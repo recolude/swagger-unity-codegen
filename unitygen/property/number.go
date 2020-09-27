@@ -20,5 +20,10 @@ func (sp Number) ToVariableType() string {
 	if sp.format == "" {
 		return "float"
 	}
+
+	if sp.format == "int32" {
+		return "int"
+	}
+
 	return sp.format
 }

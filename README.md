@@ -1,5 +1,7 @@
 # Swagger Unity Codegen
 
+[![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen)
+
 Generate valid networking code for Unity3D. 
 
 Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.

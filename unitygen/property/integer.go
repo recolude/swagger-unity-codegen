@@ -18,8 +18,6 @@ func (sp Integer) Name() string {
 
 func (sp Integer) ToVariableType() string {
 	switch sp.format {
-	case "int32":
-		return "int32"
 
 	default:
 		return "int"

@@ -114,7 +114,7 @@ public class V1ListLicensesRequest {
 
 	public double duration;
 
-	public int32 limit;
+	public int limit;
 
 	public float time;
 
