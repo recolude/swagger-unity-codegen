@@ -61,17 +61,17 @@ func (p Parser) interpretObjectPropertyDefinition(path []string, name string, ob
 	}
 }
 
-func (p Parser) interpretDefinition(path []string, name string, obj *gabs.Container) (definition.Definition, error) {
+func (p Parser) interpretObjectDefinition(path []string, name string, obj *gabs.Container) (definition.Object, error) {
 	newPath := append(path, name)
 	if obj == nil {
-		return nil, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
+		return definition.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
 	}
 	properties := make([]property.Property, 0)
 
 	for key, val := range obj.Path("properties").ChildrenMap() {
 		prop, err := p.interpretObjectPropertyDefinition(append(newPath, "properties"), key, val)
 		if err != nil {
-			return nil, err
+			return definition.Object{}, err
 		}
 		properties = append(properties, prop)
 	}
@@ -79,9 +79,25 @@ func (p Parser) interpretDefinition(path []string, name string, obj *gabs.Contai
 	return definition.NewObject(name, properties), nil
 }
 
-// Parse reads through the input stream and constructs an understanding of the
-// API our Unity3D client needs to interact with
-func (p Parser) Parse(in io.Reader) (Spec, error) {
+func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (definition.Definition, error) {
+
+	enum := obj.Path("enum")
+	if enum == nil {
+		return nil, InvalidSpecError{Path: append(path, name), Reason: "Unimplemented string case"}
+	}
+
+	children := enum.Children()
+	parsedValues := make([]string, len(children))
+	for i, child := range enum.Children() {
+		parsedValues[i] = child.Data().(string)
+	}
+
+	return definition.NewEnum(name, parsedValues), nil
+}
+
+// ParseJSON reads through the input stream and constructs an understanding of
+// the API our Unity3D client needs to interact with
+func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
 
 	entireIn, err := ioutil.ReadAll(in)
 	if err != nil {
@@ -100,7 +116,26 @@ func (p Parser) Parse(in io.Reader) (Spec, error) {
 
 	definitions := make([]definition.Definition, 0)
 	for key, val := range jsonParsed.Path("definitions").ChildrenMap() {
-		def, err := p.interpretDefinition([]string{"definitions"}, key, val)
+
+		definitionType, ok := val.Path("type").Data().(string)
+		if !ok {
+			return Spec{}, InvalidSpecError{Path: []string{"definitions", key}, Reason: "Definition type not found on definition"}
+		}
+
+		var def definition.Definition
+		switch definitionType {
+		case "object":
+			def, err = p.interpretObjectDefinition([]string{"definitions"}, key, val)
+			break
+
+		case "string":
+			def, err = p.interpretStringDefinition([]string{"definitions"}, key, val)
+			break
+
+		default:
+			return Spec{}, InvalidSpecError{Path: []string{"definitions", key, "type"}, Reason: fmt.Sprintf("Unknown definition type \"%s\"", definitionType)}
+		}
+
 		if err != nil {
 			return Spec{}, err
 		}

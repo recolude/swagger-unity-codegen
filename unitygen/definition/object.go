@@ -9,12 +9,13 @@ import (
 	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 )
 
-// ObjectDefinition is a collection of properties
+// Object is a collection of properties
 type Object struct {
 	ObjectName string
 	Properties []property.Property
 }
 
+// NewObject creates a new object
 func NewObject(name string, properties []property.Property) Object {
 	sort.Sort(sortByPropName(properties))
 	return Object{
@@ -34,8 +35,8 @@ func (od Object) Name() string {
 	return od.ObjectName
 }
 
-// ToClass generates a c# class for unity
-func (od Object) ToClass() string {
+// ToCSharp generates a c# class for unity
+func (od Object) ToCSharp() string {
 	var classBuilder strings.Builder
 
 	classBuilder.WriteString("[System.Serializable]\npublic class ")

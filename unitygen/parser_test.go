@@ -55,10 +55,12 @@ func TestReadDefinition(t *testing.T) {
 		}
 	}`
 	// ********************************** ACT *********************************
-	spec, err := unitygen.Parser{}.Parse(strings.NewReader(swaggerDotJSON))
+	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
 
 	// ********************************* ASSERT *******************************
-	assert.NoError(t, err)
+	if assert.NoError(t, err) == false {
+		return
+	}
 	assert.Equal(t, "Recolude Service", spec.Info.Title)
 	assert.Equal(t, "1.0", spec.Info.Version)
 	if assert.Len(t, spec.Definitions, 2) {
@@ -80,7 +82,13 @@ public class V1ApiKey {
 
 	public string token;
 
-}`,
-			spec.Definitions[0].ToClass())
+}`, spec.Definitions[0].ToCSharp())
+
+		assert.Equal(t,
+			`public enum V1EnumVisibility {
+	V_UNKOWN,
+	V_PUBLIC,
+	V_PRIVATE
+}`, spec.Definitions[1].ToCSharp())
 	}
 }
