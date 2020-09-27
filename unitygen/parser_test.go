@@ -51,6 +51,23 @@ func TestReadDefinition(t *testing.T) {
 				  "V_PUBLIC",
 				  "V_PRIVATE"
 				]
+			},
+			"v1ListLicensesRequest": {
+				"type": "object",
+				"properties": {
+				  "limit": {
+					"type": "integer",
+					"format": "int32"
+				  },
+				  "time": {
+					"type": "number",
+					"format": "float"
+				  },
+				  "duration": {
+					"type": "number",
+					"format": "double"
+				  }
+				}
 			}
 		}
 	}`
@@ -63,7 +80,7 @@ func TestReadDefinition(t *testing.T) {
 	}
 	assert.Equal(t, "Recolude Service", spec.Info.Title)
 	assert.Equal(t, "1.0", spec.Info.Version)
-	if assert.Len(t, spec.Definitions, 2) {
+	if assert.Len(t, spec.Definitions, 3) {
 		assert.Equal(t, "v1ApiKey", spec.Definitions[0].Name())
 		assert.Equal(t, "v1EnumVisibility", spec.Definitions[1].Name())
 		assert.Equal(t,
@@ -90,5 +107,17 @@ public class V1ApiKey {
 	V_PUBLIC,
 	V_PRIVATE
 }`, spec.Definitions[1].ToCSharp())
+
+		assert.Equal(t,
+			`[System.Serializable]
+public class V1ListLicensesRequest {
+
+	public double duration;
+
+	public int32 limit;
+
+	public float time;
+
+}`, spec.Definitions[2].ToCSharp())
 	}
 }

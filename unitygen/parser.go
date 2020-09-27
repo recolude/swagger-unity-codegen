@@ -36,6 +36,24 @@ func (p Parser) interpretStringProperty(path []string, name string, obj *gabs.Co
 	return property.NewString(name, format), nil
 }
 
+func (p Parser) interpretIntProperty(path []string, name string, obj *gabs.Container) (property.Integer, error) {
+	format := ""
+	formatInSpec := obj.Path("format").Data()
+	if formatInSpec != nil {
+		format = formatInSpec.(string)
+	}
+	return property.NewInteger(name, format), nil
+}
+
+func (p Parser) interpretNumberProperty(path []string, name string, obj *gabs.Container) (property.Number, error) {
+	format := ""
+	formatInSpec := obj.Path("format").Data()
+	if formatInSpec != nil {
+		format = formatInSpec.(string)
+	}
+	return property.NewNumber(name, format), nil
+}
+
 func (p Parser) interpretObjectPropertyDefinition(path []string, name string, obj *gabs.Container) (property.Property, error) {
 
 	objRef, ok := obj.Path("$ref").Data().(string)
@@ -55,6 +73,12 @@ func (p Parser) interpretObjectPropertyDefinition(path []string, name string, ob
 
 	case "array":
 		return p.interpretArrayProperty(path, name, obj)
+
+	case "integer":
+		return p.interpretIntProperty(path, name, obj)
+
+	case "number":
+		return p.interpretNumberProperty(path, name, obj)
 
 	default:
 		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
