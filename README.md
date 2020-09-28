@@ -2,13 +2,15 @@
 
 [![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen)
 
-Generate valid networking code for Unity3D. 
+Generate valid networking code for Unity3D. Created and used for Recolude's Unity Plugin.
 
 Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
 
-PRs Welcome.
+PRs + Issues Welcome.
 
 ## Installation
+
+Built and tested with golang 1.14, but should probably work on versions as far back as 1.10 (when string builder was introduced).
 
 ```bash
 git clone https://github.com/recolude/swagger-unity-codegen.git
@@ -32,7 +34,7 @@ DESCRIPTION:
    Generate C# code specifically for Unity3D from a swagger file
 
 AUTHOR:
-   Eli C Davis
+   Elijah C Davis
 
 COMMANDS:
    generate, g  Generate c# code from a swagger file
@@ -54,4 +56,6 @@ swag3d --file api/openapi-spec/swagger.json generate --namespace Recolude.API > 
 
 - [ ] Embedded object definitions
 - [ ] Embedded array object definitions
-- [ ] Other Swagger File Types
+- [ ] YAML support
+- [ ] OpenAPI support
+- [ ] Oauth security definition

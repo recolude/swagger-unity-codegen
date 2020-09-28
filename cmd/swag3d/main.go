@@ -17,7 +17,7 @@ func buildApp() *cli.App {
 		Usage:       "swagger and Unity3D meet",
 		Authors: []*cli.Author{
 			{
-				Name: "Eli C Davis",
+				Name: "Elijah C Davis",
 			},
 		},
 		Flags: []cli.Flag{

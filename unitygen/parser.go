@@ -8,6 +8,7 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
 	"github.com/recolude/swagger-unity-codegen/unitygen/property"
+	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 )
 
 // Parser reads through a file and interprets a swagger definition
@@ -119,6 +120,86 @@ func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.
 	return definition.NewEnum(name, parsedValues), nil
 }
 
+func (p Parser) parseDefinitions(obj *gabs.Container) ([]definition.Definition, error) {
+	definitions := make([]definition.Definition, 0)
+	var err error
+	for key, val := range obj.Path("definitions").ChildrenMap() {
+
+		definitionType, ok := val.Path("type").Data().(string)
+		if !ok {
+			return nil, InvalidSpecError{Path: []string{"definitions", key}, Reason: "Definition type not found on definition"}
+		}
+
+		var def definition.Definition
+		switch definitionType {
+		case "object":
+			def, err = p.interpretObjectDefinition([]string{"definitions"}, key, val)
+			break
+
+		case "string":
+			def, err = p.interpretStringDefinition([]string{"definitions"}, key, val)
+			break
+
+		default:
+			return nil, InvalidSpecError{Path: []string{"definitions", key, "type"}, Reason: fmt.Sprintf("Unknown definition type \"%s\"", definitionType)}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		definitions = append(definitions, def)
+	}
+
+	return definitions, nil
+}
+
+func (p Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs.Container) (security.Auth, error) {
+	newPath := append(path, name)
+	if obj == nil {
+		return definition.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
+	}
+	properties := make([]property.Property, 0)
+
+	for key, val := range obj.Path("properties").ChildrenMap() {
+		prop, err := p.interpretObjectPropertyDefinition(append(newPath, "properties"), key, val)
+		if err != nil {
+			return definition.Object{}, err
+		}
+		properties = append(properties, prop)
+	}
+
+	return definition.NewObject(name, properties), nil
+}
+
+func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, error) {
+	definitions := make([]security.Auth, 0)
+	var err error
+	for key, val := range obj.Path("securityDefinitions").ChildrenMap() {
+
+		definitionType, ok := val.Path("type").Data().(string)
+		if !ok {
+			return nil, InvalidSpecError{Path: []string{"securityDefinitions", key}, Reason: "Definition type not found on definition"}
+		}
+
+		var def security.Auth
+		switch definitionType {
+		case "apiKey":
+			def, err = p.interpretAPIKeyDefinition([]string{"securityDefinitions"}, key, val)
+			break
+
+		default:
+			return nil, InvalidSpecError{Path: []string{"securityDefinitions", key, "type"}, Reason: fmt.Sprintf("Unknown security type \"%s\"", definitionType)}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		definitions = append(definitions, def)
+	}
+
+	return definitions, nil
+}
+
 // ParseJSON reads through the input stream and constructs an understanding of
 // the API our Unity3D client needs to interact with
 func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
@@ -138,33 +219,15 @@ func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
 		Version: jsonParsed.Path("info.version").Data().(string),
 	}
 
-	definitions := make([]definition.Definition, 0)
-	for key, val := range jsonParsed.Path("definitions").ChildrenMap() {
-
-		definitionType, ok := val.Path("type").Data().(string)
-		if !ok {
-			return Spec{}, InvalidSpecError{Path: []string{"definitions", key}, Reason: "Definition type not found on definition"}
-		}
-
-		var def definition.Definition
-		switch definitionType {
-		case "object":
-			def, err = p.interpretObjectDefinition([]string{"definitions"}, key, val)
-			break
-
-		case "string":
-			def, err = p.interpretStringDefinition([]string{"definitions"}, key, val)
-			break
-
-		default:
-			return Spec{}, InvalidSpecError{Path: []string{"definitions", key, "type"}, Reason: fmt.Sprintf("Unknown definition type \"%s\"", definitionType)}
-		}
-
-		if err != nil {
-			return Spec{}, err
-		}
-		definitions = append(definitions, def)
+	parsedDefinitions, err := p.parseDefinitions(jsonParsed)
+	if err != nil {
+		return Spec{}, err
 	}
 
-	return NewSpec(info, definitions), nil
+	parsedSecurityDefinitions, err := p.parseSecurityDefinitions(jsonParsed)
+	if err != nil {
+		return Spec{}, err
+	}
+
+	return NewSpec(info, parsedDefinitions, parsedSecurityDefinitions, nil), nil
 }

@@ -15,6 +15,60 @@ func TestReadDefinition(t *testing.T) {
 			"title": "Recolude Service",
 			"version": "1.0"
 		},
+		"paths": {
+			"/api/v1/dev-keys": {
+				"get": {
+					"security": [
+						{
+							"CognitoAuth": []
+						}
+					],	
+					"tags": [
+						"DevKeyService"
+					],
+					"operationId": "DevKeyService_GetDevKey",
+					"responses": {
+						"200": {
+							"description": "A successful response.",
+							"schema": {
+								"$ref": "#/definitions/v1DevKeyResponse"
+							}
+						},
+						"default": {
+							"description": "An unexpected error response",
+							"schema": {
+								"$ref": "#/definitions/runtimeError"
+							}
+						}
+					}
+				},
+				"post": {
+					"security": [
+						{
+							"CognitoAuth": []
+						}
+					],
+					"tags": [
+						"DevKeyService"
+					],
+					"operationId": "DevKeyService_CreateDevKey",
+					"responses": {
+						"200": {
+							"description": "A successful response.",
+							"schema": {
+								"$ref": "#/definitions/v1DevKeyResponse"
+							}
+						},
+						"default": {
+							"description": "An unexpected error response",
+							"schema": {
+								"$ref": "#/definitions/runtimeError"
+							}
+						}
+					}
+				}
+			}
+		},
 		"definitions": {
 			"v1ApiKey": {
 				"type": "object",
@@ -69,6 +123,23 @@ func TestReadDefinition(t *testing.T) {
 				  }
 				}
 			}
+		},
+		"securityDefinitions": {
+		  "ApiKeyAuth": {
+			"type": "apiKey",
+			"name": "X-API-KEY",
+			"in": "header"
+		  },
+		  "CognitoAuth": {
+			"type": "apiKey",
+			"name": "Authorization",
+			"in": "header"
+		  },
+		  "DevKeyAuth": {
+			"type": "apiKey",
+			"name": "X-DEV-KEY",
+			"in": "header"
+		  }
 		}
 	}`
 	// ********************************** ACT *********************************
@@ -119,5 +190,11 @@ public class V1ListLicensesRequest {
 	public float time;
 
 }`, spec.Definitions[2].ToCSharp())
+	}
+
+	if assert.Len(t, spec.AuthDefinitions, 3) {
+		assert.NotNil(t, spec.AuthDefinitions[0])
+		assert.NotNil(t, spec.AuthDefinitions[1])
+		assert.NotNil(t, spec.AuthDefinitions[2])
 	}
 }
