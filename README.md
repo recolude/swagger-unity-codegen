@@ -46,7 +46,7 @@ GLOBAL OPTIONS:
    --version, -v  print the version (default: false)
 ```
 
-Example
+### Example
 
 ```bash
 swag3d --file api/openapi-spec/swagger.json generate --namespace Recolude.API > API.cs

@@ -154,21 +154,36 @@ func (p Parser) parseDefinitions(obj *gabs.Container) ([]definition.Definition, 
 }
 
 func (p Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs.Container) (security.Auth, error) {
-	newPath := append(path, name)
+	keyPath := append(path, name)
 	if obj == nil {
-		return definition.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
-	}
-	properties := make([]property.Property, 0)
-
-	for key, val := range obj.Path("properties").ChildrenMap() {
-		prop, err := p.interpretObjectPropertyDefinition(append(newPath, "properties"), key, val)
-		if err != nil {
-			return definition.Object{}, err
-		}
-		properties = append(properties, prop)
+		return nil, InvalidSpecError{Path: keyPath, Reason: "Definition contains no contents"}
 	}
 
-	return definition.NewObject(name, properties), nil
+	apikeyName, ok := obj.Path("name").Data().(string)
+	if !ok || apikeyName == "" {
+		return nil, InvalidSpecError{Path: keyPath, Reason: "No name found for key"}
+	}
+
+	foundIn, ok := obj.Path("in").Data().(string)
+	if !ok || foundIn == "" {
+		return nil, InvalidSpecError{Path: keyPath, Reason: "No destination for API Key found"}
+	}
+
+	var keyLoc security.APIKeyLocation
+	if foundIn == "header" {
+		keyLoc = security.Header
+	}
+
+	switch foundIn {
+	case "header":
+		keyLoc = security.Header
+		break
+
+	default:
+		return nil, InvalidSpecError{Path: keyPath, Reason: fmt.Sprintf("Unimplemnted key location: \"%s\"", foundIn)}
+	}
+
+	return security.NewAPIKey(name, apikeyName, keyLoc), nil
 }
 
 func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, error) {

@@ -193,8 +193,14 @@ public class V1ListLicensesRequest {
 	}
 
 	if assert.Len(t, spec.AuthDefinitions, 3) {
-		assert.NotNil(t, spec.AuthDefinitions[0])
-		assert.NotNil(t, spec.AuthDefinitions[1])
-		assert.NotNil(t, spec.AuthDefinitions[2])
+		if assert.NotNil(t, spec.AuthDefinitions[0]) {
+			assert.Equal(t, "ApiKeyAuth", spec.AuthDefinitions[0].Identifier())
+		}
+		if assert.NotNil(t, spec.AuthDefinitions[1]) {
+			assert.Equal(t, "CognitoAuth", spec.AuthDefinitions[1].Identifier())
+		}
+		if assert.NotNil(t, spec.AuthDefinitions[2]) {
+			assert.Equal(t, "DevKeyAuth", spec.AuthDefinitions[2].Identifier())
+		}
 	}
 }
