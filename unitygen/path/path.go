@@ -35,6 +35,31 @@ func NewPath(route, operationID, method string, tags []string, security []Securi
 	}
 }
 
+func (p Path) OperationID() string {
+	return p.operationID
+}
+
+func (p Path) Route() string {
+	return p.route
+}
+
+func (p Path) Method() string {
+	return p.httpMethod
+}
+
+func (p Path) SecurityReferences() []SecurityMethodReference {
+	return p.security
+}
+
+func (p Path) Responses() map[string]Response {
+	return p.responses
+}
+
+// Tags are what different tags a route is associated with
+func (p Path) Tags() []string {
+	return p.tags
+}
+
 func (p Path) reqPathName() string {
 	return fmt.Sprintf("%sUnityWebRequest", p.operationID)
 }
@@ -84,6 +109,10 @@ func (p Path) SupportingClasses() string {
 
 	// constructor
 	fmt.Fprintf(&builder, "\tpublic %s(UnityWebRequest req) {\n\t\tthis.UnderlyingRequest = req;\n\t}\n\n", p.reqPathName())
+
+	// Function that will actually execute the request
+	fmt.Fprint(&builder, "\tpublic IEnumerator Run() {\n\t\tyield return this.UnderlyingRequest.SendWebRequest();\n\t}\n\n")
+
 	fmt.Fprint(&builder, "}")
 
 	return builder.String()

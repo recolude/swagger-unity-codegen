@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"sort"
+	"strings"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/path"
 	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 )
@@ -215,6 +218,131 @@ func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, 
 	return definitions, nil
 }
 
+func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, error) {
+
+	paths := make([]path.Path, 0)
+	for verb, verbObj := range routeObj.ChildrenMap() {
+		tagsInJSON := make([]string, 0)
+		for _, child := range verbObj.Path("tags").Children() {
+			tagsInJSON = append(tagsInJSON, child.Data().(string))
+		}
+
+		securityReferences := make([]path.SecurityMethodReference, 0)
+		for _, child := range verbObj.Path("security").Children() {
+			for key := range child.ChildrenMap() {
+				securityReferences = append(securityReferences, path.NewSecurityMethodReference(key))
+			}
+		}
+		sort.Sort(sortBySecurityReferenceIdentifier(securityReferences))
+
+		operationID, ok := verbObj.Path("operationId").Data().(string)
+		if !ok {
+			return nil, InvalidSpecError{Path: []string{"paths", url, verb}, Reason: "unable to location operation ID"}
+		}
+
+		responses := make(map[string]path.Response)
+		for key, respJSON := range verbObj.Path("responses").ChildrenMap() {
+
+			var def definition.Definition
+			schemaJSON := respJSON.Path("schema")
+			if schemaJSON != nil {
+				refNode := schemaJSON.Path("$ref")
+				if refNode == nil {
+					return nil, InvalidSpecError{
+						Path:   []string{url, verb, key, "schema"},
+						Reason: fmt.Sprintf("expected $ref but was not found for schema"),
+					}
+				}
+
+				def = definition.NewObjectReference(refNode.Data().(string))
+			}
+
+			responses[key] = path.NewResponse(
+				respJSON.Path("description").Data().(string),
+				def,
+			)
+		}
+
+		paths = append(paths, path.NewPath(
+			url,
+			operationID,
+			strings.ToUpper(verb),
+			tagsInJSON,
+			securityReferences,
+			responses,
+			nil,
+		),
+		)
+	}
+
+	sort.Sort(sortByPathMethod(paths))
+	return paths, nil
+}
+
+type sortBySecurityReferenceIdentifier []path.SecurityMethodReference
+
+func (a sortBySecurityReferenceIdentifier) Len() int      { return len(a) }
+func (a sortBySecurityReferenceIdentifier) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a sortBySecurityReferenceIdentifier) Less(i, j int) bool {
+	return a[i].Identifier < a[j].Identifier
+}
+
+type sortByPathMethod []path.Path
+
+func (a sortByPathMethod) Len() int           { return len(a) }
+func (a sortByPathMethod) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a sortByPathMethod) Less(i, j int) bool { return a[i].Method() < a[j].Method() }
+
+func (p Parser) serviceForPath(s Service, pa path.Path) bool {
+	for _, t := range pa.Tags() {
+		if t == s.name {
+			return true
+		}
+	}
+	return false
+}
+
+func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
+
+	services := make([]Service, 0)
+	defaultServiceIndex := -1
+
+	for key, val := range obj.Path("paths").ChildrenMap() {
+		paths, err := p.parsePaths(key, val)
+		if err != nil {
+			return nil, err
+		}
+		for _, foundPath := range paths {
+
+			// Have a default service for paths without any tags
+			if len(foundPath.Tags()) == 0 {
+				if defaultServiceIndex == -1 {
+					defaultServiceIndex = len(services)
+					services = append(services, Service{name: "Default"})
+				}
+				services[defaultServiceIndex].paths = append(services[defaultServiceIndex].paths, foundPath)
+			}
+
+			foundService := false
+			for serviceIndex, service := range services {
+				if p.serviceForPath(service, foundPath) {
+					foundService = true
+					services[serviceIndex].paths = append(services[serviceIndex].paths, foundPath)
+				}
+			}
+
+			if foundService == false {
+				for _, tag := range foundPath.Tags() {
+					services = append(services, Service{name: tag})
+					services[len(services)-1].paths = append(services[len(services)-1].paths, foundPath)
+				}
+			}
+		}
+	}
+
+	return services, nil
+}
+
 // ParseJSON reads through the input stream and constructs an understanding of
 // the API our Unity3D client needs to interact with
 func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
@@ -244,5 +372,10 @@ func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
 		return Spec{}, err
 	}
 
-	return NewSpec(info, parsedDefinitions, parsedSecurityDefinitions, nil), nil
+	parsedServices, err := p.parseServices(jsonParsed)
+	if err != nil {
+		return Spec{}, err
+	}
+
+	return NewSpec(info, parsedDefinitions, parsedSecurityDefinitions, parsedServices), nil
 }

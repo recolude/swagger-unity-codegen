@@ -1,6 +1,6 @@
 # Swagger Unity Codegen
 
-[![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen)
+[![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen)
 
 Generate valid networking code for Unity3D. Created and used for Recolude's Unity Plugin.
 

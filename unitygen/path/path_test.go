@@ -38,6 +38,10 @@ func Test_SimpleGet(t *testing.T) {
 		this.UnderlyingRequest = req;
 	}
 
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
+	}
+
 }`, classCode)
 
 	assert.Equal(t, `public DevKeyService_GetDevKeyUnityWebRequest DevKeyService_GetDevKey()
@@ -86,6 +90,10 @@ func Test_ParameterInPath(t *testing.T) {
 
 	public UserService_GetUserUnityWebRequest(UnityWebRequest req) {
 		this.UnderlyingRequest = req;
+	}
+
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
 	}
 
 }`, classCode)

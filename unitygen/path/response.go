@@ -14,3 +14,7 @@ func NewResponse(description string, schema definition.Definition) Response {
 		schema:      schema,
 	}
 }
+
+func (resp Response) Schema() definition.Definition {
+	return resp.schema
+}

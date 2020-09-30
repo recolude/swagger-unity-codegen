@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
-	"github.com/recolude/swagger-unity-codegen/unitygen/path"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 )
 
@@ -13,17 +12,17 @@ type Spec struct {
 	Info            SpecInfo
 	Definitions     []definition.Definition
 	AuthDefinitions []security.Auth
-	Paths           []path.Path
+	Services        []Service
 }
 
-func NewSpec(info SpecInfo, definitions []definition.Definition, authDefinitions []security.Auth, paths []path.Path) Spec {
+func NewSpec(info SpecInfo, definitions []definition.Definition, authDefinitions []security.Auth, services []Service) Spec {
 	sort.Sort(sortByDefinitionName(definitions))
 	sort.Sort(sortBySecurityIdentifier(authDefinitions))
 	return Spec{
 		Info:            info,
 		Definitions:     definitions,
 		AuthDefinitions: authDefinitions,
-		Paths:           paths,
+		Services:        services,
 	}
 }
 

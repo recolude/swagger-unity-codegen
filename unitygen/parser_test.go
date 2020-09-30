@@ -1,6 +1,7 @@
 package unitygen_test
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
@@ -45,7 +46,8 @@ func TestReadDefinition(t *testing.T) {
 				"post": {
 					"security": [
 						{
-							"CognitoAuth": []
+							"CognitoAuth": [],
+							"DevKeyAuth": []
 						}
 					],
 					"tags": [
@@ -203,4 +205,49 @@ public class V1ListLicensesRequest {
 			assert.Equal(t, "DevKeyAuth", spec.AuthDefinitions[2].Identifier())
 		}
 	}
+
+	if assert.Len(t, spec.Services, 1) {
+		assert.Equal(t, "DevKeyService", spec.Services[0].Name())
+		if assert.Len(t, spec.Services[0].Paths(), 2) {
+			assert.Equal(t, "/api/v1/dev-keys", spec.Services[0].Paths()[0].Route())
+			assert.Equal(t, "/api/v1/dev-keys", spec.Services[0].Paths()[1].Route())
+			assert.Equal(t, http.MethodGet, spec.Services[0].Paths()[0].Method())
+			assert.Equal(t, http.MethodPost, spec.Services[0].Paths()[1].Method())
+
+			// Security References
+			if assert.Len(t, spec.Services[0].Paths()[0].SecurityReferences(), 1) {
+				assert.Equal(t, "CognitoAuth", spec.Services[0].Paths()[0].SecurityReferences()[0].Identifier)
+			}
+			if assert.Len(t, spec.Services[0].Paths()[1].SecurityReferences(), 2) {
+				assert.Equal(t, "CognitoAuth", spec.Services[0].Paths()[1].SecurityReferences()[0].Identifier)
+				assert.Equal(t, "DevKeyAuth", spec.Services[0].Paths()[1].SecurityReferences()[1].Identifier)
+			}
+
+			// Operation ID
+			assert.Equal(t, "DevKeyService_GetDevKey", spec.Services[0].Paths()[0].OperationID())
+			assert.Equal(t, "DevKeyService_CreateDevKey", spec.Services[0].Paths()[1].OperationID())
+
+			if assert.Len(t, spec.Services[0].Paths()[0].Responses(), 2) {
+				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["200"].Schema()) {
+					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[0].Responses()["200"].Schema().ToVariableType())
+				}
+				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["default"].Schema()) {
+					assert.Equal(t, "RuntimeError", spec.Services[0].Paths()[0].Responses()["default"].Schema().ToVariableType())
+				}
+			}
+
+			if assert.Len(t, spec.Services[0].Paths()[1].Responses(), 2) {
+				if assert.NotNil(t, spec.Services[0].Paths()[1].Responses()["200"].Schema()) {
+					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[1].Responses()["200"].Schema().ToVariableType())
+				}
+				if assert.NotNil(t, spec.Services[0].Paths()[1].Responses()["default"].Schema()) {
+					assert.Equal(t, "RuntimeError", spec.Services[0].Paths()[1].Responses()["default"].Schema().ToVariableType())
+				}
+			}
+
+			// TODO: Parameters
+		}
+
+	}
+
 }
