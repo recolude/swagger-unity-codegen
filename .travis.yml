@@ -9,7 +9,7 @@ dist: trusty
 sudo: false
 install: true
 script:
-  - go test -race -coverprofile=coverage.txt -covermode=atomic
+  - ./test.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
