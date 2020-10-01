@@ -32,7 +32,7 @@ func Test_SimpleGet(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class DevKeyService_GetDevKeyUnityWebRequest {
 
-	public UnityWebRequest UnderlyingRequest{ get; };
+	public UnityWebRequest UnderlyingRequest{ get; }
 
 	public DevKeyService_GetDevKeyUnityWebRequest(UnityWebRequest req) {
 		this.UnderlyingRequest = req;
@@ -84,9 +84,9 @@ func Test_ParameterInPath(t *testing.T) {
 
 	public V1UserResponse success;
 
-	public RuntimeError default;
+	public RuntimeError fallbackResponse;
 
-	public UnityWebRequest UnderlyingRequest{ get; };
+	public UnityWebRequest UnderlyingRequest{ get; }
 
 	public UserService_GetUserUnityWebRequest(UnityWebRequest req) {
 		this.UnderlyingRequest = req;

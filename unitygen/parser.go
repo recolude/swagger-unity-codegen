@@ -218,6 +218,46 @@ func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, 
 	return definitions, nil
 }
 
+func (p Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (property.Property, error) {
+
+	schemaNode := obj.Path("schema")
+	if schemaNode != nil {
+		refNode := schemaNode.Path("$ref")
+		if refNode == nil {
+			return nil, InvalidSpecError{Path: append(path, "schema"), Reason: "Expected $ref"}
+		}
+		refName, ok := refNode.Data().(string)
+		if ok {
+			return property.NewObjectReference(name, refName), nil
+		}
+
+		return nil, InvalidSpecError{Path: append(path, "schema"), Reason: "Expected $ref to be string"}
+	}
+
+	propType, ok := obj.Path("type").Data().(string)
+	if !ok {
+		return nil, InvalidSpecError{Path: append(path, name), Reason: "Property type not found on definition"}
+	}
+
+	switch propType {
+
+	case "string":
+		return p.interpretStringProperty(path, name, obj)
+
+	case "array":
+		return p.interpretArrayProperty(path, name, obj)
+
+	case "integer":
+		return p.interpretIntProperty(path, name, obj)
+
+	case "number":
+		return p.interpretNumberProperty(path, name, obj)
+
+	default:
+		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
+	}
+}
+
 func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, error) {
 
 	paths := make([]path.Path, 0)
@@ -247,14 +287,9 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 			schemaJSON := respJSON.Path("schema")
 			if schemaJSON != nil {
 				refNode := schemaJSON.Path("$ref")
-				if refNode == nil {
-					return nil, InvalidSpecError{
-						Path:   []string{url, verb, key, "schema"},
-						Reason: fmt.Sprintf("expected $ref but was not found for schema"),
-					}
+				if refNode != nil {
+					def = definition.NewObjectReference(refNode.Data().(string))
 				}
-
-				def = definition.NewObjectReference(refNode.Data().(string))
 			}
 
 			responses[key] = path.NewResponse(
@@ -263,15 +298,44 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 			)
 		}
 
-		paths = append(paths, path.NewPath(
-			url,
-			operationID,
-			strings.ToUpper(verb),
-			tagsInJSON,
-			securityReferences,
-			responses,
-			nil,
-		),
+		parameters := make([]path.Parameter, 0)
+		for paramIndex, param := range verbObj.Path("parameters").Children() {
+
+			required, ok := param.Path("required").Data().(bool)
+			if !ok {
+				required = false
+			}
+
+			paramName := param.Path("name").Data().(string)
+
+			paramProperty, err := p.interpretPathPameterProperty(
+				[]string{url, verb, "parameters", fmt.Sprintf("[%d]", paramIndex)},
+				paramName,
+				param,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			parameters = append(parameters, path.NewParameter(
+				path.ParameterLocation(param.Path("in").Data().(string)),
+				paramName,
+				required,
+				paramProperty,
+			))
+
+		}
+
+		paths = append(paths,
+			path.NewPath(
+				url,
+				operationID,
+				strings.ToUpper(verb),
+				tagsInJSON,
+				securityReferences,
+				responses,
+				parameters,
+			),
 		)
 	}
 
@@ -301,6 +365,12 @@ func (p Parser) serviceForPath(s Service, pa path.Path) bool {
 	}
 	return false
 }
+
+type sortByServiceName []Service
+
+func (a sortByServiceName) Len() int           { return len(a) }
+func (a sortByServiceName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a sortByServiceName) Less(i, j int) bool { return a[i].name < a[j].name }
 
 func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
 
@@ -339,6 +409,8 @@ func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
 			}
 		}
 	}
+
+	sort.Sort(sortByServiceName(services))
 
 	return services, nil
 }

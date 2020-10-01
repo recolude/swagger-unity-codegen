@@ -29,3 +29,19 @@ func NewParameter(location ParameterLocation, name string, required bool, parame
 		parameterType: parameterType,
 	}
 }
+
+func (param Parameter) Name() string {
+	return param.name
+}
+
+func (param Parameter) Location() ParameterLocation {
+	return param.location
+}
+
+func (param Parameter) Required() bool {
+	return param.required
+}
+
+func (param Parameter) Schema() property.Property {
+	return param.parameterType
+}

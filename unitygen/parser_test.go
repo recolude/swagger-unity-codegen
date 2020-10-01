@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen"
+	"github.com/recolude/swagger-unity-codegen/unitygen/path"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -245,7 +246,148 @@ public class V1ListLicensesRequest {
 				}
 			}
 
-			// TODO: Parameters
+			assert.Len(t, spec.Services[0].Paths()[0].Parameters(), 0)
+			assert.Len(t, spec.Services[0].Paths()[1].Parameters(), 0)
+		}
+
+	}
+
+}
+
+func Test_ReadParameters(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	var swaggerDotJSON = `{
+		"info": {
+			"title": "Read Params",
+			"version": "1.0.1"
+		},
+		"paths": {
+			"/api/v1/echo": {
+				"get": {
+				  "security": [
+					{
+					  "ApiKeyAuth": [],
+					  "CognitoAuth": [],
+					  "DevKeyAuth": []
+					}
+				  ],
+				  "description": "Echos your message back to you",
+				  "tags": [
+					"EchoService"
+				  ],
+				  "operationId": "EchoService_EchoString",
+				  "parameters": [
+					{
+					  "type": "string",
+					  "name": "value",
+					  "in": "query"
+					},
+					{
+					"type": "integer",
+					"format": "int32",
+					"name": "grantId",
+					"in": "path",
+					"required": true
+					}
+				  ],
+				  "responses": {
+					"200": {
+					  "description": "A successful response.",
+					  "schema": {
+						"$ref": "#/definitions/v1Echo"
+					  },
+					  "examples": {
+						"application/json": {
+						  "value": "your message"
+						}
+					  }
+					},
+					"default": {
+					  "description": "An unexpected error response",
+					  "schema": {
+						"$ref": "#/definitions/runtimeError"
+					  }
+					}
+				  }
+				},
+				"post": {
+				  "security": [
+					{
+					  "ApiKeyAuth": [],
+					  "CognitoAuth": [],
+					  "DevKeyAuth": []
+					}
+				  ],
+				  "description": "Echos your message back to you",
+
+				  "operationId": "EchoService_EchoString2",
+				  "parameters": [
+					{
+					  "name": "body",
+					  "in": "body",
+					  "required": true,
+					  "schema": {
+						"$ref": "#/definitions/v1Echo"
+					  }
+					}
+				  ],
+				  "responses": {
+					"200": {
+					  "description": "A successful response.",
+					  "schema": {
+						"$ref": "#/definitions/v1Echo"
+					  },
+					  "examples": {
+						"application/json": {
+						  "value": "your message"
+						}
+					  }
+					},
+					"default": {
+					  "description": "An unexpected error response",
+					  "schema": {
+						"$ref": "#/definitions/runtimeError"
+					  }
+					}
+				  }
+				}
+			  }
+		}
+	}`
+	// ********************************** ACT *********************************
+	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	if assert.NoError(t, err) == false {
+		return
+	}
+	assert.Equal(t, "Read Params", spec.Info.Title)
+	assert.Equal(t, "1.0.1", spec.Info.Version)
+
+	if assert.Len(t, spec.Services, 2) {
+		assert.Equal(t, "Default", spec.Services[0].Name())
+		if assert.Len(t, spec.Services[0].Paths(), 1) {
+			if assert.Len(t, spec.Services[0].Paths()[0].Parameters(), 1) {
+				assert.Equal(t, "body", spec.Services[0].Paths()[0].Parameters()[0].Name())
+				assert.Equal(t, path.BodyParameterLocation, spec.Services[0].Paths()[0].Parameters()[0].Location())
+				assert.Equal(t, true, spec.Services[0].Paths()[0].Parameters()[0].Required())
+				assert.Equal(t, "V1Echo", spec.Services[0].Paths()[0].Parameters()[0].Schema().ToVariableType())
+			}
+		}
+
+		assert.Equal(t, "EchoService", spec.Services[1].Name())
+		if assert.Len(t, spec.Services[1].Paths(), 1) {
+			if assert.Len(t, spec.Services[1].Paths()[0].Parameters(), 2) {
+				assert.Equal(t, "value", spec.Services[1].Paths()[0].Parameters()[0].Name())
+				assert.Equal(t, path.QueryParameterLocation, spec.Services[1].Paths()[0].Parameters()[0].Location())
+				assert.Equal(t, false, spec.Services[1].Paths()[0].Parameters()[0].Required())
+				assert.Equal(t, "string", spec.Services[1].Paths()[0].Parameters()[0].Schema().ToVariableType())
+
+				assert.Equal(t, "grantId", spec.Services[1].Paths()[0].Parameters()[1].Name())
+				assert.Equal(t, path.PathParameterLocation, spec.Services[1].Paths()[0].Parameters()[1].Location())
+				assert.Equal(t, true, spec.Services[1].Paths()[0].Parameters()[1].Required())
+				assert.Equal(t, "int", spec.Services[1].Paths()[0].Parameters()[1].Schema().ToVariableType())
+			}
 		}
 
 	}

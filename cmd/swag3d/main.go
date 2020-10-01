@@ -60,9 +60,18 @@ func buildApp() *cli.App {
 						fmt.Fprintf(c.App.Writer, "namespace %s {\n\n", namespace)
 					}
 
+					// Define out all classes!
+					fmt.Fprintf(c.App.Writer, "%s\n\n", "#region Definitions")
 					for _, def := range spec.Definitions {
 						fmt.Fprintf(c.App.Writer, "%s\n\n", def.ToCSharp())
 					}
+					fmt.Fprintf(c.App.Writer, "%s\n\n", "#endregion")
+
+					fmt.Fprintf(c.App.Writer, "%s\n\n", "#region Services")
+					for _, service := range spec.Services {
+						fmt.Fprintf(c.App.Writer, "%s\n\n", service.ToCSharp(spec.AuthDefinitions))
+					}
+					fmt.Fprintf(c.App.Writer, "%s\n\n", "#endregion")
 
 					if namespace != "" {
 						fmt.Fprint(c.App.Writer, "}")

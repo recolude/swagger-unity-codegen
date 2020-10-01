@@ -35,6 +35,10 @@ func NewPath(route, operationID, method string, tags []string, security []Securi
 	}
 }
 
+func (p Path) Parameters() []Parameter {
+	return p.parameters
+}
+
 func (p Path) OperationID() string {
 	return p.operationID
 }
@@ -86,7 +90,7 @@ func (p Path) respVariableName(k string) string {
 	}
 
 	if k == "default" {
-		return "default"
+		return "fallbackResponse"
 	}
 
 	panic("unkown response key: " + k)
@@ -101,11 +105,15 @@ func (p Path) SupportingClasses() string {
 
 	// Outline all portential responses
 	for respKey, resp := range p.responses {
-		fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", resp.schema.ToVariableType(), p.respVariableName(respKey))
+
+		// Some responses are defined as an empty body, making them nil!
+		if resp.schema != nil {
+			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", resp.schema.ToVariableType(), p.respVariableName(respKey))
+		}
 	}
 
 	// underlying network request
-	fmt.Fprint(&builder, "\tpublic UnityWebRequest UnderlyingRequest{ get; };\n\n")
+	fmt.Fprint(&builder, "\tpublic UnityWebRequest UnderlyingRequest{ get; }\n\n")
 
 	// constructor
 	fmt.Fprintf(&builder, "\tpublic %s(UnityWebRequest req) {\n\t\tthis.UnderlyingRequest = req;\n\t}\n\n", p.reqPathName())
