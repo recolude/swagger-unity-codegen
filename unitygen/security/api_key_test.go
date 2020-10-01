@@ -17,5 +17,5 @@ func Test_APIKey(t *testing.T) {
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "someIdentifier", id)
-	assert.Equal(t, `unityNetworkReq.SetRequestHeader("SomeName", this.config.Security.SomeIdentifier());`, modfier)
+	assert.Equal(t, `unityNetworkReq.SetRequestHeader("SomeName", this.Config.SomeIdentifier);`, modfier)
 }

@@ -46,8 +46,8 @@ func Test_SimpleGet(t *testing.T) {
 
 	assert.Equal(t, `public DevKeyService_GetDevKeyUnityWebRequest DevKeyService_GetDevKey()
 {
-	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/dev-keys", this.config.BasePath), UnityWebRequest.kHttpVerbGET);
-	unityNetworkReq.SetRequestHeader("X-API-KEY", this.config.Security.CognitoAuth());
+	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/dev-keys", this.Config.BasePath), UnityWebRequest.kHttpVerbGET);
+	unityNetworkReq.SetRequestHeader("X-API-KEY", this.Config.CognitoAuth);
 	return new DevKeyService_GetDevKeyUnityWebRequest(unityNetworkReq);
 }`, functionCode)
 }
@@ -100,12 +100,12 @@ func Test_ParameterInPath(t *testing.T) {
 
 	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId)
 {
-	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}", this.config.BasePath, userId), UnityWebRequest.kHttpVerbGET);
-	if (string.IsNullOrEmpty(this.config.Security.CognitoAuth()) == false) {
-		unityNetworkReq.SetRequestHeader("CognitoThing", this.config.Security.CognitoAuth());
+	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}", this.Config.BasePath, userId), UnityWebRequest.kHttpVerbGET);
+	if (string.IsNullOrEmpty(this.Config.CognitoAuth) == false) {
+		unityNetworkReq.SetRequestHeader("CognitoThing", this.Config.CognitoAuth);
 	}
-	if (string.IsNullOrEmpty(this.config.Security.DevKeyAuth()) == false) {
-		unityNetworkReq.SetRequestHeader("X-API-KEY", this.config.Security.DevKeyAuth());
+	if (string.IsNullOrEmpty(this.Config.DevKeyAuth) == false) {
+		unityNetworkReq.SetRequestHeader("X-API-KEY", this.Config.DevKeyAuth);
 	}
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }`, functionCode)

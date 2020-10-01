@@ -7,4 +7,6 @@ type Auth interface {
 	Identifier() string
 
 	ModifyNetworkRequest() string
+
+	String() string
 }

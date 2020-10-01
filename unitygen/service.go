@@ -34,16 +34,23 @@ func (s Service) Paths() []path.Path {
 
 // ToCSharp writes out the service as a class with colleciton of functions that
 // correspond to calling different routes
-func (s Service) ToCSharp(knownModifiers []security.Auth) string {
+func (s Service) ToCSharp(knownModifiers []security.Auth, serviceConfigName string) string {
 
-	className := convention.TitleCase(s.Name()) + "Service"
+	className := convention.TitleCase(s.Name())
+	if strings.HasSuffix(className, "Service") == false {
+		className += "Service"
+	}
 
 	builder := strings.Builder{}
 	builder.WriteString("public class ")
 	builder.WriteString(className)
-	builder.WriteString(" {\n\n\tpublic ServiceConfig Config { get; }\n\n\tpublic ")
+	builder.WriteString(" {\n\n\tpublic ")
+	builder.WriteString(serviceConfigName)
+	builder.WriteString(" Config { get; }\n\n\tpublic ")
 	builder.WriteString(className)
-	builder.WriteString("(ServiceConfig Config) {\n\t\tthis.Config = Config;\n\t}\n\n")
+	builder.WriteString("(")
+	builder.WriteString(serviceConfigName)
+	builder.WriteString(" Config) {\n\t\tthis.Config = Config;\n\t}\n\n")
 
 	for _, p := range s.paths {
 		builder.WriteString(p.SupportingClasses())

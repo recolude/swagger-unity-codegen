@@ -52,5 +52,14 @@ func (key APIKeyAuth) name() string {
 // ModifyNetworkRequest generates C# code that appends this API Key to a
 // specific network request
 func (key APIKeyAuth) ModifyNetworkRequest() string {
-	return fmt.Sprintf("unityNetworkReq.SetRequestHeader(\"%s\", this.config.Security.%s());", key.name(), convention.TitleCase(key.Identifier()))
+	return fmt.Sprintf("unityNetworkReq.SetRequestHeader(\"%s\", this.Config.%s);", key.name(), convention.TitleCase(key.Identifier()))
+}
+
+func (key APIKeyAuth) String() string {
+	return fmt.Sprintf(
+		"%s is a API Key \"%s\" found in a request's %s",
+		convention.TitleCase(key.Identifier()),
+		key.key,
+		key.loc,
+	)
 }

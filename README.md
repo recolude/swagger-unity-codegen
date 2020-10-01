@@ -49,7 +49,7 @@ GLOBAL OPTIONS:
 ### Example
 
 ```bash
-swag3d --file api/openapi-spec/swagger.json generate --namespace Recolude.API > API.cs
+swag3d --file api/openapi-spec/swagger.json generate --config-name="RecoludeConfig" --config-menu="Recolude/Config" --namespace Recolude.API > API.cs
 ```
 
 ## TODO

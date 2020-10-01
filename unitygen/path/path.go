@@ -3,8 +3,10 @@ package path
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
+	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 )
 
@@ -104,11 +106,15 @@ func (p Path) SupportingClasses() string {
 	fmt.Fprintf(&builder, "public class %s {\n\n", p.reqPathName())
 
 	// Outline all portential responses
-	for respKey, resp := range p.responses {
-
+	keys := make([]string, 0)
+	for k := range p.responses {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
 		// Some responses are defined as an empty body, making them nil!
-		if resp.schema != nil {
-			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", resp.schema.ToVariableType(), p.respVariableName(respKey))
+		if p.responses[k].schema != nil {
+			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].schema.ToVariableType(), p.respVariableName(k))
 		}
 	}
 
@@ -154,7 +160,7 @@ func (p Path) serviceFunctionParameters() string {
 func (p Path) serviceFunctionNetReqURL() string {
 	paramsInURL := 0
 	finalRoute := p.route
-	routeReplacements := "this.config.BasePath"
+	routeReplacements := "this.Config.BasePath"
 	for _, param := range p.parameters {
 		if param.location == PathParameterLocation {
 			finalRoute = strings.Replace(finalRoute, "{"+param.name+"}", fmt.Sprintf("{%d}", paramsInURL+1), 1)
@@ -175,7 +181,7 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 		fmt.Fprintf(&builder, "\t%s\n", p.guard(p.security[0], knownModifiers).ModifyNetworkRequest())
 	} else if len(p.security) > 1 {
 		for _, sec := range p.security {
-			fmt.Fprintf(&builder, "\tif (string.IsNullOrEmpty(this.config.Security.%s()) == false) {\n", sec.Identifier)
+			fmt.Fprintf(&builder, "\tif (string.IsNullOrEmpty(this.Config.%s) == false) {\n", convention.TitleCase(sec.Identifier))
 			fmt.Fprintf(&builder, "\t\t%s\n", p.guard(sec, knownModifiers).ModifyNetworkRequest())
 			builder.WriteString("\t}\n")
 		}

@@ -37,6 +37,16 @@ func buildApp() *cli.App {
 						Name:  "namespace",
 						Usage: "The namespace the code will be wrapped in",
 					},
+					&cli.StringFlag{
+						Name:        "config-name",
+						Usage:       "The name of the config class that will contain all server variables",
+						DefaultText: "ServiceConfig",
+					},
+					&cli.StringFlag{
+						Name:        "config-menu",
+						Usage:       "Name to be listed in the Assets/Create submenu, so that instances of the server config can be easily created and stored in the project as \".asset\"",
+						DefaultText: "Server/Config",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					file, err := os.Open(c.String("file"))
@@ -54,6 +64,12 @@ func buildApp() *cli.App {
 					fmt.Fprintln(c.App.Writer, "// Issues and PRs welcome :)")
 					fmt.Fprintln(c.App.Writer, "")
 
+					// imports
+					fmt.Fprintln(c.App.Writer, "using UnityEngine;")
+					fmt.Fprintln(c.App.Writer, "using UnityEngine.Networking;")
+					fmt.Fprintln(c.App.Writer, "using System.Collections;")
+					fmt.Fprintln(c.App.Writer, "")
+
 					namespace := c.String("namespace")
 
 					if namespace != "" {
@@ -68,8 +84,9 @@ func buildApp() *cli.App {
 					fmt.Fprintf(c.App.Writer, "%s\n\n", "#endregion")
 
 					fmt.Fprintf(c.App.Writer, "%s\n\n", "#region Services")
+					fmt.Fprintf(c.App.Writer, "%s\n\n", spec.ServiceConfig(c.String("config-name"), c.String("config-menu")))
 					for _, service := range spec.Services {
-						fmt.Fprintf(c.App.Writer, "%s\n\n", service.ToCSharp(spec.AuthDefinitions))
+						fmt.Fprintf(c.App.Writer, "%s\n\n", service.ToCSharp(spec.AuthDefinitions, c.String("config-name")))
 					}
 					fmt.Fprintf(c.App.Writer, "%s\n\n", "#endregion")
 
