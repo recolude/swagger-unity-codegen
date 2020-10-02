@@ -53,7 +53,7 @@ func (s Spec) ServiceConfig(configName, menuName string) string {
 	builder := strings.Builder{}
 	builder.WriteString("[System.Serializable]\n")
 	fmt.Fprintf(&builder, "[CreateAssetMenu(menuName = \"%s\", fileName = \"%s\")]\n", menuName, properClassName)
-	fmt.Fprintf(&builder, "public class %s {\n\n\tpublic string BasePath { get; set; }\n\n", properClassName)
+	fmt.Fprintf(&builder, "public class %s: ScriptableObject {\n\n\tpublic string BasePath { get; set; }\n\n", properClassName)
 	for _, authGuard := range s.AuthDefinitions {
 		fmt.Fprintf(&builder, "\t// %s\n", authGuard.String())
 		fmt.Fprintf(&builder, "\tpublic string %s { get; set; }\n\n", convention.TitleCase(authGuard.Identifier()))

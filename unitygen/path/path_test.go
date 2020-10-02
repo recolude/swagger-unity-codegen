@@ -94,6 +94,11 @@ func Test_ParameterInPath(t *testing.T) {
 
 	public IEnumerator Run() {
 		yield return this.UnderlyingRequest.SendWebRequest();
+		if (UnderlyingRequest.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		} else {
+			fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+		}
 	}
 
 }`, classCode)
@@ -101,6 +106,7 @@ func Test_ParameterInPath(t *testing.T) {
 	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId)
 {
 	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}", this.Config.BasePath, userId), UnityWebRequest.kHttpVerbGET);
+	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	if (string.IsNullOrEmpty(this.Config.CognitoAuth) == false) {
 		unityNetworkReq.SetRequestHeader("CognitoThing", this.Config.CognitoAuth);
 	}
@@ -109,4 +115,192 @@ func Test_ParameterInPath(t *testing.T) {
 	}
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }`, functionCode)
+}
+
+func Test_AcknowledgesSingleResponses(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	route := path.NewPath(
+		"/api/v1/users/{userId}",
+		"UserService_GetUser",
+		http.MethodGet,
+		[]string{"UserService"},
+		[]path.SecurityMethodReference{
+			path.NewSecurityMethodReference("CognitoAuth"),
+			path.NewSecurityMethodReference("DevKeyAuth"),
+		},
+		map[string]path.Response{
+			"200": path.NewResponse("A successful response.", definition.NewObjectReference("#/definitions/v1UserResponse")),
+		},
+		[]path.Parameter{
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	classCode := route.SupportingClasses()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+
+	public V1UserResponse success;
+
+	public UnityWebRequest UnderlyingRequest{ get; }
+
+	public UserService_GetUserUnityWebRequest(UnityWebRequest req) {
+		this.UnderlyingRequest = req;
+	}
+
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
+		if (UnderlyingRequest.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		}
+	}
+
+}`, classCode)
+}
+
+func Test_AcknowledgesDefaultResponses(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	route := path.NewPath(
+		"/api/v1/users/{userId}",
+		"UserService_GetUser",
+		http.MethodGet,
+		[]string{"UserService"},
+		[]path.SecurityMethodReference{
+			path.NewSecurityMethodReference("CognitoAuth"),
+			path.NewSecurityMethodReference("DevKeyAuth"),
+		},
+		map[string]path.Response{
+			"default": path.NewResponse("An unexpected error response", definition.NewObjectReference("#/definitions/runtimeError")),
+		},
+		[]path.Parameter{
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	classCode := route.SupportingClasses()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+
+	public RuntimeError fallbackResponse;
+
+	public UnityWebRequest UnderlyingRequest{ get; }
+
+	public UserService_GetUserUnityWebRequest(UnityWebRequest req) {
+		this.UnderlyingRequest = req;
+	}
+
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
+		fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+	}
+
+}`, classCode)
+}
+
+func Test_ThreeParametersInPath(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	route := path.NewPath(
+		"/api/v1/users/{userId}",
+		"UserService_GetUser",
+		http.MethodGet,
+		[]string{"UserService"},
+		[]path.SecurityMethodReference{
+			path.NewSecurityMethodReference("CognitoAuth"),
+			path.NewSecurityMethodReference("DevKeyAuth"),
+		},
+		map[string]path.Response{
+			"200":     path.NewResponse("A successful response.", definition.NewObjectReference("#/definitions/v1UserResponse")),
+			"401":     path.NewResponse("Weird Unauthorized response.", definition.NewObjectReference("#/definitions/v1Unauthorized")),
+			"default": path.NewResponse("An unexpected error response", definition.NewObjectReference("#/definitions/runtimeError")),
+		},
+		[]path.Parameter{
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	classCode := route.SupportingClasses()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+
+	public V1UserResponse success;
+
+	public V1Unauthorized unauthorized;
+
+	public RuntimeError fallbackResponse;
+
+	public UnityWebRequest UnderlyingRequest{ get; }
+
+	public UserService_GetUserUnityWebRequest(UnityWebRequest req) {
+		this.UnderlyingRequest = req;
+	}
+
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
+		if (UnderlyingRequest.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		} else if (UnderlyingRequest.responseCode == 401) {
+			unauthorized = JsonUtility.FromJson<V1Unauthorized>(UnderlyingRequest.downloadHandler.text);
+		} else {
+			fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+		}
+	}
+
+}`, classCode)
+
+}
+
+func Test_HandlesNilResponseDefinitions(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	route := path.NewPath(
+		"/api/v1/users/{userId}",
+		"UserService_GetUser",
+		http.MethodGet,
+		[]string{"UserService"},
+		[]path.SecurityMethodReference{
+			path.NewSecurityMethodReference("CognitoAuth"),
+			path.NewSecurityMethodReference("DevKeyAuth"),
+		},
+		map[string]path.Response{
+			"200":     path.NewResponse("A successful response.", definition.NewObjectReference("#/definitions/v1UserResponse")),
+			"401":     path.NewResponse("Weird Unauthorized response.", nil),
+			"default": path.NewResponse("An unexpected error response", definition.NewObjectReference("#/definitions/runtimeError")),
+		},
+		[]path.Parameter{
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	classCode := route.SupportingClasses()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+
+	public V1UserResponse success;
+
+	public RuntimeError fallbackResponse;
+
+	public UnityWebRequest UnderlyingRequest{ get; }
+
+	public UserService_GetUserUnityWebRequest(UnityWebRequest req) {
+		this.UnderlyingRequest = req;
+	}
+
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
+		if (UnderlyingRequest.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		} else {
+			fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+		}
+	}
+
+}`, classCode)
+
 }

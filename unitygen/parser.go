@@ -173,10 +173,6 @@ func (p Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs.
 	}
 
 	var keyLoc security.APIKeyLocation
-	if foundIn == "header" {
-		keyLoc = security.Header
-	}
-
 	switch foundIn {
 	case "header":
 		keyLoc = security.Header

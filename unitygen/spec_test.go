@@ -18,7 +18,7 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `[System.Serializable]
 [CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
-public class ServiceConfig {
+public class ServiceConfig: ScriptableObject {
 
 	public string BasePath { get; set; }
 
@@ -44,7 +44,7 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `[System.Serializable]
 [CreateAssetMenu(menuName = "Recolude/Config", fileName = "RecoludeConfig")]
-public class RecoludeConfig {
+public class RecoludeConfig: ScriptableObject {
 
 	public string BasePath { get; set; }
 

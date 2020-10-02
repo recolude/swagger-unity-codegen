@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
@@ -91,11 +92,88 @@ func (p Path) respVariableName(k string) string {
 		return "success"
 	}
 
+	if k == "401" {
+		return "unauthorized"
+	}
+
+	if k == "403" {
+		return "forbidden"
+	}
+
+	if k == "404" {
+		return "notFound"
+	}
+
+	if k == "500" {
+		return "internalServerError"
+	}
+
+	if k == "501" {
+		return "notImplemented"
+	}
+
+	if k == "502" {
+		return "badGateway"
+	}
+
+	if k == "503" {
+		return "serviceUnavailable"
+	}
+
+	if k == "504" {
+		return "gatewayTimeout"
+	}
+
 	if k == "default" {
 		return "fallbackResponse"
 	}
 
 	panic("unkown response key: " + k)
+}
+
+func (p Path) renderConditionalResponseCast(code string, resp Response) string {
+	if resp.schema == nil {
+		panic(fmt.Sprintf("code %s has nil response schema", code))
+	}
+
+	if parsed, err := strconv.Atoi(code); err == nil {
+		return fmt.Sprintf("if (UnderlyingRequest.responseCode == %d) {\n\t\t\t%s = JsonUtility.FromJson<%s>(UnderlyingRequest.downloadHandler.text);\n\t\t}", parsed, p.respVariableName(code), resp.schema.ToVariableType())
+	}
+	return fmt.Sprintf("fallbackResponse = JsonUtility.FromJson<%s>(UnderlyingRequest.downloadHandler.text);", resp.schema.ToVariableType())
+}
+
+func (p Path) renderHandleResponse() string {
+	keys := make([]string, 0)
+	for k, resp := range p.responses {
+		if resp.schema != nil {
+			keys = append(keys, k)
+		}
+	}
+	builder := strings.Builder{}
+	sort.Strings(keys)
+	if len(keys) > 0 {
+		builder.WriteString("\t\t")
+	}
+
+	if len(keys) == 1 {
+		builder.WriteString(p.renderConditionalResponseCast(keys[0], p.responses[keys[0]]))
+		builder.WriteString("\n")
+	} else if len(keys) > 1 {
+		for keyIndex := range keys {
+			if keys[keyIndex] == "default" {
+				builder.WriteString("{\n\t\t\t")
+				builder.WriteString(p.renderConditionalResponseCast(keys[keyIndex], p.responses[keys[keyIndex]]))
+				builder.WriteString("\n\t\t}")
+			} else {
+				builder.WriteString(p.renderConditionalResponseCast(keys[keyIndex], p.responses[keys[keyIndex]]))
+			}
+			if keyIndex < len(keys)-1 {
+				builder.WriteString(" else ")
+			}
+		}
+		builder.WriteString("\n")
+	}
+	return builder.String()
 }
 
 // SupportingClasses will write out different helper classes in C# to assist
@@ -125,10 +203,9 @@ func (p Path) SupportingClasses() string {
 	fmt.Fprintf(&builder, "\tpublic %s(UnityWebRequest req) {\n\t\tthis.UnderlyingRequest = req;\n\t}\n\n", p.reqPathName())
 
 	// Function that will actually execute the request
-	fmt.Fprint(&builder, "\tpublic IEnumerator Run() {\n\t\tyield return this.UnderlyingRequest.SendWebRequest();\n\t}\n\n")
-
-	fmt.Fprint(&builder, "}")
-
+	builder.WriteString("\tpublic IEnumerator Run() {\n\t\tyield return this.UnderlyingRequest.SendWebRequest();\n")
+	builder.WriteString(p.renderHandleResponse())
+	builder.WriteString("\t}\n\n}")
 	return builder.String()
 }
 
@@ -177,6 +254,11 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 
 	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.reqPathName(), p.operationID, p.serviceFunctionParameters())
 	fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), p.toUnityHTTPVerb())
+
+	if len(p.responses) > 0 {
+		builder.WriteString("\tunityNetworkReq.downloadHandler = new DownloadHandlerBuffer();\n")
+	}
+
 	if len(p.security) == 1 {
 		fmt.Fprintf(&builder, "\t%s\n", p.guard(p.security[0], knownModifiers).ModifyNetworkRequest())
 	} else if len(p.security) > 1 {

@@ -52,6 +52,12 @@ GLOBAL OPTIONS:
 swag3d --file api/openapi-spec/swagger.json generate --config-name="RecoludeConfig" --config-menu="Recolude/Config" --namespace Recolude.API > API.cs
 ```
 
+## Features
+
+### Generate Scriptable Object For Configuring Services
+
+### A Library You Can Use To Generate Your Own Code
+
 ## TODO
 
 - [ ] Embedded object definitions
