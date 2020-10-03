@@ -1,8 +1,9 @@
 package property
 
 import (
-	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"path/filepath"
+
+	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 )
 
 type ObjectReference struct {
