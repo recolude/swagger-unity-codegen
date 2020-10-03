@@ -18,12 +18,12 @@ func TestFilterServiceByTags_DoesNothingWithNoTags(t *testing.T) {
 	})
 
 	// ********************************** ACT *********************************
-	filterSpecForTags(spec, nil)
+	out := filterSpecForTags(spec, nil)
 
 	// ********************************* ASSERT *******************************
-	if assert.Len(t, spec.Services, 2) {
-		assert.Equal(t, spec.Services[0].Name(), "A")
-		assert.Equal(t, spec.Services[1].Name(), "B")
+	if assert.Len(t, out.Services, 2) {
+		assert.Equal(t, out.Services[0].Name(), "A")
+		assert.Equal(t, out.Services[1].Name(), "B")
 	}
 }
 
@@ -35,11 +35,11 @@ func TestFilterServiceByTags_Filters(t *testing.T) {
 	})
 
 	// ********************************** ACT *********************************
-	filterSpecForTags(spec, []string{"A"})
+	out := filterSpecForTags(spec, []string{"A"})
 
 	// ********************************* ASSERT *******************************
-	if assert.Len(t, spec.Services, 2) {
-		assert.Equal(t, spec.Services[0].Name(), "A")
+	if assert.Len(t, out.Services, 1) {
+		assert.Equal(t, out.Services[0].Name(), "A")
 	}
 }
 

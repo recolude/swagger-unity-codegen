@@ -49,7 +49,11 @@ GLOBAL OPTIONS:
 ### Example
 
 ```bash
-swag3d --file api/openapi-spec/swagger.json generate --config-name="RecoludeConfig" --config-menu="Recolude/Config" --namespace Recolude.API > API.cs
+swag3d --file api/openapi-spec/swagger.json generate \
+	--config-name="RecoludeConfig" \
+	--config-menu="Recolude/Config" \
+	--tags "RecordingService" \
+	--namespace Recolude.API > API.cs
 ```
 
 ## Features
@@ -57,6 +61,124 @@ swag3d --file api/openapi-spec/swagger.json generate --config-name="RecoludeConf
 ### Generate Scriptable Object For Configuring Services
 
 ### A Library You Can Use To Generate Your Own Code
+
+You don't need a swagger file to generate your own unity code! This allows you to generate c# code as part of something like custom build pipelines that use in-house API definitions.
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/recolude/swagger-unity-codegen/unitygen"
+	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/path"
+	"github.com/recolude/swagger-unity-codegen/unitygen/property"
+)
+
+func main() {
+	// Create a new file
+	f, err := os.Create("api.cs")
+	if err != nil {
+		panic(err)
+	}
+
+	// What we want our succesful response to be
+	responseDefinition := definition.NewObject(
+		"EchoResponse",
+		[]property.Property{
+			property.NewString("response", ""),
+			property.NewString("serverTime", "date-time"),
+		},
+	)
+
+	service := unitygen.NewService(
+		"ExampleService",
+		[]path.Path{
+			path.NewPath(
+				"api/echo",     // The URL endpoint, ex: example.com/api/echo
+				"Echo",         // Name of the function that gets generated
+				http.MethodGet, // Get Rquest
+				nil,            // Different tags
+				nil,            // Security Definitions (Like API Keys)
+
+				// Different responses that can be sent to the function
+				map[string]path.Response{
+					"200": path.NewResponse("", responseDefinition),
+				},
+
+				// Paramters to call the function
+				[]path.Parameter{
+					path.NewParameter(
+						path.QueryParameterLocation,   // Where the parameter should be located
+						"whatToEcho",                  // name of the query param
+						true,                          // require the parameter
+						property.NewString("val", ""), // name of the variable in c#
+					),
+				},
+			),
+		},
+	)
+
+	// Write the service C# code to api.cs
+	fmt.Fprint(f, responseDefinition.ToCSharp())
+	fmt.Fprint(f, service.ToCSharp(nil, "ServiceConfig"))
+}
+
+```
+
+When the above code executes, it will generate the following C# code:
+
+```c#
+[System.Serializable]
+public class EchoResponse
+{
+    public string response;
+
+    public System.DateTime serverTime;
+}
+
+public class ExampleService
+{
+    public ServiceConfig Config { get; }
+
+    public ExampleService(ServiceConfig Config)
+    {
+        this.Config = Config;
+    }
+
+    public class EchoUnityWebRequest
+    {
+
+        public EchoResponse success;
+
+        public UnityWebRequest UnderlyingRequest { get; }
+
+        public EchoUnityWebRequest(UnityWebRequest req)
+        {
+            this.UnderlyingRequest = req;
+        }
+
+        public IEnumerator Run()
+        {
+            yield return this.UnderlyingRequest.SendWebRequest();
+            if (UnderlyingRequest.responseCode == 200)
+            {
+                success = JsonUtility.FromJson<EchoResponse>(UnderlyingRequest.downloadHandler.text);
+            }
+        }
+
+    }
+    public EchoUnityWebRequest Echo(string val)
+    {
+        var unityNetworkReq = new UnityWebRequest(string.Format("{0}api/echo?whatToEcho={1}", this.Config.BasePath, UnityWebRequest.EscapeURL(whatToEcho)), UnityWebRequest.kHttpVerbGET);
+        unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
+        return new EchoUnityWebRequest(unityNetworkReq);
+    }
+}
+```
 
 ## TODO
 
