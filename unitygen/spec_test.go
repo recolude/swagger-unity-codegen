@@ -16,10 +16,17 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	code := service.ServiceConfig("ServiceConfig", "Server/Config")
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `[System.Serializable]
-[CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
-public class ServiceConfig: ScriptableObject {
+	assert.Equal(t, `public interface Config {
 
+	public string BasePath { get; set; }
+
+}
+
+[System.Serializable]
+[CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
+public class ServiceConfig: ScriptableObject, Config {
+
+	[SerializeField]
 	public string BasePath { get; set; }
 
 	public ServiceConfig(string basePath) {
@@ -42,9 +49,7 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	code := service.ServiceConfig("RecoludeConfig", "Recolude/Config")
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `[System.Serializable]
-[CreateAssetMenu(menuName = "Recolude/Config", fileName = "RecoludeConfig")]
-public class RecoludeConfig: ScriptableObject {
+	assert.Equal(t, `public interface Config {
 
 	public string BasePath { get; set; }
 
@@ -52,6 +57,23 @@ public class RecoludeConfig: ScriptableObject {
 	public string AnotherIdentifier { get; set; }
 
 	// SomeIdentifier is a API Key "DA-KEY" found in a request's header
+	public string SomeIdentifier { get; set; }
+
+}
+
+[System.Serializable]
+[CreateAssetMenu(menuName = "Recolude/Config", fileName = "RecoludeConfig")]
+public class RecoludeConfig: ScriptableObject, Config {
+
+	[SerializeField]
+	public string BasePath { get; set; }
+
+	// AnotherIdentifier is a API Key "DIF-KEY" found in a request's body
+	[SerializeField]
+	public string AnotherIdentifier { get; set; }
+
+	// SomeIdentifier is a API Key "DA-KEY" found in a request's header
+	[SerializeField]
 	public string SomeIdentifier { get; set; }
 
 	public RecoludeConfig(string basePath) {

@@ -47,17 +47,38 @@ type SpecInfo struct {
 	Version string
 }
 
+func (s Spec) renderConfigParams(serialize bool) string {
+	builder := strings.Builder{}
+
+	if serialize {
+		builder.WriteString("\t[SerializeField]\n")
+	}
+	builder.WriteString("\tpublic string BasePath { get; set; }\n\n")
+	for _, authGuard := range s.AuthDefinitions {
+		fmt.Fprintf(&builder, "\t// %s\n", authGuard.String())
+		if serialize {
+			builder.WriteString("\t[SerializeField]\n")
+		}
+		fmt.Fprintf(&builder, "\tpublic string %s { get; set; }\n\n", convention.TitleCase(authGuard.Identifier()))
+	}
+	return builder.String()
+}
+
 // ServiceConfig prints out a c# class with variables to be used for all requests
 func (s Spec) ServiceConfig(configName, menuName string) string {
 	properClassName := convention.TitleCase(configName)
 	builder := strings.Builder{}
+
+	// Interface
+	builder.WriteString("public interface Config {\n\n")
+	builder.WriteString(s.renderConfigParams(false))
+	builder.WriteString("}\n\n")
+
+	// Scriptable Object
 	builder.WriteString("[System.Serializable]\n")
 	fmt.Fprintf(&builder, "[CreateAssetMenu(menuName = \"%s\", fileName = \"%s\")]\n", menuName, properClassName)
-	fmt.Fprintf(&builder, "public class %s: ScriptableObject {\n\n\tpublic string BasePath { get; set; }\n\n", properClassName)
-	for _, authGuard := range s.AuthDefinitions {
-		fmt.Fprintf(&builder, "\t// %s\n", authGuard.String())
-		fmt.Fprintf(&builder, "\tpublic string %s { get; set; }\n\n", convention.TitleCase(authGuard.Identifier()))
-	}
+	fmt.Fprintf(&builder, "public class %s: ScriptableObject, Config {\n\n", properClassName)
+	builder.WriteString(s.renderConfigParams(true))
 	fmt.Fprintf(&builder, "\tpublic %s(string basePath) {\n", properClassName)
 	builder.WriteString("\t\tthis.BasePath = basePath;\n")
 	builder.WriteString("\t}\n")

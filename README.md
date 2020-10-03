@@ -60,6 +60,8 @@ swag3d --file api/openapi-spec/swagger.json generate --config-name="RecoludeConf
 
 ## TODO
 
+- [ ] Request Bodies
+- [ ] Optional Parameters + Easier Request Building
 - [ ] Embedded object definitions
 - [ ] Embedded array object definitions
 - [ ] YAML support
