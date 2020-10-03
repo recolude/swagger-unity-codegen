@@ -18,6 +18,7 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public interface Config {
 
+	// The base URL to which the endpoint paths are appended
 	public string BasePath { get; set; }
 
 }
@@ -26,6 +27,7 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 [CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
 public class ServiceConfig: ScriptableObject, Config {
 
+	// The base URL to which the endpoint paths are appended
 	[SerializeField]
 	public string BasePath { get; set; }
 
@@ -51,6 +53,7 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public interface Config {
 
+	// The base URL to which the endpoint paths are appended
 	public string BasePath { get; set; }
 
 	// AnotherIdentifier is a API Key "DIF-KEY" found in a request's body
@@ -65,6 +68,7 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 [CreateAssetMenu(menuName = "Recolude/Config", fileName = "RecoludeConfig")]
 public class RecoludeConfig: ScriptableObject, Config {
 
+	// The base URL to which the endpoint paths are appended
 	[SerializeField]
 	public string BasePath { get; set; }
 

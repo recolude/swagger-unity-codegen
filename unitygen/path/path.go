@@ -2,13 +2,13 @@ package path
 
 import (
 	"fmt"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
+	"github.com/recolude/swagger-unity-codegen/unitygen/unity"
 )
 
 // Path represents an HTTP endpoint that our unity client can ping
@@ -71,61 +71,33 @@ func (p Path) reqPathName() string {
 	return fmt.Sprintf("%sUnityWebRequest", p.operationID)
 }
 
-func (p Path) toUnityHTTPVerb() string {
-	switch p.httpMethod {
-	case http.MethodGet:
-		return "UnityWebRequest.kHttpVerbGET"
-	case http.MethodPut:
-		return "UnityWebRequest.kHttpVerbPUT"
-	case http.MethodPost:
-		return "UnityWebRequest.kHttpVerbPOST"
-	case http.MethodDelete:
-		return "UnityWebRequest.kHttpVerbDELETE"
-	case http.MethodHead:
-		return "UnityWebRequest.kHttpVerbHEAD"
-	}
-	panic(fmt.Sprintf("unknown verb \"%s\"", p.httpMethod))
-}
-
 func (p Path) respVariableName(k string) string {
-	if k == "200" {
+
+	switch k {
+	case "200":
 		return "success"
-	}
 
-	if k == "401" {
+	case "401":
 		return "unauthorized"
-	}
-
-	if k == "403" {
+	case "403":
 		return "forbidden"
-	}
-
-	if k == "404" {
+	case "404":
 		return "notFound"
-	}
 
-	if k == "500" {
+	case "500":
 		return "internalServerError"
-	}
-
-	if k == "501" {
+	case "501":
 		return "notImplemented"
-	}
-
-	if k == "502" {
+	case "502":
 		return "badGateway"
-	}
-
-	if k == "503" {
+	case "503":
 		return "serviceUnavailable"
-	}
-
-	if k == "504" {
+	case "504":
 		return "gatewayTimeout"
-	}
 
-	if k == "default" {
+	case "default":
 		return "fallbackResponse"
+
 	}
 
 	panic("unkown response key: " + k)
@@ -238,13 +210,43 @@ func (p Path) serviceFunctionNetReqURL() string {
 	paramsInURL := 0
 	finalRoute := p.route
 	routeReplacements := "this.Config.BasePath"
+
+	// Do all path parameters first
 	for _, param := range p.parameters {
 		if param.location == PathParameterLocation {
 			finalRoute = strings.Replace(finalRoute, "{"+param.name+"}", fmt.Sprintf("{%d}", paramsInURL+1), 1)
-			routeReplacements = routeReplacements + ", " + param.name
+			routeReplacements += ", "
+			if param.parameterType.ToVariableType() == "string" {
+				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
+			} else {
+				routeReplacements += param.name
+			}
 			paramsInURL++
 		}
 	}
+
+	// Then do query parameters next
+	firstQuery := true
+	for _, param := range p.parameters {
+		if param.location == QueryParameterLocation {
+			if firstQuery {
+				finalRoute += "?"
+				firstQuery = false
+			} else {
+				finalRoute += "&"
+			}
+			finalRoute += fmt.Sprintf("%s={%d}", param.name, paramsInURL+1)
+
+			routeReplacements += ", "
+			if param.parameterType.ToVariableType() == "string" {
+				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
+			} else {
+				routeReplacements += param.name
+			}
+			paramsInURL++
+		}
+	}
+
 	return fmt.Sprintf("string.Format(\"{0}%s\", %s)", finalRoute, routeReplacements)
 }
 
@@ -253,7 +255,7 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 
 	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.reqPathName(), p.operationID, p.serviceFunctionParameters())
-	fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), p.toUnityHTTPVerb())
+	fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
 
 	if len(p.responses) > 0 {
 		builder.WriteString("\tunityNetworkReq.downloadHandler = new DownloadHandlerBuffer();\n")

@@ -50,6 +50,7 @@ type SpecInfo struct {
 func (s Spec) renderConfigParams(serialize bool) string {
 	builder := strings.Builder{}
 
+	builder.WriteString("\t// The base URL to which the endpoint paths are appended\n")
 	if serialize {
 		builder.WriteString("\t[SerializeField]\n")
 	}

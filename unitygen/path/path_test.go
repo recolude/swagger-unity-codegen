@@ -105,7 +105,7 @@ func Test_ParameterInPath(t *testing.T) {
 
 	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId)
 {
-	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}", this.Config.BasePath, userId), UnityWebRequest.kHttpVerbGET);
+	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}", this.Config.BasePath, UnityWebRequest.EscapeURL(userId)), UnityWebRequest.kHttpVerbGET);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	if (string.IsNullOrEmpty(this.Config.CognitoAuth) == false) {
 		unityNetworkReq.SetRequestHeader("CognitoThing", this.Config.CognitoAuth);
@@ -303,4 +303,63 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 
 }`, classCode)
 
+}
+
+func Test_DealsWithQueryParams(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	route := path.NewPath(
+		"/api/v1/users/{userId}",
+		"UserService_GetUser",
+		http.MethodGet,
+		[]string{"UserService"},
+		nil,
+		map[string]path.Response{
+			"default": path.NewResponse("An unexpected error response", definition.NewObjectReference("#/definitions/runtimeError")),
+		},
+		[]path.Parameter{
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	functionCode := route.ServiceFunction(nil)
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId)
+{
+	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}?diffId={2}", this.Config.BasePath, UnityWebRequest.EscapeURL(userId), UnityWebRequest.EscapeURL(diffId)), UnityWebRequest.kHttpVerbGET);
+	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
+	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
+}`, functionCode)
+}
+
+func Test_DealsWithMultipleQueryParams(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	route := path.NewPath(
+		"/api/v1/users/{userId}",
+		"UserService_GetUser",
+		http.MethodGet,
+		[]string{"UserService"},
+		nil,
+		map[string]path.Response{
+			"default": path.NewResponse("An unexpected error response", definition.NewObjectReference("#/definitions/runtimeError")),
+		},
+		[]path.Parameter{
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
+			path.NewParameter(path.QueryParameterLocation, "anotherId", true, property.NewInteger("anotherId", "")),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	functionCode := route.ServiceFunction(nil)
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId, int anotherId)
+{
+	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}?diffId={2}&anotherId={3}", this.Config.BasePath, UnityWebRequest.EscapeURL(userId), UnityWebRequest.EscapeURL(diffId), anotherId), UnityWebRequest.kHttpVerbGET);
+	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
+	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
+}`, functionCode)
 }
