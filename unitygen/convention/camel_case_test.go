@@ -14,6 +14,7 @@ func TestCamelCase(t *testing.T) {
 	}{
 		"simple":            {input: "AbcDef", want: "abcDef"},
 		"already lowercase": {input: "abcDef", want: "abcDef"},
+		"empty string":      {input: "", want: ""},
 	}
 
 	for name, tc := range tests {

@@ -213,6 +213,9 @@ func (p Path) serviceFunctionNetReqURL() string {
 
 	// Do all path parameters first
 	for _, param := range p.parameters {
+		if param.location == BodyParameterLocation {
+			panic("Generating request bodies not implemented ATM")
+		}
 		if param.location == PathParameterLocation {
 			finalRoute = strings.Replace(finalRoute, "{"+param.name+"}", fmt.Sprintf("{%d}", paramsInURL+1), 1)
 			routeReplacements += ", "

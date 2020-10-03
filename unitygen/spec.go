@@ -47,20 +47,28 @@ type SpecInfo struct {
 	Version string
 }
 
-func (s Spec) renderConfigParams(serialize bool) string {
+func (s Spec) renderConfigParams(forScriptableObject bool) string {
 	builder := strings.Builder{}
 
 	builder.WriteString("\t// The base URL to which the endpoint paths are appended\n")
-	if serialize {
+	if forScriptableObject {
 		builder.WriteString("\t[SerializeField]\n")
 	}
-	builder.WriteString("\tpublic string BasePath { get; set; }\n\n")
+	builder.WriteString("\t")
+	if forScriptableObject {
+		builder.WriteString("public ")
+	}
+	builder.WriteString("string BasePath { get; set; }\n\n")
 	for _, authGuard := range s.AuthDefinitions {
 		fmt.Fprintf(&builder, "\t// %s\n", authGuard.String())
-		if serialize {
+		if forScriptableObject {
 			builder.WriteString("\t[SerializeField]\n")
 		}
-		fmt.Fprintf(&builder, "\tpublic string %s { get; set; }\n\n", convention.TitleCase(authGuard.Identifier()))
+		builder.WriteString("\t")
+		if forScriptableObject {
+			builder.WriteString("public ")
+		}
+		fmt.Fprintf(&builder, "string %s { get; set; }\n\n", convention.TitleCase(authGuard.Identifier()))
 	}
 	return builder.String()
 }

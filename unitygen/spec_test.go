@@ -19,7 +19,7 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	assert.Equal(t, `public interface Config {
 
 	// The base URL to which the endpoint paths are appended
-	public string BasePath { get; set; }
+	string BasePath { get; set; }
 
 }
 
@@ -54,13 +54,13 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	assert.Equal(t, `public interface Config {
 
 	// The base URL to which the endpoint paths are appended
-	public string BasePath { get; set; }
+	string BasePath { get; set; }
 
 	// AnotherIdentifier is a API Key "DIF-KEY" found in a request's body
-	public string AnotherIdentifier { get; set; }
+	string AnotherIdentifier { get; set; }
 
 	// SomeIdentifier is a API Key "DA-KEY" found in a request's header
-	public string SomeIdentifier { get; set; }
+	string SomeIdentifier { get; set; }
 
 }
 

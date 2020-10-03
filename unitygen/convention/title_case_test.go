@@ -14,6 +14,7 @@ func TestTitleCase(t *testing.T) {
 	}{
 		"simple":              {input: "abcDef", want: "AbcDef"},
 		"already capitilized": {input: "AbcDef", want: "AbcDef"},
+		"empty string":        {input: "", want: ""},
 	}
 
 	for name, tc := range tests {

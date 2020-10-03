@@ -425,9 +425,13 @@ func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
 		return Spec{}, err
 	}
 
-	info := SpecInfo{
-		Title:   jsonParsed.Path("info.title").Data().(string),
-		Version: jsonParsed.Path("info.version").Data().(string),
+	var info SpecInfo
+	infoNode := jsonParsed.Path("info")
+	if infoNode != nil {
+		info = SpecInfo{
+			Title:   jsonParsed.Path("info.title").Data().(string),
+			Version: jsonParsed.Path("info.version").Data().(string),
+		}
 	}
 
 	parsedDefinitions, err := p.parseDefinitions(jsonParsed)
