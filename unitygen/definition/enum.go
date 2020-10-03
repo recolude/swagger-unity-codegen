@@ -39,7 +39,7 @@ func (e Enum) ToCSharp() string {
 	enumBuilder.WriteString(e.ToVariableType())
 	enumBuilder.WriteString(" {\n")
 	for i, prop := range e.values {
-		enumBuilder.WriteString(fmt.Sprintf("\t%s", prop))
+		enumBuilder.WriteString(fmt.Sprintf("\t%s", convention.TitleCase(prop)))
 		if i < len(e.values)-1 {
 			enumBuilder.WriteString(",\n")
 		}
