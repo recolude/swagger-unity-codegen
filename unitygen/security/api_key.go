@@ -57,7 +57,7 @@ func (key APIKeyAuth) ModifyNetworkRequest() string {
 
 func (key APIKeyAuth) String() string {
 	return fmt.Sprintf(
-		"%s is a API Key \"%s\" found in a request's %s",
+		"%s is a API Key '%s' found in a request's %s",
 		convention.TitleCase(key.Identifier()),
 		key.key,
 		key.loc,

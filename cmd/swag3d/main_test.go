@@ -10,6 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func AssertFileExists(t *testing.T, fs afero.Fs, filename string) bool {
+	info, err := fs.Stat(filename)
+	if os.IsNotExist(err) {
+		t.Errorf("expected file \"%s\" to exist but doesn't", filename)
+		return false
+	}
+	if info.IsDir() {
+		t.Errorf("expected \"%s\" to to be file but is instead directory", filename)
+	}
+	return true
+}
+
 func TestFilterServiceByTags_DoesNothingWithNoTags(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	spec := unitygen.NewSpec(unitygen.SpecInfo{}, nil, nil, []unitygen.Service{
@@ -43,6 +55,87 @@ func TestFilterServiceByTags_Filters(t *testing.T) {
 	}
 }
 
+// func TestFilterUnusedDefinitions(t *testing.T) {
+// 	// ******************************** ARRANGE *******************************
+// 	spec := unitygen.NewSpec(
+// 		unitygen.SpecInfo{},
+// 		[]definition.Definition{
+// 			definition.NewEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
+// 		},
+// 		nil,
+// 		[]unitygen.Service{
+// 			unitygen.NewService(
+// 				"A",
+// 				[]path.Path{
+// 					path.NewPath(
+// 						"aaerg",
+// 						"",
+// 						"",
+// 						nil,
+// 						nil,
+// 						map[string]path.Response{
+// 							"200":     path.NewResponse("", nil),
+// 							"400":     path.NewResponse("", nil),
+// 							"default": path.NewResponse("", nil),
+// 						},
+// 						[]path.Parameter{
+// 							path.NewParameter(
+// 								path.BodyParameterLocation,
+// 								"",
+// 								false,
+// 								property.NewObjectReference("a", "#/definitions/X"),
+// 							),
+// 							path.NewParameter(
+// 								path.BodyParameterLocation,
+// 								"",
+// 								false,
+// 								property.NewObjectReference("a", "#/definitions/X"),
+// 							),
+// 						},
+// 					),
+// 				},
+// 			),
+// 			unitygen.NewService(
+// 				"B",
+// 				[]path.Path{
+// 					path.NewPath(
+// 						"aaerg",
+// 						"",
+// 						"",
+// 						nil,
+// 						nil,
+// 						map[string]path.Response{
+// 							"200":     path.NewResponse("", nil),
+// 							"400":     path.NewResponse("", nil),
+// 							"default": path.NewResponse("", nil),
+// 						},
+// 						[]path.Parameter{
+// 							path.NewParameter(
+// 								path.BodyParameterLocation,
+// 								"",
+// 								false,
+// 								property.NewObjectReference("a", "#/definitions/X"),
+// 							),
+// 							path.NewParameter(
+// 								path.BodyParameterLocation,
+// 								"",
+// 								false,
+// 								property.NewObjectReference("a", "#/definitions/X"),
+// 							),
+// 						},
+// 					),
+// 				},
+// 			),
+// 		},
+// 	)
+
+// 	// ********************************** ACT *********************************
+// 	out := filterSpecForUnusedDefinitions(spec)
+
+// 	// ********************************* ASSERT *******************************
+// 	assert.Len(t, out.Services, 2)
+// }
+
 func TestNoNamespace(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	appFS := afero.NewMemMapFs()
@@ -75,21 +168,46 @@ using System.Collections;
 public interface Config {
 
 	// The base URL to which the endpoint paths are appended
-	string BasePath { get; set; }
+	string BasePath { get; }
 
 }
 
+#if UNITY_EDITOR
+[UnityEditor.CustomEditor(typeof(ServiceConfig))]
+public class ServiceConfigEditor : UnityEditor.Editor
+{
+
+	public override void OnInspectorGUI()
+	{
+		if (target == null)
+		{
+			return;
+		}
+
+		var castedTarget = (ServiceConfig)target;
+
+		UnityEditor.EditorGUILayout.Space();
+		UnityEditor.EditorGUILayout.LabelField("The base URL to which the endpoint paths are appended");
+		var newBasePath = UnityEditor.EditorGUILayout.TextField("BasePath", castedTarget.BasePath);
+		if (newBasePath != castedTarget.BasePath) {
+			castedTarget.BasePath = newBasePath;
+			UnityEditor.EditorUtility.SetDirty(target);
+		}
+
+	}
+
+}
+#endif
+
 [System.Serializable]
-[CreateAssetMenu(menuName = "", fileName = "")]
-public class : ScriptableObject, Config {
+[CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
+public class ServiceConfig: ScriptableObject, Config {
+
+	[SerializeField]
+	private string basePath;
 
 	// The base URL to which the endpoint paths are appended
-	[SerializeField]
-	public string BasePath { get; set; }
-
-	public (string basePath) {
-		this.BasePath = basePath;
-	}
+	public string BasePath { get { return basePath; } set { basePath = value; } }
 
 }
 
@@ -132,25 +250,69 @@ namespace Example {
 public interface Config {
 
 	// The base URL to which the endpoint paths are appended
-	string BasePath { get; set; }
+	string BasePath { get; }
 
 }
 
+#if UNITY_EDITOR
+[UnityEditor.CustomEditor(typeof(ServiceConfig))]
+public class ServiceConfigEditor : UnityEditor.Editor
+{
+
+	public override void OnInspectorGUI()
+	{
+		if (target == null)
+		{
+			return;
+		}
+
+		var castedTarget = (ServiceConfig)target;
+
+		UnityEditor.EditorGUILayout.Space();
+		UnityEditor.EditorGUILayout.LabelField("The base URL to which the endpoint paths are appended");
+		var newBasePath = UnityEditor.EditorGUILayout.TextField("BasePath", castedTarget.BasePath);
+		if (newBasePath != castedTarget.BasePath) {
+			castedTarget.BasePath = newBasePath;
+			UnityEditor.EditorUtility.SetDirty(target);
+		}
+
+	}
+
+}
+#endif
+
 [System.Serializable]
-[CreateAssetMenu(menuName = "", fileName = "")]
-public class : ScriptableObject, Config {
+[CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
+public class ServiceConfig: ScriptableObject, Config {
+
+	[SerializeField]
+	private string basePath;
 
 	// The base URL to which the endpoint paths are appended
-	[SerializeField]
-	public string BasePath { get; set; }
-
-	public (string basePath) {
-		this.BasePath = basePath;
-	}
+	public string BasePath { get { return basePath; } set { basePath = value; } }
 
 }
 
 #endregion
 
 }`, out.String())
+}
+
+func TestSpecifyingOutWritesMultipleFiles(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	appFS := afero.NewMemMapFs()
+	afero.WriteFile(appFS, "swagger.json", []byte("{ }"), os.ModePerm)
+
+	out := strings.Builder{}
+	errOut := strings.Builder{}
+	app := buildApp(appFS, &out, &errOut)
+
+	// ********************************** ACT *********************************
+	err := app.Run([]string{"swag3d", "--file", "swagger.json", "generate", "--out", "."})
+
+	// ********************************* ASSERT *******************************
+	assert.NoError(t, err)
+	AssertFileExists(t, appFS, "Definitions.cs")
+	AssertFileExists(t, appFS, "Services.cs")
+	AssertFileExists(t, appFS, "ServiceConfig.cs")
 }

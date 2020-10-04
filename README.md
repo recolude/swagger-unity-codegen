@@ -2,9 +2,7 @@
 
 [![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen)
 
-Generate valid networking code for Unity3D. Created and used for Recolude's Unity Plugin.
-
-Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
+Generate valid networking code for Unity3D that **WILL NOT REQUIRE** any external dependencies/DLLs. Created and used for [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
 
 PRs + Issues Welcome.
 
@@ -53,12 +51,17 @@ swag3d --file api/openapi-spec/swagger.json generate \
 	--config-name="RecoludeConfig" \
 	--config-menu="Recolude/Config" \
 	--tags "RecordingService" \
-	--namespace Recolude.API > API.cs
+	--namespace Recolude.API \
+	--out "Scripts/Recolude/API"
 ```
 
 ## Features
 
 ### Generate Scriptable Object For Configuring Services
+
+The swagger tool will generate a [Scriptable Object](https://docs.unity3d.com/Manual/class-ScriptableObject.html) that can be used to store different keys found in your security definitions.
+
+![Imgur](https://i.imgur.com/WHI9XV2.png)
 
 ### A Library You Can Use To Generate Your Own Code
 
@@ -182,13 +185,16 @@ public class ExampleService
 
 ## TODO
 
-Ordered by priority!
+Ordered by priority (to me)!
 
-- [ ] Support Searilizing Bodies
+- [X] Scriptable Object For Configuration.
 - [ ] Easier Request Building
+- [ ] Don't include definitions that are never used
+- [ ] Support Searilizing Bodies
 - [ ] Optional Parameters In Request Body
 - [ ] Embedded object definitions
 - [ ] Embedded array object definitions
+- [ ] Generate a scriptable object for any definition found in the swagger file
 - [ ] Ability to generate `*.unitypackage`
 - [ ] YAML support
 - [ ] OpenAPI support

@@ -19,21 +19,46 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	assert.Equal(t, `public interface Config {
 
 	// The base URL to which the endpoint paths are appended
-	string BasePath { get; set; }
+	string BasePath { get; }
 
 }
+
+#if UNITY_EDITOR
+[UnityEditor.CustomEditor(typeof(ServiceConfig))]
+public class ServiceConfigEditor : UnityEditor.Editor
+{
+
+	public override void OnInspectorGUI()
+	{
+		if (target == null)
+		{
+			return;
+		}
+
+		var castedTarget = (ServiceConfig)target;
+
+		UnityEditor.EditorGUILayout.Space();
+		UnityEditor.EditorGUILayout.LabelField("The base URL to which the endpoint paths are appended");
+		var newBasePath = UnityEditor.EditorGUILayout.TextField("BasePath", castedTarget.BasePath);
+		if (newBasePath != castedTarget.BasePath) {
+			castedTarget.BasePath = newBasePath;
+			UnityEditor.EditorUtility.SetDirty(target);
+		}
+
+	}
+
+}
+#endif
 
 [System.Serializable]
 [CreateAssetMenu(menuName = "Server/Config", fileName = "ServiceConfig")]
 public class ServiceConfig: ScriptableObject, Config {
 
-	// The base URL to which the endpoint paths are appended
 	[SerializeField]
-	public string BasePath { get; set; }
+	private string basePath;
 
-	public ServiceConfig(string basePath) {
-		this.BasePath = basePath;
-	}
+	// The base URL to which the endpoint paths are appended
+	public string BasePath { get { return basePath; } set { basePath = value; } }
 
 }`, code)
 }
@@ -54,35 +79,80 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	assert.Equal(t, `public interface Config {
 
 	// The base URL to which the endpoint paths are appended
-	string BasePath { get; set; }
+	string BasePath { get; }
 
-	// AnotherIdentifier is a API Key "DIF-KEY" found in a request's body
-	string AnotherIdentifier { get; set; }
+	// AnotherIdentifier is a API Key 'DIF-KEY' found in a request's body
+	string AnotherIdentifier { get; }
 
-	// SomeIdentifier is a API Key "DA-KEY" found in a request's header
-	string SomeIdentifier { get; set; }
+	// SomeIdentifier is a API Key 'DA-KEY' found in a request's header
+	string SomeIdentifier { get; }
 
 }
+
+#if UNITY_EDITOR
+[UnityEditor.CustomEditor(typeof(RecoludeConfig))]
+public class RecoludeConfigEditor : UnityEditor.Editor
+{
+
+	public override void OnInspectorGUI()
+	{
+		if (target == null)
+		{
+			return;
+		}
+
+		var castedTarget = (RecoludeConfig)target;
+
+		UnityEditor.EditorGUILayout.Space();
+		UnityEditor.EditorGUILayout.LabelField("The base URL to which the endpoint paths are appended");
+		var newBasePath = UnityEditor.EditorGUILayout.TextField("BasePath", castedTarget.BasePath);
+		if (newBasePath != castedTarget.BasePath) {
+			castedTarget.BasePath = newBasePath;
+			UnityEditor.EditorUtility.SetDirty(target);
+		}
+
+		UnityEditor.EditorGUILayout.Space();
+		UnityEditor.EditorGUILayout.LabelField("AnotherIdentifier is a API Key 'DIF-KEY' found in a request's body");
+		var newAnotherIdentifier = UnityEditor.EditorGUILayout.TextField("AnotherIdentifier", castedTarget.AnotherIdentifier);
+		if (newAnotherIdentifier != castedTarget.AnotherIdentifier) {
+			castedTarget.AnotherIdentifier = newAnotherIdentifier;
+			UnityEditor.EditorUtility.SetDirty(target);
+		}
+
+		UnityEditor.EditorGUILayout.Space();
+		UnityEditor.EditorGUILayout.LabelField("SomeIdentifier is a API Key 'DA-KEY' found in a request's header");
+		var newSomeIdentifier = UnityEditor.EditorGUILayout.TextField("SomeIdentifier", castedTarget.SomeIdentifier);
+		if (newSomeIdentifier != castedTarget.SomeIdentifier) {
+			castedTarget.SomeIdentifier = newSomeIdentifier;
+			UnityEditor.EditorUtility.SetDirty(target);
+		}
+
+	}
+
+}
+#endif
 
 [System.Serializable]
 [CreateAssetMenu(menuName = "Recolude/Config", fileName = "RecoludeConfig")]
 public class RecoludeConfig: ScriptableObject, Config {
 
+	[SerializeField]
+	private string basePath;
+
 	// The base URL to which the endpoint paths are appended
-	[SerializeField]
-	public string BasePath { get; set; }
+	public string BasePath { get { return basePath; } set { basePath = value; } }
 
-	// AnotherIdentifier is a API Key "DIF-KEY" found in a request's body
 	[SerializeField]
-	public string AnotherIdentifier { get; set; }
+	private string anotherIdentifier;
 
-	// SomeIdentifier is a API Key "DA-KEY" found in a request's header
+	// AnotherIdentifier is a API Key 'DIF-KEY' found in a request's body
+	public string AnotherIdentifier { get { return anotherIdentifier; } set { anotherIdentifier = value; } }
+
 	[SerializeField]
-	public string SomeIdentifier { get; set; }
+	private string someIdentifier;
 
-	public RecoludeConfig(string basePath) {
-		this.BasePath = basePath;
-	}
+	// SomeIdentifier is a API Key 'DA-KEY' found in a request's header
+	public string SomeIdentifier { get { return someIdentifier; } set { someIdentifier = value; } }
 
 }`, code)
 }
