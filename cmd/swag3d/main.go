@@ -159,9 +159,10 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "file, f",
-				Usage: "where to load swagger from",
-				Value: "swagger.json",
+				Name:    "file",
+				Aliases: []string{"f"},
+				Usage:   "where to load swagger from",
+				Value:   "swagger.json",
 			},
 		},
 		Commands: []*cli.Command{

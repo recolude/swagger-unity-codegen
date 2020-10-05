@@ -21,3 +21,7 @@ func (sp Array) Name() string {
 func (sp Array) ToVariableType() string {
 	return fmt.Sprintf("%s[]", sp.prop.ToVariableType())
 }
+
+func (sp Array) EmptyValue() string {
+	return "null"
+}

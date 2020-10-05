@@ -14,8 +14,10 @@ func Test_Array(t *testing.T) {
 	// ********************************** ACT *********************************
 	name := ref.Name()
 	varType := ref.ToVariableType()
+	nullVal := ref.EmptyValue()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "int[]", varType)
+	assert.Equal(t, "null", nullVal)
 }

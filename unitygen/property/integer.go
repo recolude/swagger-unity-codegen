@@ -23,3 +23,11 @@ func (sp Integer) ToVariableType() string {
 		return "int"
 	}
 }
+
+func (sp Integer) EmptyValue() string {
+	switch sp.format {
+
+	default:
+		return "0"
+	}
+}

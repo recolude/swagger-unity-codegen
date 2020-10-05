@@ -67,8 +67,12 @@ func (p Path) Tags() []string {
 	return p.tags
 }
 
-func (p Path) reqPathName() string {
+func (p Path) unityWebReqPathName() string {
 	return fmt.Sprintf("%sUnityWebRequest", p.operationID)
+}
+
+func (p Path) requestParamClassName() string {
+	return fmt.Sprintf("%sRequestParams", p.operationID)
 }
 
 func (p Path) respVariableName(k string) string {
@@ -101,6 +105,101 @@ func (p Path) respVariableName(k string) string {
 	}
 
 	panic("unkown response key: " + k)
+}
+
+// RequestParamClass a class to act as a container for all parameters associated
+// for making a specific web request
+func (p Path) RequestParamClass() string {
+	if len(p.parameters) == 0 {
+		return ""
+	}
+
+	builder := strings.Builder{}
+
+	builder.WriteString("public class ")
+	builder.WriteString(p.requestParamClassName())
+	builder.WriteString("\n{\n")
+
+	for _, param := range p.parameters {
+		privateVarName := convention.CamelCase(param.name)
+		propertyName := convention.TitleCase(param.name)
+		fmt.Fprintf(&builder, "\tprivate bool %sSet = false;\n", privateVarName)
+		fmt.Fprintf(&builder, "\tprivate %s %s;\n", param.parameterType.ToVariableType(), privateVarName)
+		fmt.Fprintf(
+			&builder,
+			"\tpublic %s %s { get { return %s; } set { %sSet = true; %s = value; } }\n",
+			param.parameterType.ToVariableType(),
+			propertyName,
+			privateVarName,
+			privateVarName,
+			privateVarName,
+		)
+		fmt.Fprintf(&builder, "\tpublic void Unset%s() { %s = %s; %sSet = false; }\n\n", propertyName, privateVarName, param.parameterType.EmptyValue(), privateVarName)
+	}
+
+	builder.WriteString("\tpublic UnityWebRequest BuildUnityWebRequest(string baseURL)\n\t{\n")
+
+	fmt.Fprintf(&builder, "\t\tvar finalPath = string.Format(\"{0}%s\", baseURL);\n", p.route)
+
+	// Do all path parameters first
+	for _, param := range p.parameters {
+		if param.location == BodyParameterLocation {
+			panic("Generating request bodies not implemented ATM")
+		}
+		if param.location == PathParameterLocation {
+			privateVarName := convention.CamelCase(param.name)
+			fmt.Fprintf(&builder, "\t\tfinalPath = finalPath.Replace(\"{%s}\", %sSet ? UnityWebRequest.EscapeURL(%s.ToString()) : \"\");\n", privateVarName, privateVarName, privateVarName)
+		}
+	}
+
+	builder.WriteString("\t\tvar queryAdded = false;\n\n")
+
+	for _, param := range p.parameters {
+		if param.location == QueryParameterLocation {
+			privateVarName := convention.CamelCase(param.name)
+			fmt.Fprintf(&builder, "\t\tif (%sSet) {\n", privateVarName)
+			fmt.Fprintf(&builder, "\t\t\tfinalPath += (queryAdded ? \"&\" : \"?\") + \"%s=\";\n", privateVarName)
+			builder.WriteString("\t\t\tqueryAdded = true;\n")
+			fmt.Fprintf(&builder, "\t\t\tfinalPath += UnityWebRequest.EscapeURL(%s.ToString());\n\t\t}\n\n", privateVarName)
+		}
+	}
+
+	fmt.Fprintf(&builder, "\t\treturn new UnityWebRequest(finalPath, %s);\n\t}\n}", unity.ToUnityHTTPVerb(p.httpMethod))
+
+	return builder.String()
+}
+
+// UnityWebRequest is the CSharp code that handles asynchronous web requests
+func (p Path) UnityWebRequest() string {
+	builder := strings.Builder{}
+
+	fmt.Fprintf(&builder, "public class %s {\n\n", p.unityWebReqPathName())
+
+	// Outline all portential responses
+	keys := make([]string, 0)
+	for k := range p.responses {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		// Some responses are defined as an empty body, making them nil!
+		if p.responses[k].schema != nil {
+			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].schema.ToVariableType(), p.respVariableName(k))
+		}
+	}
+
+	// underlying network request
+	fmt.Fprint(&builder, "\tpublic UnityWebRequest UnderlyingRequest{ get; }\n\n")
+
+	// constructor
+	fmt.Fprintf(&builder, "\tpublic %s(UnityWebRequest req) {\n\t\tthis.UnderlyingRequest = req;\n\t}\n\n", p.unityWebReqPathName())
+
+	// Function that will actually execute the request
+	builder.WriteString("\tpublic IEnumerator Run() {\n\t\tyield return this.UnderlyingRequest.SendWebRequest();\n")
+	builder.WriteString(p.renderHandleResponse())
+	builder.WriteString("\t}\n\n}")
+
+	return builder.String()
 }
 
 func (p Path) renderConditionalResponseCast(code string, resp Response) string {
@@ -152,32 +251,9 @@ func (p Path) renderHandleResponse() string {
 // in network requests
 func (p Path) SupportingClasses() string {
 	builder := strings.Builder{}
-
-	fmt.Fprintf(&builder, "public class %s {\n\n", p.reqPathName())
-
-	// Outline all portential responses
-	keys := make([]string, 0)
-	for k := range p.responses {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		// Some responses are defined as an empty body, making them nil!
-		if p.responses[k].schema != nil {
-			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].schema.ToVariableType(), p.respVariableName(k))
-		}
-	}
-
-	// underlying network request
-	fmt.Fprint(&builder, "\tpublic UnityWebRequest UnderlyingRequest{ get; }\n\n")
-
-	// constructor
-	fmt.Fprintf(&builder, "\tpublic %s(UnityWebRequest req) {\n\t\tthis.UnderlyingRequest = req;\n\t}\n\n", p.reqPathName())
-
-	// Function that will actually execute the request
-	builder.WriteString("\tpublic IEnumerator Run() {\n\t\tyield return this.UnderlyingRequest.SendWebRequest();\n")
-	builder.WriteString(p.renderHandleResponse())
-	builder.WriteString("\t}\n\n}")
+	builder.WriteString(p.UnityWebRequest())
+	builder.WriteString("\n")
+	builder.WriteString(p.RequestParamClass())
 	return builder.String()
 }
 
@@ -190,75 +266,84 @@ func (p Path) guard(reference SecurityMethodReference, knownModifiers []security
 	panic("no known modifier matches reference " + reference.Identifier)
 }
 
-func (p Path) serviceFunctionParameters() string {
-	if len(p.parameters) == 0 {
-		return ""
-	}
+// func (p Path) serviceFunctionParameters() string {
+// 	if len(p.parameters) == 0 {
+// 		return ""
+// 	}
 
-	sb := strings.Builder{}
-	for i, param := range p.parameters {
-		fmt.Fprintf(&sb, "%s %s", param.parameterType.ToVariableType(), param.parameterType.Name())
-		if i < len(p.parameters)-1 {
-			sb.WriteString(", ")
-		}
-	}
+// 	sb := strings.Builder{}
+// 	for i, param := range p.parameters {
+// 		fmt.Fprintf(&sb, "%s %s", param.parameterType.ToVariableType(), param.parameterType.Name())
+// 		if i < len(p.parameters)-1 {
+// 			sb.WriteString(", ")
+// 		}
+// 	}
 
-	return sb.String()
-}
+// 	return sb.String()
+// }
 
-func (p Path) serviceFunctionNetReqURL() string {
-	paramsInURL := 0
-	finalRoute := p.route
-	routeReplacements := "this.Config.BasePath"
+// func (p Path) serviceFunctionNetReqURL() string {
+// 	paramsInURL := 0
+// 	finalRoute := p.route
+// 	routeReplacements := "this.Config.BasePath"
 
-	// Do all path parameters first
-	for _, param := range p.parameters {
-		if param.location == BodyParameterLocation {
-			panic("Generating request bodies not implemented ATM")
-		}
-		if param.location == PathParameterLocation {
-			finalRoute = strings.Replace(finalRoute, "{"+param.name+"}", fmt.Sprintf("{%d}", paramsInURL+1), 1)
-			routeReplacements += ", "
-			if param.parameterType.ToVariableType() == "string" {
-				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
-			} else {
-				routeReplacements += param.name
-			}
-			paramsInURL++
-		}
-	}
+// 	// Do all path parameters first
+// 	for _, param := range p.parameters {
+// 		if param.location == BodyParameterLocation {
+// 			panic("Generating request bodies not implemented ATM")
+// 		}
+// 		if param.location == PathParameterLocation {
+// 			finalRoute = strings.Replace(finalRoute, "{"+param.name+"}", fmt.Sprintf("{%d}", paramsInURL+1), 1)
+// 			routeReplacements += ", "
+// 			if param.parameterType.ToVariableType() == "string" {
+// 				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
+// 			} else {
+// 				routeReplacements += param.name
+// 			}
+// 			paramsInURL++
+// 		}
+// 	}
 
-	// Then do query parameters next
-	firstQuery := true
-	for _, param := range p.parameters {
-		if param.location == QueryParameterLocation {
-			if firstQuery {
-				finalRoute += "?"
-				firstQuery = false
-			} else {
-				finalRoute += "&"
-			}
-			finalRoute += fmt.Sprintf("%s={%d}", param.name, paramsInURL+1)
+// 	// Then do query parameters next
+// 	firstQuery := true
+// 	for _, param := range p.parameters {
+// 		if param.location == QueryParameterLocation {
+// 			if firstQuery {
+// 				finalRoute += "?"
+// 				firstQuery = false
+// 			} else {
+// 				finalRoute += "&"
+// 			}
+// 			finalRoute += fmt.Sprintf("%s={%d}", param.name, paramsInURL+1)
 
-			routeReplacements += ", "
-			if param.parameterType.ToVariableType() == "string" {
-				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
-			} else {
-				routeReplacements += param.name
-			}
-			paramsInURL++
-		}
-	}
+// 			routeReplacements += ", "
+// 			if param.parameterType.ToVariableType() == "string" {
+// 				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
+// 			} else {
+// 				routeReplacements += param.name
+// 			}
+// 			paramsInURL++
+// 		}
+// 	}
 
-	return fmt.Sprintf("string.Format(\"{0}%s\", %s)", finalRoute, routeReplacements)
-}
+// 	return fmt.Sprintf("string.Format(\"{0}%s\", %s)", finalRoute, routeReplacements)
+// }
 
 // ServiceFunction generates C# code that is used to make network requests
 func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 
-	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.reqPathName(), p.operationID, p.serviceFunctionParameters())
-	fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
+	// Keep this for later... create a extra function for those who don't want to create a requestparams instance
+	// fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.unityWebReqPathName(), p.operationID, p.serviceFunctionParameters())
+	// fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
+
+	if len(p.parameters) > 0 {
+		fmt.Fprintf(&builder, "public %s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), p.operationID, p.requestParamClassName())
+		builder.WriteString("\tvar unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);\n")
+	} else {
+		fmt.Fprintf(&builder, "public %s %s()\n{\n", p.unityWebReqPathName(), p.operationID)
+		fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(string.Format(\"{0}%s\", this.Config.BasePath), %s);\n", p.route, unity.ToUnityHTTPVerb(p.httpMethod))
+	}
 
 	if len(p.responses) > 0 {
 		builder.WriteString("\tunityNetworkReq.downloadHandler = new DownloadHandlerBuffer();\n")
@@ -273,7 +358,7 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 			builder.WriteString("\t}\n")
 		}
 	}
-	fmt.Fprintf(&builder, "\treturn new %s(unityNetworkReq);\n}", p.reqPathName())
+	fmt.Fprintf(&builder, "\treturn new %s(unityNetworkReq);\n}", p.unityWebReqPathName())
 
 	return builder.String()
 }

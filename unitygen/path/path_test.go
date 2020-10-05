@@ -24,10 +24,11 @@ func Test_SimpleGet(t *testing.T) {
 	)
 
 	// ********************************** ACT *********************************
-	classCode := route.SupportingClasses()
+	classCode := route.UnityWebRequest()
 	functionCode := route.ServiceFunction([]security.Auth{
 		security.NewAPIKey("CognitoAuth", "X-API-KEY", security.Header),
 	})
+	requestParamsCode := route.RequestParamClass()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class DevKeyService_GetDevKeyUnityWebRequest {
@@ -50,6 +51,8 @@ func Test_SimpleGet(t *testing.T) {
 	unityNetworkReq.SetRequestHeader("X-API-KEY", this.Config.CognitoAuth);
 	return new DevKeyService_GetDevKeyUnityWebRequest(unityNetworkReq);
 }`, functionCode)
+
+	assert.Equal(t, "", requestParamsCode)
 }
 
 func Test_ParameterInPath(t *testing.T) {
@@ -73,7 +76,7 @@ func Test_ParameterInPath(t *testing.T) {
 	)
 
 	// ********************************** ACT *********************************
-	classCode := route.SupportingClasses()
+	classCode := route.UnityWebRequest()
 	functionCode := route.ServiceFunction([]security.Auth{
 		security.NewAPIKey("CognitoAuth", "CognitoThing", security.Header),
 		security.NewAPIKey("DevKeyAuth", "X-API-KEY", security.Header),
@@ -103,9 +106,9 @@ func Test_ParameterInPath(t *testing.T) {
 
 }`, classCode)
 
-	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId)
+	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(UserService_GetUserRequestParams requestParams)
 {
-	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}", this.Config.BasePath, UnityWebRequest.EscapeURL(userId)), UnityWebRequest.kHttpVerbGET);
+	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	if (string.IsNullOrEmpty(this.Config.CognitoAuth) == false) {
 		unityNetworkReq.SetRequestHeader("CognitoThing", this.Config.CognitoAuth);
@@ -137,7 +140,7 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 	)
 
 	// ********************************** ACT *********************************
-	classCode := route.SupportingClasses()
+	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
@@ -180,7 +183,7 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 	)
 
 	// ********************************** ACT *********************************
-	classCode := route.SupportingClasses()
+	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
@@ -223,7 +226,7 @@ func Test_ThreeParametersInPath(t *testing.T) {
 	)
 
 	// ********************************** ACT *********************************
-	classCode := route.SupportingClasses()
+	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
@@ -277,7 +280,7 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	)
 
 	// ********************************** ACT *********************************
-	classCode := route.SupportingClasses()
+	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
@@ -326,9 +329,9 @@ func Test_DealsWithQueryParams(t *testing.T) {
 	functionCode := route.ServiceFunction(nil)
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId)
+	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(UserService_GetUserRequestParams requestParams)
 {
-	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}?diffId={2}", this.Config.BasePath, UnityWebRequest.EscapeURL(userId), UnityWebRequest.EscapeURL(diffId)), UnityWebRequest.kHttpVerbGET);
+	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }`, functionCode)
@@ -354,12 +357,53 @@ func Test_DealsWithMultipleQueryParams(t *testing.T) {
 
 	// ********************************** ACT *********************************
 	functionCode := route.ServiceFunction(nil)
+	requestParamsClass := route.RequestParamClass()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId, int anotherId)
+	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(UserService_GetUserRequestParams requestParams)
 {
-	var unityNetworkReq = new UnityWebRequest(string.Format("{0}/api/v1/users/{1}?diffId={2}&anotherId={3}", this.Config.BasePath, UnityWebRequest.EscapeURL(userId), UnityWebRequest.EscapeURL(diffId), anotherId), UnityWebRequest.kHttpVerbGET);
+	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }`, functionCode)
+
+	assert.Equal(t, `public class UserService_GetUserRequestParams
+{
+	private bool userIdSet = false;
+	private string userId;
+	public string UserId { get { return userId; } set { userIdSet = true; userId = value; } }
+	public void UnsetUserId() { userId = null; userIdSet = false; }
+
+	private bool diffIdSet = false;
+	private string diffId;
+	public string DiffId { get { return diffId; } set { diffIdSet = true; diffId = value; } }
+	public void UnsetDiffId() { diffId = null; diffIdSet = false; }
+
+	private bool anotherIdSet = false;
+	private int anotherId;
+	public int AnotherId { get { return anotherId; } set { anotherIdSet = true; anotherId = value; } }
+	public void UnsetAnotherId() { anotherId = 0; anotherIdSet = false; }
+
+	public UnityWebRequest BuildUnityWebRequest(string baseURL)
+	{
+		var finalPath = string.Format("{0}/api/v1/users/{userId}", baseURL);
+		finalPath = finalPath.Replace("{userId}", userIdSet ? UnityWebRequest.EscapeURL(userId.ToString()) : "");
+		var queryAdded = false;
+
+		if (diffIdSet) {
+			finalPath += (queryAdded ? "&" : "?") + "diffId=";
+			queryAdded = true;
+			finalPath += UnityWebRequest.EscapeURL(diffId.ToString());
+		}
+
+		if (anotherIdSet) {
+			finalPath += (queryAdded ? "&" : "?") + "anotherId=";
+			queryAdded = true;
+			finalPath += UnityWebRequest.EscapeURL(anotherId.ToString());
+		}
+
+		return new UnityWebRequest(finalPath, UnityWebRequest.kHttpVerbGET);
+	}
+}`, requestParamsClass)
+
 }

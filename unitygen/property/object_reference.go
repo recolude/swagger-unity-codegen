@@ -25,3 +25,7 @@ func (orp ObjectReference) Name() string {
 func (orp ObjectReference) ToVariableType() string {
 	return convention.TitleCase(filepath.Base(orp.referencePath))
 }
+
+func (orp ObjectReference) EmptyValue() string {
+	return "null"
+}

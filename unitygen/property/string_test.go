@@ -14,10 +14,12 @@ func Test_StringDefaultsToFloat(t *testing.T) {
 	// ********************************** ACT *********************************
 	name := ref.Name()
 	varType := ref.ToVariableType()
+	nullVal := ref.EmptyValue()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "string", varType)
+	assert.Equal(t, "null", nullVal)
 }
 
 func Test_StringInterpretsInt32(t *testing.T) {
@@ -27,8 +29,10 @@ func Test_StringInterpretsInt32(t *testing.T) {
 	// ********************************** ACT *********************************
 	name := ref.Name()
 	varType := ref.ToVariableType()
+	nullVal := ref.EmptyValue()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "System.DateTime", varType)
+	assert.Equal(t, "null", nullVal)
 }

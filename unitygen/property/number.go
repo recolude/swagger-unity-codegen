@@ -27,3 +27,15 @@ func (sp Number) ToVariableType() string {
 
 	return sp.format
 }
+
+func (sp Number) EmptyValue() string {
+	if sp.format == "" {
+		return "0f"
+	}
+
+	if sp.format == "int32" {
+		return "0"
+	}
+
+	return "0f"
+}

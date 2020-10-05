@@ -25,3 +25,7 @@ func (sp String) ToVariableType() string {
 		return "string"
 	}
 }
+
+func (sp String) EmptyValue() string {
+	return "null"
+}

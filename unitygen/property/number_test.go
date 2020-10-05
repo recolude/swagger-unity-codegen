@@ -14,10 +14,12 @@ func Test_NumberDefaultsToFloat(t *testing.T) {
 	// ********************************** ACT *********************************
 	name := ref.Name()
 	varType := ref.ToVariableType()
+	nullVal := ref.EmptyValue()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "float", varType)
+	assert.Equal(t, "0f", nullVal)
 }
 
 func Test_NumberInterpretsInt32(t *testing.T) {
@@ -27,8 +29,11 @@ func Test_NumberInterpretsInt32(t *testing.T) {
 	// ********************************** ACT *********************************
 	name := ref.Name()
 	varType := ref.ToVariableType()
+	nullVal := ref.EmptyValue()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "int", varType)
+	assert.Equal(t, "0", nullVal)
+
 }

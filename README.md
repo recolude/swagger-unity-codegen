@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen)
 
-Generate valid networking code for Unity3D that **WILL NOT REQUIRE** any external dependencies/DLLs. Created and used for [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
+Generate valid networking code for Unity3D that **WILL NOT REQUIRE** any external dependencies/DLLs!!! This project was both made for and is used by [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
 
 PRs + Issues Welcome.
 
