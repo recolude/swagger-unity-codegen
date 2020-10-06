@@ -117,6 +117,13 @@ func Test_ParameterInPath(t *testing.T) {
 		unityNetworkReq.SetRequestHeader("X-API-KEY", this.Config.DevKeyAuth);
 	}
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
+}
+
+public UserService_GetUserUnityWebRequest UserService_GetUser(string userId)
+{
+	return UserService_GetUser(new UserService_GetUserRequestParams() {
+		UserId=userId,
+	});
 }`, functionCode)
 }
 
@@ -334,6 +341,14 @@ func Test_DealsWithQueryParams(t *testing.T) {
 	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
+}
+
+public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId)
+{
+	return UserService_GetUser(new UserService_GetUserRequestParams() {
+		UserId=userId,
+		DiffId=diffId,
+	});
 }`, functionCode)
 }
 
@@ -365,6 +380,15 @@ func Test_DealsWithMultipleQueryParams(t *testing.T) {
 	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
+}
+
+public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId, int anotherId)
+{
+	return UserService_GetUser(new UserService_GetUserRequestParams() {
+		UserId=userId,
+		DiffId=diffId,
+		AnotherId=anotherId,
+	});
 }`, functionCode)
 
 	assert.Equal(t, `public class UserService_GetUserRequestParams

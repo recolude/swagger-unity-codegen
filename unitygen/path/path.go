@@ -107,6 +107,16 @@ func (p Path) respVariableName(k string) string {
 	panic("unkown response key: " + k)
 }
 
+func (p Path) queryParamCount() int {
+	count := 0
+	for _, param := range p.parameters {
+		if param.location == QueryParameterLocation {
+			count++
+		}
+	}
+	return count
+}
+
 // RequestParamClass a class to act as a container for all parameters associated
 // for making a specific web request
 func (p Path) RequestParamClass() string {
@@ -152,7 +162,9 @@ func (p Path) RequestParamClass() string {
 		}
 	}
 
-	builder.WriteString("\t\tvar queryAdded = false;\n\n")
+	if p.queryParamCount() > 0 {
+		builder.WriteString("\t\tvar queryAdded = false;\n\n")
+	}
 
 	for _, param := range p.parameters {
 		if param.location == QueryParameterLocation {
@@ -266,21 +278,21 @@ func (p Path) guard(reference SecurityMethodReference, knownModifiers []security
 	panic("no known modifier matches reference " + reference.Identifier)
 }
 
-// func (p Path) serviceFunctionParameters() string {
-// 	if len(p.parameters) == 0 {
-// 		return ""
-// 	}
+func (p Path) serviceFunctionParameters() string {
+	if len(p.parameters) == 0 {
+		return ""
+	}
 
-// 	sb := strings.Builder{}
-// 	for i, param := range p.parameters {
-// 		fmt.Fprintf(&sb, "%s %s", param.parameterType.ToVariableType(), param.parameterType.Name())
-// 		if i < len(p.parameters)-1 {
-// 			sb.WriteString(", ")
-// 		}
-// 	}
+	sb := strings.Builder{}
+	for i, param := range p.parameters {
+		fmt.Fprintf(&sb, "%s %s", param.parameterType.ToVariableType(), param.name)
+		if i < len(p.parameters)-1 {
+			sb.WriteString(", ")
+		}
+	}
 
-// 	return sb.String()
-// }
+	return sb.String()
+}
 
 // func (p Path) serviceFunctionNetReqURL() string {
 // 	paramsInURL := 0
@@ -329,13 +341,26 @@ func (p Path) guard(reference SecurityMethodReference, knownModifiers []security
 // 	return fmt.Sprintf("string.Format(\"{0}%s\", %s)", finalRoute, routeReplacements)
 // }
 
+func (p Path) functionOveride(knownModifiers []security.Auth) string {
+	builder := strings.Builder{}
+
+	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.unityWebReqPathName(), p.operationID, p.serviceFunctionParameters())
+	fmt.Fprintf(&builder, "\treturn %s(new %s() {\n", p.operationID, p.requestParamClassName())
+	// fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
+
+	for _, param := range p.parameters {
+		privateVarName := convention.CamelCase(param.name)
+		propertyName := convention.TitleCase(param.name)
+		fmt.Fprintf(&builder, "\t\t%s=%s,\n", propertyName, privateVarName)
+	}
+	builder.WriteString("\t});\n}")
+
+	return builder.String()
+}
+
 // ServiceFunction generates C# code that is used to make network requests
 func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
-
-	// Keep this for later... create a extra function for those who don't want to create a requestparams instance
-	// fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.unityWebReqPathName(), p.operationID, p.serviceFunctionParameters())
-	// fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
 
 	if len(p.parameters) > 0 {
 		fmt.Fprintf(&builder, "public %s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), p.operationID, p.requestParamClassName())
@@ -359,6 +384,10 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 		}
 	}
 	fmt.Fprintf(&builder, "\treturn new %s(unityNetworkReq);\n}", p.unityWebReqPathName())
+
+	if len(p.parameters) > 0 {
+		fmt.Fprintf(&builder, "\n\n%s", p.functionOveride(knownModifiers))
+	}
 
 	return builder.String()
 }

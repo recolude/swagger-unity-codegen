@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen)
 
+**[Currently In Beta: Only Supports Swagger 2.0 JSON ATM]**
+
 Generate valid networking code for Unity3D that **WILL NOT REQUIRE** any external dependencies/DLLs!!! This project was both made for and is used by [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
 
 PRs + Issues Welcome.
@@ -183,12 +185,12 @@ public class ExampleService
 }
 ```
 
-## TODO
+## Progress Towards V1
 
 Ordered by priority (to me)!
 
 - [X] Scriptable Object For Configuration.
-- [ ] Easier Request Building
+- [X] Easier Request Building
 - [ ] Don't include definitions that are never used
 - [ ] Support Searilizing Bodies
 - [ ] Optional Parameters In Request Body
@@ -199,4 +201,3 @@ Ordered by priority (to me)!
 - [ ] YAML support
 - [ ] OpenAPI support
 - [ ] Oauth security definition
-- [ ] XML consumption/produce Support (but why tho)
