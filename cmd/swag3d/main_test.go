@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen"
+	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/path"
+	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -55,86 +58,89 @@ func TestFilterServiceByTags_Filters(t *testing.T) {
 	}
 }
 
-// func TestFilterUnusedDefinitions(t *testing.T) {
-// 	// ******************************** ARRANGE *******************************
-// 	spec := unitygen.NewSpec(
-// 		unitygen.SpecInfo{},
-// 		[]definition.Definition{
-// 			definition.NewEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
-// 		},
-// 		nil,
-// 		[]unitygen.Service{
-// 			unitygen.NewService(
-// 				"A",
-// 				[]path.Path{
-// 					path.NewPath(
-// 						"aaerg",
-// 						"",
-// 						"",
-// 						nil,
-// 						nil,
-// 						map[string]path.Response{
-// 							"200":     path.NewResponse("", nil),
-// 							"400":     path.NewResponse("", nil),
-// 							"default": path.NewResponse("", nil),
-// 						},
-// 						[]path.Parameter{
-// 							path.NewParameter(
-// 								path.BodyParameterLocation,
-// 								"",
-// 								false,
-// 								property.NewObjectReference("a", "#/definitions/X"),
-// 							),
-// 							path.NewParameter(
-// 								path.BodyParameterLocation,
-// 								"",
-// 								false,
-// 								property.NewObjectReference("a", "#/definitions/X"),
-// 							),
-// 						},
-// 					),
-// 				},
-// 			),
-// 			unitygen.NewService(
-// 				"B",
-// 				[]path.Path{
-// 					path.NewPath(
-// 						"aaerg",
-// 						"",
-// 						"",
-// 						nil,
-// 						nil,
-// 						map[string]path.Response{
-// 							"200":     path.NewResponse("", nil),
-// 							"400":     path.NewResponse("", nil),
-// 							"default": path.NewResponse("", nil),
-// 						},
-// 						[]path.Parameter{
-// 							path.NewParameter(
-// 								path.BodyParameterLocation,
-// 								"",
-// 								false,
-// 								property.NewObjectReference("a", "#/definitions/X"),
-// 							),
-// 							path.NewParameter(
-// 								path.BodyParameterLocation,
-// 								"",
-// 								false,
-// 								property.NewObjectReference("a", "#/definitions/X"),
-// 							),
-// 						},
-// 					),
-// 				},
-// 			),
-// 		},
-// 	)
+func TestFilterUnusedDefinitions(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	spec := unitygen.NewSpec(
+		unitygen.SpecInfo{},
+		[]definition.Definition{
+			definition.NewEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
+			definition.NewEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"}),
+			definition.NewObject("ToBeRemoved", nil),
+			definition.NewObject("Basic", nil),
+			definition.NewObject("X", nil),
+			definition.NewObject("Y", nil),
+			definition.NewObject("A", []property.Property{property.NewObjectReference("a", "#/definitions/B")}),
+			definition.NewObject("B", []property.Property{property.NewObjectReference("a", "#/definitions/C")}),
+			definition.NewObject("C", []property.Property{
+				property.NewObjectReference("a", "#/definitions/FurtherRemovedEnum"),
+				property.NewArray("test", property.NewObjectReference("a", "#/definitions/D")),
+			}),
+			definition.NewObject("D", nil),
+			definition.NewObject("RecurseL", []property.Property{property.NewObjectReference("a", "#/definitions/RecurseR")}),
+			definition.NewObject("RecurseR", []property.Property{property.NewObjectReference("a", "#/definitions/RecurseL")}),
+			definition.NewObject("RecurseM", []property.Property{property.NewObjectReference("a", "#/definitions/RecurseM")}),
+		},
+		nil,
+		[]unitygen.Service{
+			unitygen.NewService(
+				"A",
+				[]path.Path{
+					path.NewPath(
+						"aaerg",
+						"",
+						"",
+						nil,
+						nil,
+						map[string]path.Response{
+							"200": path.NewResponse("", definition.NewObjectReference("#/definitions/A")),
+							"400": path.NewResponse("", definition.NewObjectReference("#/definitions/SomeEnum")),
+							"500": path.NewResponse("", definition.NewObjectReference("#/definitions/RecurseM")),
+							"501": path.NewResponse("", definition.NewObjectReference("#/definitions/RecurseL")),
+						},
+						[]path.Parameter{
+							path.NewParameter(
+								path.BodyParameterLocation,
+								"",
+								false,
+								property.NewObjectReference("a", "#/definitions/X"),
+							),
+						},
+					),
+				},
+			),
+			unitygen.NewService(
+				"B",
+				[]path.Path{
+					path.NewPath(
+						"aaerg",
+						"",
+						"",
+						nil,
+						nil,
+						map[string]path.Response{
+							"200": path.NewResponse("", definition.NewObjectReference("#/definitions/Basic")),
+						},
+						[]path.Parameter{
+							path.NewParameter(
+								path.BodyParameterLocation,
+								"",
+								false,
+								property.NewObjectReference("a", "#/definitions/Y"),
+							),
+						},
+					),
+				},
+			),
+		},
+	)
 
-// 	// ********************************** ACT *********************************
-// 	out := filterSpecForUnusedDefinitions(spec)
+	// ********************************** ACT *********************************
+	out := filterSpecForUnusedDefinitions(spec)
 
-// 	// ********************************* ASSERT *******************************
-// 	assert.Len(t, out.Services, 2)
-// }
+	// ********************************* ASSERT *******************************
+	assert.Len(t, out.Services, 2)
+	assert.Len(t, out.Definitions, 12)
+}
 
 func TestNoNamespace(t *testing.T) {
 	// ******************************** ARRANGE *******************************

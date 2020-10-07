@@ -18,6 +18,10 @@ func (sp Array) Name() string {
 	return sp.name
 }
 
+func (sp Array) Property() Property {
+	return sp.prop
+}
+
 func (sp Array) ToVariableType() string {
 	return fmt.Sprintf("%s[]", sp.prop.ToVariableType())
 }

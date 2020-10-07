@@ -191,7 +191,7 @@ Ordered by priority (to me)!
 
 - [X] Scriptable Object For Configuration.
 - [X] Easier Request Building
-- [ ] Don't include definitions that are never used
+- [X] Don't include definitions that are never used
 - [ ] Support Searilizing Bodies
 - [ ] Optional Parameters In Request Body
 - [ ] Embedded object definitions
