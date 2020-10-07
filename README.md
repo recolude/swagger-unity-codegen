@@ -48,13 +48,16 @@ GLOBAL OPTIONS:
 
 ### Example
 
+Command used to generate Recolude's code.
+
 ```bash
 swag3d --file api/openapi-spec/swagger.json generate \
 	--config-name="RecoludeConfig" \
-	--config-menu="Recolude/Config" \
-	--tags "RecordingService" \
-	--namespace Recolude.API \
-	--out "Scripts/Recolude/API"
+	--config-menu="Recolude/Config" 
+	--tags "RecordingService" 
+	--namespace Recolude.API 
+	--out "Scripts" 
+	-scriptable-object-config=false
 ```
 
 ## Features

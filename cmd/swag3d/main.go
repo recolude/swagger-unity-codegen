@@ -92,9 +92,7 @@ func findReferenceRecurse(inQuestion definition.Definition, defs []definition.De
 func buildReferenceMapping(defs []definition.Definition) map[string][]string {
 	refMapping := make(map[string][]string)
 	for _, def := range defs {
-		log.Print(def.ToVariableType())
 		refMapping[def.ToVariableType()] = findReferenceRecurse(def, defs, nil)
-		log.Println(refMapping[def.ToVariableType()])
 	}
 	return refMapping
 }
@@ -202,7 +200,7 @@ func allOutAtOnce(c *cli.Context, spec unitygen.Spec) error {
 	fmt.Fprintf(c.App.Writer, "%s\n\n", "#endregion")
 
 	fmt.Fprintf(c.App.Writer, "%s\n\n", "#region Services")
-	fmt.Fprintf(c.App.Writer, "%s\n\n", spec.ServiceConfig(c.String("config-name"), c.String("config-menu")))
+	fmt.Fprintf(c.App.Writer, "%s\n\n", spec.ServiceConfig(c.String("config-name"), c.String("config-menu"), c.Bool("scriptable-object-config")))
 	writeServices(c.App.Writer, spec.Services, spec.AuthDefinitions)
 	fmt.Fprint(c.App.Writer, "#endregion\n\n")
 
@@ -246,7 +244,7 @@ func toDir(fs afero.Fs, c *cli.Context, location string, spec unitygen.Spec) err
 	fileCommentHeader(configFile)
 	fileImports(configFile)
 	openNamespace(configFile, namespace)
-	fmt.Fprintf(configFile, "%s\n\n", spec.ServiceConfig(c.String("config-name"), c.String("config-menu")))
+	fmt.Fprintf(configFile, "%s\n\n", spec.ServiceConfig(c.String("config-name"), c.String("config-menu"), c.Bool("scriptable-object-config")))
 	closeNamespace(configFile, namespace)
 
 	return nil
@@ -299,6 +297,11 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 						Name:  "include-unused",
 						Usage: "Whether or not to include definitions that where never used in the different services",
 						Value: false,
+					},
+					&cli.BoolFlag{
+						Name:  "scriptable-object-config",
+						Usage: "Whether or not to generate a scriptable object that contains all server values different services will use.",
+						Value: true,
 					},
 					&cli.StringSliceFlag{
 						Name:  "tags",

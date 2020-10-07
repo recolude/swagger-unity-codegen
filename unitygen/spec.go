@@ -89,53 +89,55 @@ func (s Spec) renderScriptableObjectBody() string {
 }
 
 // ServiceConfig prints out a c# class with variables to be used for all requests
-func (s Spec) ServiceConfig(configName, menuName string) string {
+func (s Spec) ServiceConfig(configName, menuName string, includeScriptableObject bool) string {
 	properClassName := convention.TitleCase(configName)
 	builder := strings.Builder{}
 
 	// Interface
 	builder.WriteString("public interface Config {\n\n")
 	builder.WriteString(s.renderInterfaceBody())
-	builder.WriteString("}\n\n")
+	builder.WriteString("}")
 
 	// Editor Config Code
-	builder.WriteString("#if UNITY_EDITOR\n[UnityEditor.CustomEditor(typeof(")
-	builder.WriteString(properClassName)
-	builder.WriteString("))]\npublic class ")
-	builder.WriteString(properClassName)
-	builder.WriteString("Editor : UnityEditor.Editor\n{\n\n\tpublic override void OnInspectorGUI()\n\t{\n")
-	builder.WriteString("\t\tif (target == null)\n\t\t{\n\t\t\treturn;\n\t\t}\n\n\t\tvar castedTarget = (")
-	builder.WriteString(properClassName)
-	builder.WriteString(")target;\n\n\t\tUnityEditor.EditorGUILayout.Space();\n")
-	fmt.Fprintf(&builder, "\t\tUnityEditor.EditorGUILayout.LabelField(\"%s\");\n", s.basePathDescription())
-	fmt.Fprintf(&builder, "\t\tvar newBasePath = UnityEditor.EditorGUILayout.TextField(\"BasePath\", castedTarget.BasePath);\n")
-	fmt.Fprintf(&builder, "\t\tif (newBasePath != castedTarget.BasePath) {\n")
-	fmt.Fprintf(&builder, "\t\t\tcastedTarget.BasePath = newBasePath;\n")
-	builder.WriteString("\t\t\tUnityEditor.EditorUtility.SetDirty(target);\n\t\t}\n\n")
-	for _, authGuard := range s.AuthDefinitions {
-		propertyName := convention.TitleCase(authGuard.Identifier())
-		privateVarName := "new" + propertyName
-		fmt.Fprintf(&builder, "\t\tUnityEditor.EditorGUILayout.Space();\n")
-		fmt.Fprintf(&builder, "\t\tUnityEditor.EditorGUILayout.LabelField(\"%s\");\n", authGuard.String())
-		fmt.Fprintf(&builder, "\t\tvar %s = UnityEditor.EditorGUILayout.TextField(\"%s\", castedTarget.%s);\n", privateVarName, propertyName, propertyName)
-		fmt.Fprintf(&builder, "\t\tif (%s != castedTarget.%s) {\n", privateVarName, propertyName)
-		fmt.Fprintf(&builder, "\t\t\tcastedTarget.%s = %s;\n", propertyName, privateVarName)
+	if includeScriptableObject {
+		builder.WriteString("\n\n#if UNITY_EDITOR\n[UnityEditor.CustomEditor(typeof(")
+		builder.WriteString(properClassName)
+		builder.WriteString("))]\npublic class ")
+		builder.WriteString(properClassName)
+		builder.WriteString("Editor : UnityEditor.Editor\n{\n\n\tpublic override void OnInspectorGUI()\n\t{\n")
+		builder.WriteString("\t\tif (target == null)\n\t\t{\n\t\t\treturn;\n\t\t}\n\n\t\tvar castedTarget = (")
+		builder.WriteString(properClassName)
+		builder.WriteString(")target;\n\n\t\tUnityEditor.EditorGUILayout.Space();\n")
+		fmt.Fprintf(&builder, "\t\tUnityEditor.EditorGUILayout.LabelField(\"%s\");\n", s.basePathDescription())
+		fmt.Fprintf(&builder, "\t\tvar newBasePath = UnityEditor.EditorGUILayout.TextField(\"BasePath\", castedTarget.BasePath);\n")
+		fmt.Fprintf(&builder, "\t\tif (newBasePath != castedTarget.BasePath) {\n")
+		fmt.Fprintf(&builder, "\t\t\tcastedTarget.BasePath = newBasePath;\n")
 		builder.WriteString("\t\t\tUnityEditor.EditorUtility.SetDirty(target);\n\t\t}\n\n")
+		for _, authGuard := range s.AuthDefinitions {
+			propertyName := convention.TitleCase(authGuard.Identifier())
+			privateVarName := "new" + propertyName
+			fmt.Fprintf(&builder, "\t\tUnityEditor.EditorGUILayout.Space();\n")
+			fmt.Fprintf(&builder, "\t\tUnityEditor.EditorGUILayout.LabelField(\"%s\");\n", authGuard.String())
+			fmt.Fprintf(&builder, "\t\tvar %s = UnityEditor.EditorGUILayout.TextField(\"%s\", castedTarget.%s);\n", privateVarName, propertyName, propertyName)
+			fmt.Fprintf(&builder, "\t\tif (%s != castedTarget.%s) {\n", privateVarName, propertyName)
+			fmt.Fprintf(&builder, "\t\t\tcastedTarget.%s = %s;\n", propertyName, privateVarName)
+			builder.WriteString("\t\t\tUnityEditor.EditorUtility.SetDirty(target);\n\t\t}\n\n")
+		}
+		builder.WriteString("\t}\n\n}\n#endif\n\n")
+
+		// Scriptable Object
+		builder.WriteString("[System.Serializable]\n")
+		fmt.Fprintf(&builder, "[CreateAssetMenu(menuName = \"%s\", fileName = \"%s\")]\n", menuName, properClassName)
+		fmt.Fprintf(&builder, "public class %s: ScriptableObject, Config {\n\n", properClassName)
+		builder.WriteString(s.renderScriptableObjectBody())
+
+		// Scriptable objects can't have constructors, need to decide on alternative method of instantiating them in code
+		// fmt.Fprintf(&builder, "\tpublic %s(string basePath) {\n", properClassName)
+		// builder.WriteString("\t\tthis.BasePath = basePath;\n")
+		// builder.WriteString("\t}\n")
+
+		builder.WriteString("}")
 	}
-	builder.WriteString("\t}\n\n}\n#endif\n\n")
-
-	// Scriptable Object
-	builder.WriteString("[System.Serializable]\n")
-	fmt.Fprintf(&builder, "[CreateAssetMenu(menuName = \"%s\", fileName = \"%s\")]\n", menuName, properClassName)
-	fmt.Fprintf(&builder, "public class %s: ScriptableObject, Config {\n\n", properClassName)
-	builder.WriteString(s.renderScriptableObjectBody())
-
-	// Scriptable objects can't have constructors, need to decide on alternative method of instantiating them in code
-	// fmt.Fprintf(&builder, "\tpublic %s(string basePath) {\n", properClassName)
-	// builder.WriteString("\t\tthis.BasePath = basePath;\n")
-	// builder.WriteString("\t}\n")
-
-	builder.WriteString("}")
 
 	return builder.String()
 }

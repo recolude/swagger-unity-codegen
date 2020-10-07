@@ -8,12 +8,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSpec_ServiceConfig_NoScriptableObject(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	service := unitygen.Spec{}
+
+	// ********************************** ACT *********************************
+	code := service.ServiceConfig("ServiceConfig", "Server/Config", false)
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public interface Config {
+
+	// The base URL to which the endpoint paths are appended
+	string BasePath { get; }
+
+}`, code)
+}
+
 func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	service := unitygen.Spec{}
 
 	// ********************************** ACT *********************************
-	code := service.ServiceConfig("ServiceConfig", "Server/Config")
+	code := service.ServiceConfig("ServiceConfig", "Server/Config", true)
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public interface Config {
@@ -73,7 +89,7 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	}
 
 	// ********************************** ACT *********************************
-	code := service.ServiceConfig("RecoludeConfig", "Recolude/Config")
+	code := service.ServiceConfig("RecoludeConfig", "Recolude/Config", true)
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public interface Config {
