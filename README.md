@@ -57,7 +57,7 @@ swag3d --file api/openapi-spec/swagger.json generate \
 	--tags "RecordingService" 
 	--namespace Recolude.API 
 	--out "Scripts" 
-	-scriptable-object-config=false
+	--scriptable-object-config=false
 ```
 
 ## Features

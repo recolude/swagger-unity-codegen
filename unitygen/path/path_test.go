@@ -97,10 +97,14 @@ func Test_ParameterInPath(t *testing.T) {
 
 	public IEnumerator Run() {
 		yield return this.UnderlyingRequest.SendWebRequest();
-		if (UnderlyingRequest.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		Interpret(this.UnderlyingRequest);
+	}
+
+	public void Interpret(UnityWebRequest req) {
+		if (req.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
 		} else {
-			fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+			fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
 		}
 	}
 
@@ -162,8 +166,12 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 
 	public IEnumerator Run() {
 		yield return this.UnderlyingRequest.SendWebRequest();
-		if (UnderlyingRequest.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		Interpret(this.UnderlyingRequest);
+	}
+
+	public void Interpret(UnityWebRequest req) {
+		if (req.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
 		}
 	}
 
@@ -205,7 +213,11 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 
 	public IEnumerator Run() {
 		yield return this.UnderlyingRequest.SendWebRequest();
-		fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+		Interpret(this.UnderlyingRequest);
+	}
+
+	public void Interpret(UnityWebRequest req) {
+		fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
 	}
 
 }`, classCode)
@@ -252,12 +264,16 @@ func Test_ThreeParametersInPath(t *testing.T) {
 
 	public IEnumerator Run() {
 		yield return this.UnderlyingRequest.SendWebRequest();
-		if (UnderlyingRequest.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
-		} else if (UnderlyingRequest.responseCode == 401) {
-			unauthorized = JsonUtility.FromJson<V1Unauthorized>(UnderlyingRequest.downloadHandler.text);
+		Interpret(this.UnderlyingRequest);
+	}
+
+	public void Interpret(UnityWebRequest req) {
+		if (req.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
+		} else if (req.responseCode == 401) {
+			unauthorized = JsonUtility.FromJson<V1Unauthorized>(req.downloadHandler.text);
 		} else {
-			fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+			fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
 		}
 	}
 
@@ -304,10 +320,14 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 
 	public IEnumerator Run() {
 		yield return this.UnderlyingRequest.SendWebRequest();
-		if (UnderlyingRequest.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(UnderlyingRequest.downloadHandler.text);
+		Interpret(this.UnderlyingRequest);
+	}
+
+	public void Interpret(UnityWebRequest req) {
+		if (req.responseCode == 200) {
+			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
 		} else {
-			fallbackResponse = JsonUtility.FromJson<RuntimeError>(UnderlyingRequest.downloadHandler.text);
+			fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
 		}
 	}
 

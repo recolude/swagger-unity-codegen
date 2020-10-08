@@ -208,8 +208,18 @@ func (p Path) UnityWebRequest() string {
 
 	// Function that will actually execute the request
 	builder.WriteString("\tpublic IEnumerator Run() {\n\t\tyield return this.UnderlyingRequest.SendWebRequest();\n")
-	builder.WriteString(p.renderHandleResponse())
-	builder.WriteString("\t}\n\n}")
+	if len(p.responses) > 0 {
+		builder.WriteString("\t\tInterpret(this.UnderlyingRequest);\n")
+	}
+	builder.WriteString("\t}\n\n")
+
+	if len(p.responses) > 0 {
+		builder.WriteString("\tpublic void Interpret(UnityWebRequest req) {\n")
+		builder.WriteString(p.renderHandleResponse())
+		builder.WriteString("\t}\n\n")
+	}
+
+	builder.WriteString("}")
 
 	return builder.String()
 }
@@ -220,9 +230,9 @@ func (p Path) renderConditionalResponseCast(code string, resp Response) string {
 	}
 
 	if parsed, err := strconv.Atoi(code); err == nil {
-		return fmt.Sprintf("if (UnderlyingRequest.responseCode == %d) {\n\t\t\t%s = JsonUtility.FromJson<%s>(UnderlyingRequest.downloadHandler.text);\n\t\t}", parsed, p.respVariableName(code), resp.schema.ToVariableType())
+		return fmt.Sprintf("if (req.responseCode == %d) {\n\t\t\t%s = JsonUtility.FromJson<%s>(req.downloadHandler.text);\n\t\t}", parsed, p.respVariableName(code), resp.schema.ToVariableType())
 	}
-	return fmt.Sprintf("fallbackResponse = JsonUtility.FromJson<%s>(UnderlyingRequest.downloadHandler.text);", resp.schema.ToVariableType())
+	return fmt.Sprintf("fallbackResponse = JsonUtility.FromJson<%s>(req.downloadHandler.text);", resp.schema.ToVariableType())
 }
 
 func (p Path) renderHandleResponse() string {
