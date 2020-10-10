@@ -195,6 +195,7 @@ Ordered by priority (to me)!
 - [X] Scriptable Object For Configuration.
 - [X] Easier Request Building
 - [X] Don't include definitions that are never used
+- [X] Support for System.DateTime
 - [ ] Support Searilizing Bodies
 - [ ] Optional Parameters In Request Body
 - [ ] Embedded object definitions

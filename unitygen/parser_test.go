@@ -161,7 +161,10 @@ func TestReadDefinition(t *testing.T) {
 			`[System.Serializable]
 public class V1ApiKey {
 
-	public System.DateTime createdAt;
+	[SerializeField]
+	private string createdAt;
+
+	public System.DateTime CreatedAt { get => System.DateTime.Parse(createdAt); }
 
 	public string description;
 

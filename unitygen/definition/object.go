@@ -1,7 +1,6 @@
 package definition
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
@@ -43,7 +42,8 @@ func (od Object) ToCSharp() string {
 	classBuilder.WriteString(od.ToVariableType())
 	classBuilder.WriteString(" {\n\n")
 	for _, prop := range od.Properties {
-		classBuilder.WriteString(fmt.Sprintf("\tpublic %s %s;\n", prop.ToVariableType(), prop.Name()))
+		// classBuilder.WriteString()
+		classBuilder.WriteString(prop.ClassVariables())
 		classBuilder.WriteString("\n")
 	}
 	classBuilder.WriteString("}")

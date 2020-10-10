@@ -1,6 +1,7 @@
 package property
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
@@ -28,4 +29,8 @@ func (orp ObjectReference) ToVariableType() string {
 
 func (orp ObjectReference) EmptyValue() string {
 	return "null"
+}
+
+func (orp ObjectReference) ClassVariables() string {
+	return fmt.Sprintf("\tpublic %s %s;\n", orp.ToVariableType(), orp.Name())
 }

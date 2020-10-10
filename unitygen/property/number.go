@@ -1,5 +1,7 @@
 package property
 
+import "fmt"
+
 type Number struct {
 	name   string
 	format string
@@ -38,4 +40,8 @@ func (sp Number) EmptyValue() string {
 	}
 
 	return "0f"
+}
+
+func (sp Number) ClassVariables() string {
+	return fmt.Sprintf("\tpublic %s %s;\n", sp.ToVariableType(), sp.Name())
 }

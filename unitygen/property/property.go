@@ -6,4 +6,6 @@ type Property interface {
 
 	// EmptyValue is the value that represents the property has yet to be set.
 	EmptyValue() string
+
+	ClassVariables() string
 }

@@ -32,3 +32,31 @@ public class TestObj {
 
 }`, cSharp)
 }
+
+func TestObject_DatesCorrectly(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	obj := definition.NewObject(
+		"testObj",
+		[]property.Property{
+			property.NewString("date", "date-time"),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	varType := obj.ToVariableType()
+	name := obj.Name()
+	cSharp := obj.ToCSharp()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, "TestObj", varType)
+	assert.Equal(t, "testObj", name)
+	assert.Equal(t, `[System.Serializable]
+public class TestObj {
+
+	[SerializeField]
+	private string date;
+
+	public System.DateTime Date { get => System.DateTime.Parse(date); }
+
+}`, cSharp)
+}

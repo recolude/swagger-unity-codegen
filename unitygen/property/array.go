@@ -29,3 +29,7 @@ func (sp Array) ToVariableType() string {
 func (sp Array) EmptyValue() string {
 	return "null"
 }
+
+func (sp Array) ClassVariables() string {
+	return fmt.Sprintf("\tpublic %s %s;\n", sp.ToVariableType(), sp.Name())
+}
