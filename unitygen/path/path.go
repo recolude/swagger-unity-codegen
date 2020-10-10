@@ -149,7 +149,7 @@ func (p Path) RequestParamClass() string {
 
 	builder.WriteString("\tpublic UnityWebRequest BuildUnityWebRequest(string baseURL)\n\t{\n")
 
-	fmt.Fprintf(&builder, "\t\tvar finalPath = string.Format(\"{0}%s\", baseURL);\n", p.route)
+	fmt.Fprintf(&builder, "\t\tvar finalPath = baseURL + \"%s\";\n", p.route)
 
 	// Do all path parameters first
 	for _, param := range p.parameters {

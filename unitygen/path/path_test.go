@@ -430,7 +430,7 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 
 	public UnityWebRequest BuildUnityWebRequest(string baseURL)
 	{
-		var finalPath = string.Format("{0}/api/v1/users/{userId}", baseURL);
+		var finalPath = baseURL + "/api/v1/users/{userId}";
 		finalPath = finalPath.Replace("{userId}", userIdSet ? UnityWebRequest.EscapeURL(userId.ToString()) : "");
 		var queryAdded = false;
 
