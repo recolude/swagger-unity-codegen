@@ -104,7 +104,7 @@ func (p Path) respVariableName(k string) string {
 
 	}
 
-	panic("unkown response key: " + k)
+	panic("unknown response key: " + k)
 }
 
 func (p Path) queryParamCount() int {

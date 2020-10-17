@@ -13,7 +13,7 @@ func TestTitleCase(t *testing.T) {
 		want  string
 	}{
 		"simple":              {input: "abcDef", want: "AbcDef"},
-		"already capitilized": {input: "AbcDef", want: "AbcDef"},
+		"already capitalized": {input: "AbcDef", want: "AbcDef"},
 		"empty string":        {input: "", want: ""},
 	}
 

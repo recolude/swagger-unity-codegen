@@ -102,9 +102,9 @@ func TestReadDefinition(t *testing.T) {
 			},
 			"v1EnumVisibility": {
 				"type": "string",
-				"default": "V_UNKOWN",
+				"default": "V_UNKNOWN",
 				"enum": [
-				  "V_UNKOWN",
+				  "V_UNKNOWN",
 				  "V_PUBLIC",
 				  "V_PRIVATE"
 				]
@@ -180,7 +180,7 @@ public class V1ApiKey {
 
 		assert.Equal(t,
 			`public enum V1EnumVisibility {
-	V_UNKOWN,
+	V_UNKNOWN,
 	V_PUBLIC,
 	V_PRIVATE
 }`, spec.Definitions[1].ToCSharp())

@@ -1,6 +1,6 @@
 # Swagger Unity Codegen
 
-[![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen)
+[![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen) [![Go Report Card](https://goreportcard.com/badge/github.com/recolude/swagger-unity-codegen)](https://goreportcard.com/report/github.com/recolude/swagger-unity-codegen)
 
 **[Currently In Beta: Only Supports Swagger 2.0 JSON ATM]**
 

@@ -32,7 +32,7 @@ func (s Service) Paths() []path.Path {
 	return s.paths
 }
 
-// ToCSharp writes out the service as a class with colleciton of functions that
+// ToCSharp writes out the service as a class with collection of functions that
 // correspond to calling different routes
 func (s Service) ToCSharp(knownModifiers []security.Auth, serviceConfigName string) string {
 
