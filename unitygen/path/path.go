@@ -76,7 +76,6 @@ func (p Path) requestParamClassName() string {
 }
 
 func (p Path) respVariableName(k string) string {
-
 	switch k {
 	case "200":
 		return "success"
@@ -154,7 +153,7 @@ func (p Path) RequestParamClass() string {
 	// Do all path parameters first
 	for _, param := range p.parameters {
 		if param.location == BodyParameterLocation {
-			panic("Generating request bodies not implemented ATM")
+			panic("Generating request bodies not implemented ATM " + p.operationID)
 		}
 		if param.location == PathParameterLocation {
 			privateVarName := convention.CamelCase(param.name)

@@ -58,8 +58,11 @@ func (p Parser) interpretNumberProperty(path []string, name string, obj *gabs.Co
 	return property.NewNumber(name, format), nil
 }
 
-func (p Parser) interpretObjectPropertyDefinition(path []string, name string, obj *gabs.Container) (property.Property, error) {
+func (p Parser) interpretBooleanProperty(name string) (property.Boolean, error) {
+	return property.NewBoolean(name), nil
+}
 
+func (p Parser) interpretObjectPropertyDefinition(path []string, name string, obj *gabs.Container) (property.Property, error) {
 	objRef, ok := obj.Path("$ref").Data().(string)
 	if ok {
 		return property.NewObjectReference(name, objRef), nil
@@ -83,6 +86,9 @@ func (p Parser) interpretObjectPropertyDefinition(path []string, name string, ob
 
 	case "number":
 		return p.interpretNumberProperty(path, name, obj)
+
+	case "boolean":
+		return p.interpretBooleanProperty(name)
 
 	default:
 		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
@@ -108,7 +114,6 @@ func (p Parser) interpretObjectDefinition(path []string, name string, obj *gabs.
 }
 
 func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (definition.Definition, error) {
-
 	enum := obj.Path("enum")
 	if enum == nil {
 		return nil, InvalidSpecError{Path: append(path, name), Reason: "Unimplemented string case"}
@@ -215,7 +220,6 @@ func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, 
 }
 
 func (p Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (property.Property, error) {
-
 	schemaNode := obj.Path("schema")
 	if schemaNode != nil {
 		refNode := schemaNode.Path("$ref")
@@ -249,13 +253,15 @@ func (p Parser) interpretPathPameterProperty(path []string, name string, obj *ga
 	case "number":
 		return p.interpretNumberProperty(path, name, obj)
 
+	case "boolean":
+		return p.interpretBooleanProperty(name)
+
 	default:
 		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
 	}
 }
 
 func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, error) {
-
 	paths := make([]path.Path, 0)
 	for verb, verbObj := range routeObj.ChildrenMap() {
 		tagsInJSON := make([]string, 0)
@@ -296,7 +302,6 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 
 		parameters := make([]path.Parameter, 0)
 		for paramIndex, param := range verbObj.Path("parameters").Children() {
-
 			required, ok := param.Path("required").Data().(bool)
 			if !ok {
 				required = false
@@ -319,7 +324,6 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 				required,
 				paramProperty,
 			))
-
 		}
 
 		paths = append(paths,
@@ -369,7 +373,6 @@ func (a sortByServiceName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a sortByServiceName) Less(i, j int) bool { return a[i].name < a[j].name }
 
 func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
-
 	services := make([]Service, 0)
 	defaultServiceIndex := -1
 
@@ -414,7 +417,6 @@ func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
 // ParseJSON reads through the input stream and constructs an understanding of
 // the API our Unity3D client needs to interact with
 func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
-
 	entireIn, err := ioutil.ReadAll(in)
 	if err != nil {
 		return Spec{}, err

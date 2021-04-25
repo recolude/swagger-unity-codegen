@@ -35,5 +35,4 @@ func Test_NumberInterpretsInt32(t *testing.T) {
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "int", varType)
 	assert.Equal(t, "0", nullVal)
-
 }

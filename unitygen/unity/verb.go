@@ -5,7 +5,8 @@ import (
 	"net/http"
 )
 
-// ToUnityHTTPVerb takes how golang represents a HTTP verb (http.MethodGet) and translates it for unity (UnityWebRequest.kHttpVerbGET).
+// ToUnityHTTPVerb takes how golang represents a HTTP verb (http.MethodGet) and
+// translates it for unity (UnityWebRequest.kHttpVerbGET).
 func ToUnityHTTPVerb(httpMethod string) string {
 	switch httpMethod {
 	case http.MethodGet:
