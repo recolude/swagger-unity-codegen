@@ -14,6 +14,8 @@ func TestCamelCase(t *testing.T) {
 	}{
 		"simple":            {input: "AbcDef", want: "abcDef"},
 		"already lowercase": {input: "abcDef", want: "abcDef"},
+		"snake_case":        {input: "abc_def", want: "abcDef"},
+		"snake_case weird":  {input: "_abc__def", want: "abcDef"},
 		"empty string":      {input: "", want: ""},
 	}
 

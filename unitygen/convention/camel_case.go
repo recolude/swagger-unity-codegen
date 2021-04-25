@@ -7,7 +7,32 @@ func CamelCase(in string) string {
 	if in == "" {
 		return ""
 	}
-	a := []rune(in)
-	a[0] = unicode.ToLower(a[0])
-	return string(a)
+
+	out := make([]rune, 0)
+
+	nextCapitilized := false
+	experiencedFist := false
+	for _, c := range in {
+		if experiencedFist == false {
+			if c != '_' {
+				out = append(out, unicode.ToLower(c))
+				experiencedFist = true
+			}
+			continue
+		}
+
+		if c == '_' {
+			nextCapitilized = true
+			continue
+		}
+
+		if nextCapitilized {
+			out = append(out, unicode.ToUpper(c))
+			nextCapitilized = false
+		} else {
+			out = append(out, c)
+		}
+	}
+
+	return string(out)
 }

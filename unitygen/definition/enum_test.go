@@ -28,7 +28,7 @@ func TestEnum(t *testing.T) {
 	assert.Equal(t, "testEnum", name)
 	assert.Equal(t, `public enum TestEnum {
 	A,
-	B,
+	b,
 	CDF
 }`, cSharp)
 }
