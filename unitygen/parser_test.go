@@ -12,7 +12,7 @@ import (
 
 func TestReadDefinition(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	var swaggerDotJSON = `{
+	swaggerDotJSON := `{
 		"info": {
 			"title": "Recolude Service",
 			"version": "1.0"
@@ -180,9 +180,9 @@ public class V1ApiKey {
 
 		assert.Equal(t,
 			`public enum V1EnumVisibility {
-	V_UNKNOWN,
-	V_PUBLIC,
-	V_PRIVATE
+	V_UNKNOWN = 0,
+	V_PUBLIC = 1,
+	V_PRIVATE = 2
 }`, spec.Definitions[1].ToCSharp())
 
 		assert.Equal(t,
@@ -254,12 +254,11 @@ public class V1ListLicensesRequest {
 		}
 
 	}
-
 }
 
 func Test_ReadParameters(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	var swaggerDotJSON = `{
+	swaggerDotJSON := `{
 		"info": {
 			"title": "Read Params",
 			"version": "1.0.1"
@@ -394,5 +393,4 @@ func Test_ReadParameters(t *testing.T) {
 		}
 
 	}
-
 }
