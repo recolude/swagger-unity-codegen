@@ -3,7 +3,7 @@ package property_test
 import (
 	"testing"
 
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/stretchr/testify/assert"
 )
 

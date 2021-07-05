@@ -1,18 +1,18 @@
-package definition_test
+package model_test
 
 import (
 	"testing"
 
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestObject(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	obj := definition.NewObject(
+	obj := model.NewObject(
 		"testObj",
-		[]property.Property{
+		[]model.Property{
 			property.NewInteger("num", ""),
 		},
 	)
@@ -35,9 +35,9 @@ public class TestObj {
 
 func TestObject_DatesCorrectly(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	obj := definition.NewObject(
+	obj := model.NewObject(
 		"testObj",
-		[]property.Property{
+		[]model.Property{
 			property.NewString("date", "date-time"),
 		},
 	)

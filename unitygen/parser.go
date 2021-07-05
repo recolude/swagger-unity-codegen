@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/path"
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 )
 
@@ -23,7 +23,7 @@ func (p Parser) interpretArrayProperty(path []string, name string, obj *gabs.Con
 		return property.Array{}, InvalidSpecError{Path: path, Reason: "Unable to find array type (missing items property)"}
 	}
 
-	prop, err := p.interpretObjectPropertyDefinition(append(path, "items"), "", items)
+	prop, err := p.interpretObjectDefinitionProperty(append(path, "items"), "", items)
 	if err != nil {
 		return property.Array{}, err
 	}
@@ -62,7 +62,12 @@ func (p Parser) interpretBooleanProperty(name string) (property.Boolean, error) 
 	return property.NewBoolean(name), nil
 }
 
-func (p Parser) interpretObjectPropertyDefinition(path []string, name string, obj *gabs.Container) (property.Property, error) {
+func (p Parser) interpretNestedObjectProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
+	def, err := p.interpretObjectDefinition(path, name, obj)
+	return property.NewObject(name, def), err
+}
+
+func (p Parser) interpretObjectDefinitionProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
 	objRef, ok := obj.Path("$ref").Data().(string)
 	if ok {
 		return property.NewObjectReference(name, objRef), nil
@@ -90,30 +95,33 @@ func (p Parser) interpretObjectPropertyDefinition(path []string, name string, ob
 	case "boolean":
 		return p.interpretBooleanProperty(name)
 
+	case "object":
+		return p.interpretNestedObjectProperty(path, name, obj)
+
 	default:
 		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
 	}
 }
 
-func (p Parser) interpretObjectDefinition(path []string, name string, obj *gabs.Container) (definition.Object, error) {
+func (p Parser) interpretObjectDefinition(path []string, name string, obj *gabs.Container) (model.Object, error) {
 	newPath := append(path, name)
 	if obj == nil {
-		return definition.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
+		return model.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
 	}
-	properties := make([]property.Property, 0)
+	properties := make([]model.Property, 0)
 
 	for key, val := range obj.Path("properties").ChildrenMap() {
-		prop, err := p.interpretObjectPropertyDefinition(append(newPath, "properties"), key, val)
+		prop, err := p.interpretObjectDefinitionProperty(append(newPath, "properties"), key, val)
 		if err != nil {
-			return definition.Object{}, err
+			return model.Object{}, err
 		}
 		properties = append(properties, prop)
 	}
 
-	return definition.NewObject(name, properties), nil
+	return model.NewObject(name, properties), nil
 }
 
-func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (definition.Definition, error) {
+func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
 	enum := obj.Path("enum")
 	if enum == nil {
 		return nil, InvalidSpecError{Path: append(path, name), Reason: "Unimplemented string case"}
@@ -125,11 +133,11 @@ func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.
 		parsedValues[i] = child.Data().(string)
 	}
 
-	return definition.NewEnum(name, parsedValues), nil
+	return model.NewEnum(name, parsedValues), nil
 }
 
-func (p Parser) parseDefinitions(obj *gabs.Container) ([]definition.Definition, error) {
-	definitions := make([]definition.Definition, 0)
+func (p Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error) {
+	definitions := make([]model.Definition, 0)
 	var err error
 	for key, val := range obj.Path("definitions").ChildrenMap() {
 
@@ -138,7 +146,7 @@ func (p Parser) parseDefinitions(obj *gabs.Container) ([]definition.Definition, 
 			return nil, InvalidSpecError{Path: []string{"definitions", key}, Reason: "Definition type not found on definition"}
 		}
 
-		var def definition.Definition
+		var def model.Definition
 		switch definitionType {
 		case "object":
 			def, err = p.interpretObjectDefinition([]string{"definitions"}, key, val)
@@ -219,7 +227,7 @@ func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, 
 	return definitions, nil
 }
 
-func (p Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (property.Property, error) {
+func (p Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
 	schemaNode := obj.Path("schema")
 	if schemaNode != nil {
 		refNode := schemaNode.Path("$ref")
@@ -285,12 +293,12 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 		responses := make(map[string]path.Response)
 		for key, respJSON := range verbObj.Path("responses").ChildrenMap() {
 
-			var def definition.Definition
+			var def model.Definition
 			schemaJSON := respJSON.Path("schema")
 			if schemaJSON != nil {
 				refNode := schemaJSON.Path("$ref")
 				if refNode != nil {
-					def = definition.NewObjectReference(refNode.Data().(string))
+					def = model.NewObjectReference(refNode.Data().(string))
 				}
 			}
 

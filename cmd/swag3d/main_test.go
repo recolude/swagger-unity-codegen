@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen"
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/path"
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,23 +62,23 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	spec := unitygen.NewSpec(
 		unitygen.SpecInfo{},
-		[]definition.Definition{
-			definition.NewEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
-			definition.NewEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"}),
-			definition.NewObject("ToBeRemoved", nil),
-			definition.NewObject("Basic", nil),
-			definition.NewObject("X", nil),
-			definition.NewObject("Y", nil),
-			definition.NewObject("A", []property.Property{property.NewObjectReference("a", "#/definitions/B")}),
-			definition.NewObject("B", []property.Property{property.NewObjectReference("a", "#/definitions/C")}),
-			definition.NewObject("C", []property.Property{
+		[]model.Definition{
+			model.NewEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
+			model.NewEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"}),
+			model.NewObject("ToBeRemoved", nil),
+			model.NewObject("Basic", nil),
+			model.NewObject("X", nil),
+			model.NewObject("Y", nil),
+			model.NewObject("A", []model.Property{property.NewObjectReference("a", "#/definitions/B")}),
+			model.NewObject("B", []model.Property{property.NewObjectReference("a", "#/definitions/C")}),
+			model.NewObject("C", []model.Property{
 				property.NewObjectReference("a", "#/definitions/FurtherRemovedEnum"),
 				property.NewArray("test", property.NewObjectReference("a", "#/definitions/D")),
 			}),
-			definition.NewObject("D", nil),
-			definition.NewObject("RecurseL", []property.Property{property.NewObjectReference("a", "#/definitions/RecurseR")}),
-			definition.NewObject("RecurseR", []property.Property{property.NewObjectReference("a", "#/definitions/RecurseL")}),
-			definition.NewObject("RecurseM", []property.Property{property.NewObjectReference("a", "#/definitions/RecurseM")}),
+			model.NewObject("D", nil),
+			model.NewObject("RecurseL", []model.Property{property.NewObjectReference("a", "#/definitions/RecurseR")}),
+			model.NewObject("RecurseR", []model.Property{property.NewObjectReference("a", "#/definitions/RecurseL")}),
+			model.NewObject("RecurseM", []model.Property{property.NewObjectReference("a", "#/definitions/RecurseM")}),
 		},
 		nil,
 		[]unitygen.Service{
@@ -92,10 +92,10 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewResponse("", definition.NewObjectReference("#/definitions/A")),
-							"400": path.NewResponse("", definition.NewObjectReference("#/definitions/SomeEnum")),
-							"500": path.NewResponse("", definition.NewObjectReference("#/definitions/RecurseM")),
-							"501": path.NewResponse("", definition.NewObjectReference("#/definitions/RecurseL")),
+							"200": path.NewResponse("", model.NewObjectReference("#/definitions/A")),
+							"400": path.NewResponse("", model.NewObjectReference("#/definitions/SomeEnum")),
+							"500": path.NewResponse("", model.NewObjectReference("#/definitions/RecurseM")),
+							"501": path.NewResponse("", model.NewObjectReference("#/definitions/RecurseL")),
 						},
 						[]path.Parameter{
 							path.NewParameter(
@@ -118,7 +118,7 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewResponse("", definition.NewObjectReference("#/definitions/Basic")),
+							"200": path.NewResponse("", model.NewObjectReference("#/definitions/Basic")),
 						},
 						[]path.Parameter{
 							path.NewParameter(
@@ -152,7 +152,7 @@ func TestNoNamespace(t *testing.T) {
 	app := buildApp(appFS, &out, &errOut)
 
 	// ********************************** ACT *********************************
-	err := app.Run([]string{"swag3d", "--file", "swagger.json", "generate"})
+	err := app.Run([]string{"swag3d", "generate", "--file", "swagger.json"})
 
 	// ********************************* ASSERT *******************************
 	assert.NoError(t, err)
@@ -232,7 +232,7 @@ func TestWithNamespace(t *testing.T) {
 	app := buildApp(appFS, &out, &errOut)
 
 	// ********************************** ACT *********************************
-	err := app.Run([]string{"swag3d", "--file", "swagger.json", "generate", "--namespace", "example"})
+	err := app.Run([]string{"swag3d", "generate", "--file", "swagger.json", "--namespace", "example"})
 
 	// ********************************* ASSERT *******************************
 	assert.NoError(t, err)
@@ -314,7 +314,7 @@ func TestSpecifyingOutWritesMultipleFiles(t *testing.T) {
 	app := buildApp(appFS, &out, &errOut)
 
 	// ********************************** ACT *********************************
-	err := app.Run([]string{"swag3d", "--file", "swagger.json", "generate", "--out", "."})
+	err := app.Run([]string{"swag3d", "generate", "--file", "swagger.json", "--out", "."})
 
 	// ********************************* ASSERT *******************************
 	assert.NoError(t, err)

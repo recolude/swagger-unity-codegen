@@ -1,4 +1,4 @@
-package definition
+package model
 
 // Definition represents a model of data found inside a swagger file
 type Definition interface {

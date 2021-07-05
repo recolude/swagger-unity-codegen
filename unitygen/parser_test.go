@@ -394,3 +394,78 @@ func Test_ReadParameters(t *testing.T) {
 
 	}
 }
+
+func Test_ReadNestedObjectPropertyDefinition(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+			"info": {
+				"title": "Analytic Service",
+				"version": "1.0.0"
+			},
+			"paths": {
+			},
+			"definitions": {
+				"AggMetadataQuery": {
+					"type": "object",
+					"properties": {
+					  "query": {
+						"type": "object",
+						"properties": {
+						  "field": {
+							"type": "string"
+						  },
+						  "modifier": {
+							"$ref": "#/definitions/AggModifier"
+						  },
+						  "minDate": {
+							"type": "integer",
+							"format": "int32"
+						  },
+						  "maxDate": {
+							"type": "integer",
+							"format": "int32"
+						  },
+						  "onEntity": {
+							"$ref": "#/definitions/RecordingEntity"
+						  }
+						},
+						"required": ["field", "modifier"]
+					  }
+					}
+				  }
+			}
+		}`
+	// ********************************** ACT *********************************
+	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	if assert.NoError(t, err) == false {
+		return
+	}
+	assert.Equal(t, "Analytic Service", spec.Info.Title)
+	assert.Equal(t, "1.0.0", spec.Info.Version)
+	if assert.Len(t, spec.Definitions, 1) {
+		def := spec.Definitions[0]
+		assert.Equal(t, "AggMetadataQuery", def.Name())
+		assert.Equal(t, "AggMetadataQuery", def.ToVariableType())
+		assert.Equal(t, `[System.Serializable]
+public class AggMetadataQuery {
+
+	[System.Serializable]
+public class Query {
+
+	public string field;
+
+	public int maxDate;
+
+	public int minDate;
+
+	public AggModifier modifier;
+
+	public RecordingEntity onEntity;
+
+}
+	public Query query;
+}`, def.ToCSharp())
+	}
+}

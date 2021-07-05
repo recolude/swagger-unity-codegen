@@ -6,19 +6,19 @@ import (
 	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 )
 
 // Spec is the overall interpretted swagger file
 type Spec struct {
 	Info            SpecInfo
-	Definitions     []definition.Definition
+	Definitions     []model.Definition
 	AuthDefinitions []security.Auth
 	Services        []Service
 }
 
-func NewSpec(info SpecInfo, definitions []definition.Definition, authDefinitions []security.Auth, services []Service) Spec {
+func NewSpec(info SpecInfo, definitions []model.Definition, authDefinitions []security.Auth, services []Service) Spec {
 	sort.Sort(sortByDefinitionName(definitions))
 	sort.Sort(sortBySecurityIdentifier(authDefinitions))
 	return Spec{
@@ -29,7 +29,7 @@ func NewSpec(info SpecInfo, definitions []definition.Definition, authDefinitions
 	}
 }
 
-type sortByDefinitionName []definition.Definition
+type sortByDefinitionName []model.Definition
 
 func (a sortByDefinitionName) Len() int           { return len(a) }
 func (a sortByDefinitionName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

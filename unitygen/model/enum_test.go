@@ -1,15 +1,15 @@
-package definition_test
+package model_test
 
 import (
 	"testing"
 
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEnum(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	enum := definition.NewEnum(
+	enum := model.NewEnum(
 		"testEnum",
 		[]string{
 			"A",

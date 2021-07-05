@@ -1,13 +1,17 @@
 package property
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
+)
 
 type Array struct {
 	name string
-	prop Property
+	prop model.Property
 }
 
-func NewArray(name string, prop Property) Array {
+func NewArray(name string, prop model.Property) Array {
 	return Array{
 		name: name,
 		prop: prop,
@@ -18,7 +22,7 @@ func (sp Array) Name() string {
 	return sp.name
 }
 
-func (sp Array) Property() Property {
+func (sp Array) Property() model.Property {
 	return sp.prop
 }
 

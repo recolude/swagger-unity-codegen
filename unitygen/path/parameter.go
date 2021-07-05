@@ -1,7 +1,7 @@
 package path
 
 import (
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
 )
 
 type ParameterLocation string
@@ -18,10 +18,10 @@ type Parameter struct {
 	location      ParameterLocation
 	name          string
 	required      bool
-	parameterType property.Property // ex: string, query
+	parameterType model.Property // ex: string, query
 }
 
-func NewParameter(location ParameterLocation, name string, required bool, parameterType property.Property) Parameter {
+func NewParameter(location ParameterLocation, name string, required bool, parameterType model.Property) Parameter {
 	return Parameter{
 		location:      location,
 		name:          name,
@@ -42,6 +42,6 @@ func (param Parameter) Required() bool {
 	return param.required
 }
 
-func (param Parameter) Schema() property.Property {
+func (param Parameter) Schema() model.Property {
 	return param.parameterType
 }

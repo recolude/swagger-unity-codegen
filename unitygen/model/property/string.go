@@ -38,7 +38,6 @@ func (sp String) EmptyValue() string {
 }
 
 func (sp String) ClassVariables() string {
-
 	switch sp.format {
 	case "date-time":
 		builder := strings.Builder{}
@@ -50,5 +49,4 @@ func (sp String) ClassVariables() string {
 	default:
 		return fmt.Sprintf("\tpublic %s %s;\n", sp.ToVariableType(), sp.Name())
 	}
-
 }

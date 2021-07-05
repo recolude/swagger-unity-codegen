@@ -9,8 +9,8 @@ import (
 
 	"github.com/recolude/swagger-unity-codegen/unitygen"
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
@@ -22,7 +22,6 @@ func filterSpecForTags(spec unitygen.Spec, tags []string) unitygen.Spec {
 	}
 	filteredServices := make([]unitygen.Service, 0)
 	for _, service := range spec.Services {
-
 		for _, tag := range tags {
 			if service.Name() == tag {
 				filteredServices = append(filteredServices, service)
@@ -42,7 +41,7 @@ func alreadyRecursed(inquestion string, alreadyAdded []string) bool {
 	return false
 }
 
-func findReferencePropRecurse(inQuestion property.Property, defs []definition.Definition, alreadyAdded []string) []string {
+func findReferencePropRecurse(inQuestion model.Property, defs []model.Definition, alreadyAdded []string) []string {
 	finalReferences := alreadyAdded
 
 	objectDefinition, ok := inQuestion.(property.ObjectReference)
@@ -67,10 +66,10 @@ func findReferencePropRecurse(inQuestion property.Property, defs []definition.De
 	return finalReferences
 }
 
-func findReferenceRecurse(inQuestion definition.Definition, defs []definition.Definition, alreadyFound []string) []string {
+func findReferenceRecurse(inQuestion model.Definition, defs []model.Definition, alreadyFound []string) []string {
 	finalReferences := alreadyFound
 
-	objectDefinition, ok := inQuestion.(definition.Object)
+	objectDefinition, ok := inQuestion.(model.Object)
 	if ok {
 		if alreadyRecursed(objectDefinition.ToVariableType(), finalReferences) {
 			return finalReferences
@@ -81,7 +80,7 @@ func findReferenceRecurse(inQuestion definition.Definition, defs []definition.De
 		}
 	}
 
-	enumDefinition, ok := inQuestion.(definition.Enum)
+	enumDefinition, ok := inQuestion.(model.Enum)
 	if ok {
 		finalReferences = append(finalReferences, enumDefinition.ToVariableType())
 	}
@@ -89,7 +88,7 @@ func findReferenceRecurse(inQuestion definition.Definition, defs []definition.De
 	return finalReferences
 }
 
-func buildReferenceMapping(defs []definition.Definition) map[string][]string {
+func buildReferenceMapping(defs []model.Definition) map[string][]string {
 	refMapping := make(map[string][]string)
 	for _, def := range defs {
 		refMapping[def.ToVariableType()] = findReferenceRecurse(def, defs, nil)
@@ -98,7 +97,6 @@ func buildReferenceMapping(defs []definition.Definition) map[string][]string {
 }
 
 func filterSpecForUnusedDefinitions(spec unitygen.Spec) unitygen.Spec {
-
 	thingsToKeep := make(map[string]bool)
 	for _, def := range spec.Definitions {
 		thingsToKeep[def.ToVariableType()] = false
@@ -133,7 +131,7 @@ func filterSpecForUnusedDefinitions(spec unitygen.Spec) unitygen.Spec {
 		}
 	}
 
-	filteredDefinitions := make([]definition.Definition, 0)
+	filteredDefinitions := make([]model.Definition, 0)
 	for _, def := range spec.Definitions {
 		if thingsToKeep[def.ToVariableType()] {
 			filteredDefinitions = append(filteredDefinitions, def)
@@ -158,7 +156,7 @@ func fileImports(out io.Writer) {
 	fmt.Fprintln(out, "")
 }
 
-func writeDefinitions(out io.Writer, defs []definition.Definition) {
+func writeDefinitions(out io.Writer, defs []model.Definition) {
 	for _, def := range defs {
 		fmt.Fprintf(out, "%s\n\n", def.ToCSharp())
 	}
@@ -186,7 +184,6 @@ func closeNamespace(out io.Writer, namespace string) {
 
 // allOutAtOnce is for when you want the entirety of the swagger in a single file.
 func allOutAtOnce(c *cli.Context, spec unitygen.Spec) error {
-
 	fileCommentHeader(c.App.Writer)
 	fileImports(c.App.Writer)
 
@@ -263,14 +260,7 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 				Name: "Elijah C Davis",
 			},
 		},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:    "file",
-				Aliases: []string{"f"},
-				Usage:   "where to load swagger from",
-				Value:   "swagger.json",
-			},
-		},
+		Flags: []cli.Flag{},
 		Commands: []*cli.Command{
 			{
 				Name:    "generate",
@@ -292,6 +282,12 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 						Usage:       "Name to be listed in the Assets/Create submenu, so that instances of the server config can be easily created and stored in the project as \".asset\"",
 						Value:       "Server/Config",
 						DefaultText: "Server/Config",
+					},
+					&cli.StringFlag{
+						Name:    "file",
+						Aliases: []string{"f"},
+						Usage:   "where to load swagger from",
+						Value:   "swagger.json",
 					},
 					&cli.BoolFlag{
 						Name:  "include-unused",
@@ -315,7 +311,6 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 					},
 				},
 				Action: func(c *cli.Context) error {
-
 					file, err := fs.Open(c.String("file"))
 					if err != nil {
 						return fmt.Errorf("Error opening swagger file: %w", err)

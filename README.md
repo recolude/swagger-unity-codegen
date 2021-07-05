@@ -51,12 +51,13 @@ GLOBAL OPTIONS:
 Command used to generate Recolude's code.
 
 ```bash
-swag3d --file api/openapi-spec/swagger.json generate \
+swag3d generate \
+	--file api/openapi-spec/swagger.json \
 	--config-name="RecoludeConfig" \
-	--config-menu="Recolude/Config" 
-	--tags "RecordingService" 
-	--namespace Recolude.API 
-	--out "Scripts" 
+	--config-menu="Recolude/Config" \
+	--tags "RecordingService" \
+	--namespace Recolude.API \
+	--out "Scripts" \
 	--scriptable-object-config=false
 ```
 
@@ -81,9 +82,9 @@ import (
 	"os"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen"
-	"github.com/recolude/swagger-unity-codegen/unitygen/definition"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/path"
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 )
 
 func main() {
@@ -94,9 +95,9 @@ func main() {
 	}
 
 	// What we want our succesful response to be
-	responseDefinition := definition.NewObject(
+	responseDefinition := model.NewObject(
 		"EchoResponse",
-		[]property.Property{
+		[]model.Property{
 			property.NewString("response", ""),
 			property.NewString("serverTime", "date-time"),
 		},
@@ -134,7 +135,6 @@ func main() {
 	fmt.Fprint(f, responseDefinition.ToCSharp())
 	fmt.Fprint(f, service.ToCSharp(nil, "ServiceConfig"))
 }
-
 ```
 
 When the above code executes, it will generate the following C# code:
@@ -145,7 +145,10 @@ public class EchoResponse
 {
     public string response;
 
-    public System.DateTime serverTime;
+    [SerializeField]
+    private string serverTime;
+
+    public System.DateTime ServerTime { get => System.DateTime.Parse(serverTime); }
 }
 
 public class ExampleService
@@ -159,7 +162,6 @@ public class ExampleService
 
     public class EchoUnityWebRequest
     {
-
         public EchoResponse success;
 
         public UnityWebRequest UnderlyingRequest { get; }
@@ -172,18 +174,54 @@ public class ExampleService
         public IEnumerator Run()
         {
             yield return this.UnderlyingRequest.SendWebRequest();
-            if (UnderlyingRequest.responseCode == 200)
-            {
-                success = JsonUtility.FromJson<EchoResponse>(UnderlyingRequest.downloadHandler.text);
-            }
+            Interpret(this.UnderlyingRequest);
         }
 
+        public void Interpret(UnityWebRequest req)
+        {
+            if (req.responseCode == 200)
+            {
+                success = JsonUtility.FromJson<EchoResponse>(req.downloadHandler.text);
+            }
+        }
     }
-    public EchoUnityWebRequest Echo(string val)
+
+    public class EchoRequestParams
     {
-        var unityNetworkReq = new UnityWebRequest(string.Format("{0}api/echo?whatToEcho={1}", this.Config.BasePath, UnityWebRequest.EscapeURL(whatToEcho)), UnityWebRequest.kHttpVerbGET);
+        private bool whatToEchoSet = false;
+        private string whatToEcho;
+        public string WhatToEcho { get { return whatToEcho; } set { whatToEchoSet = true; whatToEcho = value; } }
+        public void UnsetWhatToEcho() { whatToEcho = null; whatToEchoSet = false; }
+
+        public UnityWebRequest BuildUnityWebRequest(string baseURL)
+        {
+            var finalPath = baseURL + "api/echo";
+            var queryAdded = false;
+
+            if (whatToEchoSet)
+            {
+                finalPath += (queryAdded ? "&" : "?") + "whatToEcho=";
+                queryAdded = true;
+                finalPath += UnityWebRequest.EscapeURL(whatToEcho.ToString());
+            }
+
+            return new UnityWebRequest(finalPath, UnityWebRequest.kHttpVerbGET);
+        }
+    }
+	
+    public EchoUnityWebRequest Echo(EchoRequestParams requestParams)
+    {
+        var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
         unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
         return new EchoUnityWebRequest(unityNetworkReq);
+    }
+
+    public EchoUnityWebRequest Echo(string whatToEcho)
+    {
+        return Echo(new EchoRequestParams()
+        {
+            WhatToEcho = whatToEcho,
+        });
     }
 }
 ```

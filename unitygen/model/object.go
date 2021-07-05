@@ -1,21 +1,20 @@
-package definition
+package model
 
 import (
 	"sort"
 	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
-	"github.com/recolude/swagger-unity-codegen/unitygen/property"
 )
 
 // Object is a collection of properties
 type Object struct {
 	ObjectName string
-	Properties []property.Property
+	Properties []Property
 }
 
 // NewObject creates a new object
-func NewObject(name string, properties []property.Property) Object {
+func NewObject(name string, properties []Property) Object {
 	sort.Sort(sortByPropName(properties))
 	return Object{
 		ObjectName: name,
@@ -23,7 +22,7 @@ func NewObject(name string, properties []property.Property) Object {
 	}
 }
 
-type sortByPropName []property.Property
+type sortByPropName []Property
 
 func (a sortByPropName) Len() int           { return len(a) }
 func (a sortByPropName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
