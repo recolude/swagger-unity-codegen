@@ -133,7 +133,22 @@ func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.
 		parsedValues[i] = child.Data().(string)
 	}
 
-	return model.NewEnum(name, parsedValues), nil
+	return model.NewStringEnum(name, parsedValues), nil
+}
+
+func (p Parser) interpretNumberDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
+	enum := obj.Path("enum")
+	if enum == nil {
+		return nil, InvalidSpecError{Path: append(path, name), Reason: "Unimplemented number case"}
+	}
+
+	children := enum.Children()
+	parsedValues := make([]float64, len(children))
+	for i, child := range enum.Children() {
+		parsedValues[i] = child.Data().(float64)
+	}
+
+	return model.NewNumberEnum(name, parsedValues), nil
 }
 
 func (p Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error) {
@@ -154,6 +169,10 @@ func (p Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error
 
 		case "string":
 			def, err = p.interpretStringDefinition([]string{"definitions"}, key, val)
+			break
+
+		case "number":
+			def, err = p.interpretNumberDefinition([]string{"definitions"}, key, val)
 			break
 
 		default:

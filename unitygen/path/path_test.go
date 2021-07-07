@@ -282,29 +282,40 @@ func Test_ThreeParametersInPath(t *testing.T) {
 
 func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	// ******************************** ARRANGE *******************************
+	params := []path.Parameter{path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", ""))}
+	opID := "UserService_GetUser"
+	urlRotue := "/api/v1/users/{userId}"
+	method := http.MethodGet
+	security := []path.SecurityMethodReference{
+		path.NewSecurityMethodReference("CognitoAuth"),
+		path.NewSecurityMethodReference("DevKeyAuth"),
+	}
+	tags := []string{"UserService"}
+
 	route := path.NewPath(
-		"/api/v1/users/{userId}",
-		"UserService_GetUser",
-		http.MethodGet,
-		[]string{"UserService"},
-		[]path.SecurityMethodReference{
-			path.NewSecurityMethodReference("CognitoAuth"),
-			path.NewSecurityMethodReference("DevKeyAuth"),
-		},
+		urlRotue,
+		opID,
+		method,
+		tags,
+		security,
 		map[string]path.Response{
 			"200":     path.NewResponse("A successful response.", model.NewObjectReference("#/definitions/v1UserResponse")),
 			"401":     path.NewResponse("Weird Unauthorized response.", nil),
 			"default": path.NewResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
 		},
-		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
-		},
+		params,
 	)
 
 	// ********************************** ACT *********************************
 	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
+	assert.Equal(t, params, route.Parameters())
+	assert.Equal(t, urlRotue, route.Route())
+	assert.Equal(t, opID, route.OperationID())
+	assert.Equal(t, method, route.Method())
+	assert.Equal(t, security, route.SecurityReferences())
+	assert.Equal(t, tags, route.Tags())
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
 
 	public V1UserResponse success;

@@ -303,53 +303,6 @@ func (p Path) serviceFunctionParameters() string {
 	return sb.String()
 }
 
-// func (p Path) serviceFunctionNetReqURL() string {
-// 	paramsInURL := 0
-// 	finalRoute := p.route
-// 	routeReplacements := "this.Config.BasePath"
-
-// 	// Do all path parameters first
-// 	for _, param := range p.parameters {
-// 		if param.location == BodyParameterLocation {
-// 			panic("Generating request bodies not implemented ATM")
-// 		}
-// 		if param.location == PathParameterLocation {
-// 			finalRoute = strings.Replace(finalRoute, "{"+param.name+"}", fmt.Sprintf("{%d}", paramsInURL+1), 1)
-// 			routeReplacements += ", "
-// 			if param.parameterType.ToVariableType() == "string" {
-// 				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
-// 			} else {
-// 				routeReplacements += param.name
-// 			}
-// 			paramsInURL++
-// 		}
-// 	}
-
-// 	// Then do query parameters next
-// 	firstQuery := true
-// 	for _, param := range p.parameters {
-// 		if param.location == QueryParameterLocation {
-// 			if firstQuery {
-// 				finalRoute += "?"
-// 				firstQuery = false
-// 			} else {
-// 				finalRoute += "&"
-// 			}
-// 			finalRoute += fmt.Sprintf("%s={%d}", param.name, paramsInURL+1)
-
-// 			routeReplacements += ", "
-// 			if param.parameterType.ToVariableType() == "string" {
-// 				routeReplacements += fmt.Sprintf("UnityWebRequest.EscapeURL(%s)", param.name)
-// 			} else {
-// 				routeReplacements += param.name
-// 			}
-// 			paramsInURL++
-// 		}
-// 	}
-
-// 	return fmt.Sprintf("string.Format(\"{0}%s\", %s)", finalRoute, routeReplacements)
-// }
-
 func (p Path) functionOveride(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 

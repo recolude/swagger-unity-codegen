@@ -80,7 +80,7 @@ func findReferenceRecurse(inQuestion model.Definition, defs []model.Definition, 
 		}
 	}
 
-	enumDefinition, ok := inQuestion.(model.Enum)
+	enumDefinition, ok := inQuestion.(model.StringEnum)
 	if ok {
 		finalReferences = append(finalReferences, enumDefinition.ToVariableType())
 	}

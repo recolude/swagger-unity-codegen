@@ -469,3 +469,44 @@ public class Query {
 }`, def.ToCSharp())
 	}
 }
+
+func Test_ReadNumberEnums(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+			"info": {
+				"title": "Analytic Service",
+				"version": "1.0.0"
+			},
+			"paths": {
+			},
+			"definitions": {
+				"BinSize": {
+					"type": "number",
+					"enum": [0.125, 0.25, 0.5, 1, 2, 4, 8]
+				}
+			}
+		}`
+	// ********************************** ACT *********************************
+	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	if assert.NoError(t, err) == false {
+		return
+	}
+	assert.Equal(t, "Analytic Service", spec.Info.Title)
+	assert.Equal(t, "1.0.0", spec.Info.Version)
+	if assert.Len(t, spec.Definitions, 1) {
+		def := spec.Definitions[0]
+		assert.Equal(t, "BinSize", def.Name())
+		assert.Equal(t, "BinSize", def.ToVariableType())
+		assert.Equal(t, `public enum BinSize {
+	NUMBER_0_DOT_125,
+	NUMBER_0_DOT_25,
+	NUMBER_0_DOT_5,
+	NUMBER_1,
+	NUMBER_2,
+	NUMBER_4,
+	NUMBER_8
+}`, def.ToCSharp())
+	}
+}

@@ -63,8 +63,8 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 	spec := unitygen.NewSpec(
 		unitygen.SpecInfo{},
 		[]model.Definition{
-			model.NewEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
-			model.NewEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"}),
+			model.NewStringEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
+			model.NewStringEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"}),
 			model.NewObject("ToBeRemoved", nil),
 			model.NewObject("Basic", nil),
 			model.NewObject("X", nil),

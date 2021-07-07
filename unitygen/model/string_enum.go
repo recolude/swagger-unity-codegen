@@ -7,32 +7,32 @@ import (
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 )
 
-// Enum is a c# enum
-type Enum struct {
+// StringEnum is a c# enum
+type StringEnum struct {
 	name   string
 	values []string
 }
 
-// NewEnum creates a new c# enum
-func NewEnum(name string, values []string) Enum {
-	return Enum{
+// NewStringEnum creates a new c# enum
+func NewStringEnum(name string, values []string) StringEnum {
+	return StringEnum{
 		name:   name,
 		values: values,
 	}
 }
 
 // ToVariableType generates a identifier for the definition
-func (e Enum) ToVariableType() string {
+func (e StringEnum) ToVariableType() string {
 	return convention.TitleCase(e.Name())
 }
 
 // Name returns the enums name
-func (e Enum) Name() string {
+func (e StringEnum) Name() string {
 	return e.name
 }
 
 // ToCSharp generates a c# enum for unity
-func (e Enum) ToCSharp() string {
+func (e StringEnum) ToCSharp() string {
 	var enumBuilder strings.Builder
 
 	enumBuilder.WriteString("public enum ")
