@@ -22,3 +22,7 @@ func NewResponse(description string, schema model.Definition) Response {
 func (resp Response) Schema() model.Definition {
 	return resp.schema
 }
+
+func (resp Response) Description() string {
+	return resp.description
+}

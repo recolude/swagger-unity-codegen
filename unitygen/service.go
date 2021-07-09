@@ -35,7 +35,6 @@ func (s Service) Paths() []path.Path {
 // ToCSharp writes out the service as a class with collection of functions that
 // correspond to calling different routes
 func (s Service) ToCSharp(knownModifiers []security.Auth, serviceConfigName string) string {
-
 	className := convention.TitleCase(s.Name())
 	if strings.HasSuffix(className, "Service") == false {
 		className += "Service"

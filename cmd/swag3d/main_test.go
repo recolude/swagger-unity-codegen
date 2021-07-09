@@ -322,3 +322,19 @@ func TestSpecifyingOutWritesMultipleFiles(t *testing.T) {
 	AssertFileExists(t, appFS, "Services.cs")
 	AssertFileExists(t, appFS, "ServiceConfig.cs")
 }
+
+func TestErrorsWithNoFileToReadFrom(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	appFS := afero.NewMemMapFs()
+	// afero.WriteFile(appFS, "swagger.json", []byte("{ }"), os.ModePerm)
+
+	out := strings.Builder{}
+	errOut := strings.Builder{}
+	app := buildApp(appFS, &out, &errOut)
+
+	// ********************************** ACT *********************************
+	err := app.Run([]string{"swag3d", "generate", "--file", "swagger.json", "--out", "."})
+
+	// ********************************* ASSERT *******************************
+	assert.EqualError(t, err, "Error opening swagger file: open swagger.json: file does not exist")
+}

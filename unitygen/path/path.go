@@ -1,6 +1,7 @@
 package path
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -27,6 +28,16 @@ type Path struct {
 
 // NewPath creates a new path
 func NewPath(route, operationID, method string, tags []string, security []SecurityMethodReference, responses map[string]Response, parameters []Parameter) Path {
+	bodyFound := false
+	for _, p := range parameters {
+		if p.location == BodyParameterLocation {
+			if bodyFound {
+				panic(errors.New("can not have multiple body parameters for a single path"))
+			}
+			bodyFound = true
+		}
+	}
+
 	return Path{
 		route:       route,
 		httpMethod:  method,
@@ -80,6 +91,8 @@ func (p Path) respVariableName(k string) string {
 	case "200":
 		return "success"
 
+	case "400":
+		return "badaRequest"
 	case "401":
 		return "unauthorized"
 	case "403":
@@ -116,6 +129,15 @@ func (p Path) queryParamCount() int {
 	return count
 }
 
+func (p Path) bodyParam() *Parameter {
+	for _, param := range p.parameters {
+		if param.location == BodyParameterLocation {
+			return &param
+		}
+	}
+	return nil
+}
+
 // RequestParamClass a class to act as a container for all parameters associated
 // for making a specific web request
 func (p Path) RequestParamClass() string {
@@ -125,9 +147,7 @@ func (p Path) RequestParamClass() string {
 
 	builder := strings.Builder{}
 
-	builder.WriteString("public class ")
-	builder.WriteString(p.requestParamClassName())
-	builder.WriteString("\n{\n")
+	fmt.Fprintf(&builder, "public class %s\n{\n", p.requestParamClassName())
 
 	for _, param := range p.parameters {
 		privateVarName := convention.CamelCase(param.name)
@@ -152,9 +172,6 @@ func (p Path) RequestParamClass() string {
 
 	// Do all path parameters first
 	for _, param := range p.parameters {
-		if param.location == BodyParameterLocation {
-			panic("Generating request bodies not implemented ATM " + p.operationID)
-		}
 		if param.location == PathParameterLocation {
 			privateVarName := convention.CamelCase(param.name)
 			fmt.Fprintf(&builder, "\t\tfinalPath = finalPath.Replace(\"{%s}\", %sSet ? UnityWebRequest.EscapeURL(%s.ToString()) : \"\");\n", privateVarName, privateVarName, privateVarName)
@@ -165,6 +182,7 @@ func (p Path) RequestParamClass() string {
 		builder.WriteString("\t\tvar queryAdded = false;\n\n")
 	}
 
+	// Build out the final url by appending set query params to the url.
 	for _, param := range p.parameters {
 		if param.location == QueryParameterLocation {
 			privateVarName := convention.CamelCase(param.name)
@@ -175,7 +193,19 @@ func (p Path) RequestParamClass() string {
 		}
 	}
 
-	fmt.Fprintf(&builder, "\t\treturn new UnityWebRequest(finalPath, %s);\n\t}\n}", unity.ToUnityHTTPVerb(p.httpMethod))
+	// Build the unity request object
+	fmt.Fprintf(&builder, "\t\tvar unityWebReq = new UnityWebRequest(finalPath, %s);\n", unity.ToUnityHTTPVerb(p.httpMethod))
+
+	// Set the body of the request
+	bodyParam := p.bodyParam()
+	if bodyParam != nil {
+		fmt.Fprintf(&builder, "\t\tvar unityRawUploadHandler = new UploadHandlerRaw(Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(%s)));\n", convention.CamelCase(bodyParam.name))
+		builder.WriteString("\t\tunityRawUploadHandler.contentType = \"application/json\";\n")
+		builder.WriteString("\t\tunityWebReq.uploadHandler = unityRawUploadHandler;\n")
+	}
+
+	// Return result
+	builder.WriteString("\t\treturn unityWebReq;\n\t}\n}")
 
 	return builder.String()
 }

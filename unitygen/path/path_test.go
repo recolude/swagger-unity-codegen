@@ -11,6 +11,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_PanicsWithMultipleBodyParameters(t *testing.T) {
+	assert.PanicsWithError(t, "can not have multiple body parameters for a single path", func() {
+		path.NewPath(
+			"/api/v1/dev-keys",
+			"DevKeyService_GetDevKey",
+			http.MethodGet,
+			[]string{"DevKeyService"},
+			[]path.SecurityMethodReference{path.NewSecurityMethodReference("CognitoAuth")},
+			nil,
+			[]path.Parameter{
+				path.NewParameter(path.BodyParameterLocation, "1", true, nil),
+				path.NewParameter(path.BodyParameterLocation, "2", true, nil),
+			},
+		)
+	})
+}
+
 func Test_SimpleGet(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
@@ -381,7 +398,7 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 }`, functionCode)
 }
 
-func Test_DealsWithMultipleQueryParams(t *testing.T) {
+func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}",
@@ -396,6 +413,7 @@ func Test_DealsWithMultipleQueryParams(t *testing.T) {
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
 			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
 			path.NewParameter(path.QueryParameterLocation, "anotherId", true, property.NewInteger("anotherId", "")),
+			path.NewParameter(path.BodyParameterLocation, "query", true, property.NewObjectReference("test", "#/definitions/Query")),
 		},
 	)
 
@@ -411,12 +429,13 @@ func Test_DealsWithMultipleQueryParams(t *testing.T) {
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }
 
-public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId, int anotherId)
+public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId, int anotherId, Query query)
 {
 	return UserService_GetUser(new UserService_GetUserRequestParams() {
 		UserId=userId,
 		DiffId=diffId,
 		AnotherId=anotherId,
+		Query=query,
 	});
 }`, functionCode)
 
@@ -437,6 +456,11 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 	public int AnotherId { get { return anotherId; } set { anotherIdSet = true; anotherId = value; } }
 	public void UnsetAnotherId() { anotherId = 0; anotherIdSet = false; }
 
+	private bool querySet = false;
+	private Query query;
+	public Query Query { get { return query; } set { querySet = true; query = value; } }
+	public void UnsetQuery() { query = null; querySet = false; }
+
 	public UnityWebRequest BuildUnityWebRequest(string baseURL)
 	{
 		var finalPath = baseURL + "/api/v1/users/{userId}";
@@ -455,7 +479,11 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 			finalPath += UnityWebRequest.EscapeURL(anotherId.ToString());
 		}
 
-		return new UnityWebRequest(finalPath, UnityWebRequest.kHttpVerbGET);
+		var unityWebReq = new UnityWebRequest(finalPath, UnityWebRequest.kHttpVerbGET);
+		var unityRawUploadHandler = new UploadHandlerRaw(Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(query)));
+		unityRawUploadHandler.contentType = "application/json";
+		unityWebReq.uploadHandler = unityRawUploadHandler;
+		return unityWebReq;
 	}
 }`, requestParamsClass)
 }

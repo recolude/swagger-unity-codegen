@@ -338,9 +338,7 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 
 func main() {
 	app := buildApp(afero.NewOsFs(), os.Stdout, os.Stderr)
-
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 }
