@@ -17,6 +17,8 @@ func TestCamelCase(t *testing.T) {
 		"snake_case":        {input: "abc_def", want: "abcDef"},
 		"snake_case weird":  {input: "_abc__def", want: "abcDef"},
 		"kebab weird":       {input: "-abc--def", want: "abcDef"},
+		"spaces":            {input: " abc def", want: "abcDef"},
+		"spaces2":           {input: " Abc def", want: "abcDef"},
 		"empty string":      {input: "", want: ""},
 	}
 

@@ -14,14 +14,14 @@ func CamelCase(in string) string {
 	experiencedFist := false
 	for _, c := range in {
 		if experiencedFist == false {
-			if c != '_' && c != '-' {
+			if c != '_' && c != '-' && c != ' ' {
 				out = append(out, unicode.ToLower(c))
 				experiencedFist = true
 			}
 			continue
 		}
 
-		if c == '_' || c == '-' {
+		if c == '_' || c == '-' || c == ' ' {
 			nextCapitilized = true
 			continue
 		}

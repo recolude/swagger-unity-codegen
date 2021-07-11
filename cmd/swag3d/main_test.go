@@ -92,10 +92,10 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewResponse("", model.NewObjectReference("#/definitions/A")),
-							"400": path.NewResponse("", model.NewObjectReference("#/definitions/SomeEnum")),
-							"500": path.NewResponse("", model.NewObjectReference("#/definitions/RecurseM")),
-							"501": path.NewResponse("", model.NewObjectReference("#/definitions/RecurseL")),
+							"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/A")),
+							"400": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/SomeEnum")),
+							"500": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/RecurseM")),
+							"501": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/RecurseL")),
 						},
 						[]path.Parameter{
 							path.NewParameter(
@@ -118,7 +118,7 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewResponse("", model.NewObjectReference("#/definitions/Basic")),
+							"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/Basic")),
 						},
 						[]path.Parameter{
 							path.NewParameter(

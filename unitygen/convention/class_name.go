@@ -16,18 +16,19 @@ func ClassName(in string) string {
 	experiencedFist := false
 	for _, c := range in {
 		if experiencedFist == false {
-			if c != '_' && c != '-' {
+			if c != '_' && c != '-' && c != ' ' {
 				out = append(out, unicode.ToUpper(c))
 				experiencedFist = true
 			}
 			continue
 		}
 
-		if c == '-' {
+		if c == '-' || c == ' ' {
 			nextCapitilized = true
 			continue
 		}
 
+		// Keep underscores cause I think some people would like that to be passed through.
 		if c == '_' {
 			out = append(out, c)
 			nextCapitilized = true

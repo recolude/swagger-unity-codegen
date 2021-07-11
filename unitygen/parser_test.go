@@ -36,6 +36,11 @@ func TestReadDefinition(t *testing.T) {
 								"$ref": "#/definitions/v1DevKeyResponse"
 							}
 						},
+						"400": {
+							"schema": {
+								"type": "file"
+							}
+						},
 						"default": {
 							"description": "An unexpected error response",
 							"schema": {
@@ -231,21 +236,25 @@ public class V1ListLicensesRequest {
 			assert.Equal(t, "DevKeyService_GetDevKey", spec.Services[0].Paths()[0].OperationID())
 			assert.Equal(t, "DevKeyService_CreateDevKey", spec.Services[0].Paths()[1].OperationID())
 
-			if assert.Len(t, spec.Services[0].Paths()[0].Responses(), 2) {
-				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["200"].Schema()) {
-					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[0].Responses()["200"].Schema().ToVariableType())
+			if assert.Len(t, spec.Services[0].Paths()[0].Responses(), 3) {
+				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["200"]) {
+					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[0].Responses()["200"].VariableType())
 				}
-				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["default"].Schema()) {
-					assert.Equal(t, "RuntimeError", spec.Services[0].Paths()[0].Responses()["default"].Schema().ToVariableType())
+				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["default"]) {
+					assert.Equal(t, "RuntimeError", spec.Services[0].Paths()[0].Responses()["default"].VariableType())
+				}
+
+				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["400"]) {
+					assert.Equal(t, "byte[]", spec.Services[0].Paths()[0].Responses()["400"].VariableType())
 				}
 			}
 
 			if assert.Len(t, spec.Services[0].Paths()[1].Responses(), 2) {
-				if assert.NotNil(t, spec.Services[0].Paths()[1].Responses()["200"].Schema()) {
-					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[1].Responses()["200"].Schema().ToVariableType())
+				if assert.NotNil(t, spec.Services[0].Paths()[1].Responses()["200"]) {
+					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[1].Responses()["200"].VariableType())
 				}
-				if assert.NotNil(t, spec.Services[0].Paths()[1].Responses()["default"].Schema()) {
-					assert.Equal(t, "RuntimeError", spec.Services[0].Paths()[1].Responses()["default"].Schema().ToVariableType())
+				if assert.NotNil(t, spec.Services[0].Paths()[1].Responses()["default"]) {
+					assert.Equal(t, "RuntimeError", spec.Services[0].Paths()[1].Responses()["default"].VariableType())
 				}
 			}
 

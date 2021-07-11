@@ -114,7 +114,7 @@ func main() {
 
 				// Different responses that can be sent to the function
 				map[string]path.Response{
-					"200": path.NewResponse("", responseDefinition),
+					"200": path.NewDefinitionResponse("", responseDefinition),
 				},
 
 				// Paramters to call the function

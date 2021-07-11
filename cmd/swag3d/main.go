@@ -119,10 +119,10 @@ func filterSpecForUnusedDefinitions(spec unitygen.Spec) unitygen.Spec {
 			}
 
 			for _, resp := range path.Responses() {
-				if resp.Schema() != nil {
-					if _, ok := thingsToKeep[resp.Schema().ToVariableType()]; ok {
-						thingsToKeep[resp.Schema().ToVariableType()] = true
-						for _, reference := range referenceMapping[resp.Schema().ToVariableType()] {
+				if resp != nil {
+					if _, ok := thingsToKeep[resp.VariableType()]; ok {
+						thingsToKeep[resp.VariableType()] = true
+						for _, reference := range referenceMapping[resp.VariableType()] {
 							thingsToKeep[reference] = true
 						}
 					}

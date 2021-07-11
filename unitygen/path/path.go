@@ -224,8 +224,8 @@ func (p Path) UnityWebRequest() string {
 	sort.Strings(keys)
 	for _, k := range keys {
 		// Some responses are defined as an empty body, making them nil!
-		if p.responses[k].schema != nil {
-			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].schema.ToVariableType(), p.respVariableName(k))
+		if p.responses[k] != nil {
+			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].VariableType(), p.respVariableName(k))
 		}
 	}
 
@@ -254,42 +254,38 @@ func (p Path) UnityWebRequest() string {
 }
 
 func (p Path) renderConditionalResponseCast(code string, resp Response) string {
-	if resp.schema == nil {
-		panic(fmt.Sprintf("code %s has nil response schema", code))
-	}
-
 	if parsed, err := strconv.Atoi(code); err == nil {
-		return fmt.Sprintf("if (req.responseCode == %d) {\n\t\t\t%s = JsonUtility.FromJson<%s>(req.downloadHandler.text);\n\t\t}", parsed, p.respVariableName(code), resp.schema.ToVariableType())
+		return fmt.Sprintf("if (req.responseCode == %d) {\n\t\t\t%s\n\t\t}", parsed, resp.Interpret(p.respVariableName(code), "req.downloadHandler"))
 	}
-	return fmt.Sprintf("fallbackResponse = JsonUtility.FromJson<%s>(req.downloadHandler.text);", resp.schema.ToVariableType())
+	return resp.Interpret("fallbackResponse", "req.downloadHandler")
 }
 
 func (p Path) renderHandleResponse() string {
-	keys := make([]string, 0)
+	codes := make([]string, 0)
 	for k, resp := range p.responses {
-		if resp.schema != nil {
-			keys = append(keys, k)
+		if resp != nil {
+			codes = append(codes, k)
 		}
 	}
 	builder := strings.Builder{}
-	sort.Strings(keys)
-	if len(keys) > 0 {
+	sort.Strings(codes)
+	if len(codes) > 0 {
 		builder.WriteString("\t\t")
 	}
 
-	if len(keys) == 1 {
-		builder.WriteString(p.renderConditionalResponseCast(keys[0], p.responses[keys[0]]))
+	if len(codes) == 1 {
+		builder.WriteString(p.renderConditionalResponseCast(codes[0], p.responses[codes[0]]))
 		builder.WriteString("\n")
-	} else if len(keys) > 1 {
-		for keyIndex := range keys {
-			if keys[keyIndex] == "default" {
+	} else if len(codes) > 1 {
+		for codeIndex, code := range codes {
+			if code == "default" {
 				builder.WriteString("{\n\t\t\t")
-				builder.WriteString(p.renderConditionalResponseCast(keys[keyIndex], p.responses[keys[keyIndex]]))
+				builder.WriteString(p.renderConditionalResponseCast(code, p.responses[codes[codeIndex]]))
 				builder.WriteString("\n\t\t}")
 			} else {
-				builder.WriteString(p.renderConditionalResponseCast(keys[keyIndex], p.responses[keys[keyIndex]]))
+				builder.WriteString(p.renderConditionalResponseCast(code, p.responses[codes[codeIndex]]))
 			}
-			if keyIndex < len(keys)-1 {
+			if codeIndex < len(codes)-1 {
 				builder.WriteString(" else ")
 			}
 		}

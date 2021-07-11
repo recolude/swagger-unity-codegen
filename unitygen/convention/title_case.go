@@ -2,6 +2,7 @@ package convention
 
 import "unicode"
 
+// TitleCase strips all '_' and '-' characters and capitalizes each word.
 func TitleCase(in string) string {
 	if in == "" {
 		return ""
@@ -11,7 +12,7 @@ func TitleCase(in string) string {
 
 	nextCapitilized := true
 	for _, c := range in {
-		if c == '_' || c == '-' {
+		if c == '_' || c == '-' || c == ' ' {
 			nextCapitilized = true
 			continue
 		}

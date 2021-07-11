@@ -17,6 +17,7 @@ func TestClassName(t *testing.T) {
 		"snake_case weird":    {input: "abc__def", want: "Abc__Def"},
 		"already capitalized": {input: "AbcDef", want: "AbcDef"},
 		"kebab weird":         {input: "-_abc-def", want: "AbcDef"},
+		"spaces":              {input: " abc def", want: "AbcDef"},
 		"empty string":        {input: "", want: ""},
 	}
 

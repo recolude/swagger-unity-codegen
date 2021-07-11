@@ -306,25 +306,50 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 
 		operationID, ok := verbObj.Path("operationId").Data().(string)
 		if !ok {
-			return nil, InvalidSpecError{Path: []string{"paths", url, verb}, Reason: "unable to location operation ID"}
+			return nil, InvalidSpecError{Path: []string{"paths", url, verb}, Reason: "unable to locate operation ID"}
 		}
 
 		responses := make(map[string]path.Response)
 		for key, respJSON := range verbObj.Path("responses").ChildrenMap() {
-
-			var def model.Definition
 			schemaJSON := respJSON.Path("schema")
+			description := ""
+			descriptionNode := respJSON.Path("description")
+			if descriptionNode != nil {
+				description = descriptionNode.Data().(string)
+			}
+
 			if schemaJSON != nil {
 				refNode := schemaJSON.Path("$ref")
 				if refNode != nil {
-					def = model.NewObjectReference(refNode.Data().(string))
+					responses[key] = path.NewDefinitionResponse(
+						description,
+						model.NewObjectReference(refNode.Data().(string)),
+					)
+					continue
 				}
-			}
 
-			responses[key] = path.NewResponse(
-				respJSON.Path("description").Data().(string),
-				def,
-			)
+				typeNode := schemaJSON.Path("type")
+				if typeNode != nil {
+					typeValue := typeNode.Data().(string)
+					switch typeValue {
+					case "file":
+						responses[key] = path.NewFileResponse(description)
+						break
+
+					case "number":
+						responses[key] = path.NewNumberResponse(description)
+						break
+
+					default:
+						return nil, InvalidSpecError{Path: []string{"paths", url, verb, key}, Reason: "unable to interpret response schema: " + typeValue}
+					}
+					continue
+				}
+
+				return nil, InvalidSpecError{Path: []string{"paths", url, verb, key}, Reason: "unable to interpret response"}
+			} else {
+				responses[key] = nil
+			}
 		}
 
 		parameters := make([]path.Parameter, 0)
