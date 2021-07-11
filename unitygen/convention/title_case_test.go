@@ -16,6 +16,7 @@ func TestTitleCase(t *testing.T) {
 		"snake_case":          {input: "abc_def", want: "AbcDef"},
 		"snake_case weird":    {input: "_abc__def", want: "AbcDef"},
 		"already capitalized": {input: "AbcDef", want: "AbcDef"},
+		"kebab weird":         {input: "-abc--def", want: "AbcDef"},
 		"empty string":        {input: "", want: ""},
 	}
 

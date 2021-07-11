@@ -92,7 +92,7 @@ func (p Path) respVariableName(k string) string {
 		return "success"
 
 	case "400":
-		return "badaRequest"
+		return "badRequest"
 	case "401":
 		return "unauthorized"
 	case "403":
@@ -174,7 +174,7 @@ func (p Path) RequestParamClass() string {
 	for _, param := range p.parameters {
 		if param.location == PathParameterLocation {
 			privateVarName := convention.CamelCase(param.name)
-			fmt.Fprintf(&builder, "\t\tfinalPath = finalPath.Replace(\"{%s}\", %sSet ? UnityWebRequest.EscapeURL(%s.ToString()) : \"\");\n", privateVarName, privateVarName, privateVarName)
+			fmt.Fprintf(&builder, "\t\tfinalPath = finalPath.Replace(\"{%s}\", %sSet ? UnityWebRequest.EscapeURL(%s.ToString()) : \"\");\n", param.name, privateVarName, privateVarName)
 		}
 	}
 
@@ -324,7 +324,7 @@ func (p Path) serviceFunctionParameters() string {
 
 	sb := strings.Builder{}
 	for i, param := range p.parameters {
-		fmt.Fprintf(&sb, "%s %s", param.parameterType.ToVariableType(), param.name)
+		fmt.Fprintf(&sb, "%s %s", param.parameterType.ToVariableType(), convention.CamelCase(param.name))
 		if i < len(p.parameters)-1 {
 			sb.WriteString(", ")
 		}

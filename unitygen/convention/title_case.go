@@ -11,7 +11,7 @@ func TitleCase(in string) string {
 
 	nextCapitilized := true
 	for _, c := range in {
-		if c == '_' {
+		if c == '_' || c == '-' {
 			nextCapitilized = true
 			continue
 		}

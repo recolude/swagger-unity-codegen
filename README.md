@@ -4,7 +4,7 @@
 
 **[Currently In Beta: Only Supports Swagger 2.0 JSON ATM]**
 
-Generate valid networking code for Unity3D that **WILL NOT REQUIRE** any external dependencies/DLLs!!! This project was both made for and is used by [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
+Generate valid networking code for Unity3D that takes advantage of [Unity's Web Request](https://docs.unity3d.com/ScriptReference/Networking.UnityWebRequest.html) object instead of something like RestSharp. This project was both made for and is used by [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
 
 PRs + Issues Welcome.
 
@@ -41,7 +41,6 @@ COMMANDS:
    help, h      Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --file value   where to load swagger from (default: "swagger.json")
    --help, -h     show help (default: false)
    --version, -v  print the version (default: false)
 ```
@@ -236,7 +235,7 @@ Ordered by priority (to me)!
 - [X] Support for System.DateTime
 - [ ] Support Searilizing Bodies
 - [ ] Optional Parameters In Request Body
-- [ ] Embedded object definitions
+- [X] Embedded object definitions
 - [ ] Embedded array object definitions
 - [ ] Generate a scriptable object for any definition found in the swagger file
 - [ ] Ability to generate `*.unitypackage`

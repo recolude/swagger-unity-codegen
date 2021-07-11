@@ -401,7 +401,7 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
-		"/api/v1/users/{userId}",
+		"/api/v1/users/{userId}/{user-name}",
 		"UserService_GetUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -411,6 +411,7 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.PathParameterLocation, "user-name", true, property.NewString("userId", "")),
 			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
 			path.NewParameter(path.QueryParameterLocation, "anotherId", true, property.NewInteger("anotherId", "")),
 			path.NewParameter(path.BodyParameterLocation, "query", true, property.NewObjectReference("test", "#/definitions/Query")),
@@ -429,10 +430,11 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }
 
-public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string diffId, int anotherId, Query query)
+public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string userName, string diffId, int anotherId, Query query)
 {
 	return UserService_GetUser(new UserService_GetUserRequestParams() {
 		UserId=userId,
+		UserName=userName,
 		DiffId=diffId,
 		AnotherId=anotherId,
 		Query=query,
@@ -445,6 +447,11 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 	private string userId;
 	public string UserId { get { return userId; } set { userIdSet = true; userId = value; } }
 	public void UnsetUserId() { userId = null; userIdSet = false; }
+
+	private bool userNameSet = false;
+	private string userName;
+	public string UserName { get { return userName; } set { userNameSet = true; userName = value; } }
+	public void UnsetUserName() { userName = null; userNameSet = false; }
 
 	private bool diffIdSet = false;
 	private string diffId;
@@ -463,8 +470,9 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 
 	public UnityWebRequest BuildUnityWebRequest(string baseURL)
 	{
-		var finalPath = baseURL + "/api/v1/users/{userId}";
+		var finalPath = baseURL + "/api/v1/users/{userId}/{user-name}";
 		finalPath = finalPath.Replace("{userId}", userIdSet ? UnityWebRequest.EscapeURL(userId.ToString()) : "");
+		finalPath = finalPath.Replace("{user-name}", userNameSet ? UnityWebRequest.EscapeURL(userName.ToString()) : "");
 		var queryAdded = false;
 
 		if (diffIdSet) {
