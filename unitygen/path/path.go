@@ -79,11 +79,11 @@ func (p Path) Tags() []string {
 }
 
 func (p Path) unityWebReqPathName() string {
-	return fmt.Sprintf("%sUnityWebRequest", p.operationID)
+	return fmt.Sprintf("%sUnityWebRequest", convention.ClassName(p.operationID))
 }
 
 func (p Path) requestParamClassName() string {
-	return fmt.Sprintf("%sRequestParams", p.operationID)
+	return fmt.Sprintf("%sRequestParams", convention.ClassName(p.operationID))
 }
 
 func (p Path) respVariableName(k string) string {
@@ -336,8 +336,8 @@ func (p Path) serviceFunctionParameters() string {
 func (p Path) functionOveride(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 
-	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.unityWebReqPathName(), p.operationID, p.serviceFunctionParameters())
-	fmt.Fprintf(&builder, "\treturn %s(new %s() {\n", p.operationID, p.requestParamClassName())
+	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.unityWebReqPathName(), convention.ClassName(p.operationID), p.serviceFunctionParameters())
+	fmt.Fprintf(&builder, "\treturn %s(new %s() {\n", convention.ClassName(p.operationID), p.requestParamClassName())
 	// fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
 
 	for _, param := range p.parameters {
@@ -355,10 +355,10 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 
 	if len(p.parameters) > 0 {
-		fmt.Fprintf(&builder, "public %s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), p.operationID, p.requestParamClassName())
+		fmt.Fprintf(&builder, "public %s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), convention.ClassName(p.operationID), p.requestParamClassName())
 		builder.WriteString("\tvar unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);\n")
 	} else {
-		fmt.Fprintf(&builder, "public %s %s()\n{\n", p.unityWebReqPathName(), p.operationID)
+		fmt.Fprintf(&builder, "public %s %s()\n{\n", p.unityWebReqPathName(), convention.ClassName(p.operationID))
 		fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(string.Format(\"{0}%s\", this.Config.BasePath), %s);\n", p.route, unity.ToUnityHTTPVerb(p.httpMethod))
 	}
 

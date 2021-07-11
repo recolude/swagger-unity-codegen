@@ -230,15 +230,15 @@ public class ExampleService
 Ordered by priority (to me)!
 
 - [X] Scriptable Object For Configuration.
-- [X] Easier Request Building
-- [X] Don't include definitions that are never used
-- [X] Support for System.DateTime
-- [ ] Support Searilizing Bodies
-- [ ] Optional Parameters In Request Body
-- [X] Embedded object definitions
-- [ ] Embedded array object definitions
-- [ ] Generate a scriptable object for any definition found in the swagger file
-- [ ] Ability to generate `*.unitypackage`
-- [ ] YAML support
-- [ ] OpenAPI support
-- [ ] Oauth security definition
+- [X] Easier Request Building.
+- [X] Don't include definitions that are never used.
+- [X] Support for System.DateTime.
+- [X] Support Searilizing Bodies.
+- [ ] Implement [Fluent Interface Pattern](https://en.wikipedia.org/wiki/Fluent_interface) For Creating Requests.
+- [ ] Optional Parameters In Request Body.
+- [X] Embedded object definitions.
+- [ ] Embedded array object definitions.
+- [ ] Generate a scriptable object for any definition found in the swagger file.
+- [ ] Ability to generate `*.unitypackage`.
+- [ ] YAML support.
+- [ ] Oauth security definition.

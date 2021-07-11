@@ -402,7 +402,7 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}/{user-name}",
-		"UserService_GetUser",
+		"getUser",
 		http.MethodGet,
 		[]string{"UserService"},
 		nil,
@@ -420,19 +420,19 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 
 	// ********************************** ACT *********************************
 	functionCode := route.ServiceFunction(nil)
-	requestParamsClass := route.RequestParamClass()
+	supportingClasses := route.SupportingClasses()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(UserService_GetUserRequestParams requestParams)
+	assert.Equal(t, `public GetUserUnityWebRequest GetUser(GetUserRequestParams requestParams)
 {
 	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
-	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
+	return new GetUserUnityWebRequest(unityNetworkReq);
 }
 
-public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, string userName, string diffId, int anotherId, Query query)
+public GetUserUnityWebRequest GetUser(string userId, string userName, string diffId, int anotherId, Query query)
 {
-	return UserService_GetUser(new UserService_GetUserRequestParams() {
+	return GetUser(new GetUserRequestParams() {
 		UserId=userId,
 		UserName=userName,
 		DiffId=diffId,
@@ -441,7 +441,27 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 	});
 }`, functionCode)
 
-	assert.Equal(t, `public class UserService_GetUserRequestParams
+	assert.Equal(t, `public class GetUserUnityWebRequest {
+
+	public RuntimeError fallbackResponse;
+
+	public UnityWebRequest UnderlyingRequest{ get; }
+
+	public GetUserUnityWebRequest(UnityWebRequest req) {
+		this.UnderlyingRequest = req;
+	}
+
+	public IEnumerator Run() {
+		yield return this.UnderlyingRequest.SendWebRequest();
+		Interpret(this.UnderlyingRequest);
+	}
+
+	public void Interpret(UnityWebRequest req) {
+		fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
+	}
+
+}
+public class GetUserRequestParams
 {
 	private bool userIdSet = false;
 	private string userId;
@@ -493,5 +513,5 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 		unityWebReq.uploadHandler = unityRawUploadHandler;
 		return unityWebReq;
 	}
-}`, requestParamsClass)
+}`, supportingClasses)
 }
