@@ -3,14 +3,16 @@ package path_test
 import (
 	"testing"
 
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/path"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_NumberResponse(t *testing.T) {
+func Test_ArrayResponse(t *testing.T) {
 	// ARRANGE ================================================================
 	desciption := "A bunch of cool cats"
-	defResp := path.NewNumberResponse(desciption)
+	schema := property.NewArray("cats", property.NewObjectReference("cats", "#/def/coolCats"))
+	defResp := path.NewArrayResponse(desciption, schema)
 
 	// ACT ====================================================================
 	desc := defResp.Description()
@@ -18,6 +20,6 @@ func Test_NumberResponse(t *testing.T) {
 
 	// ASSERT =================================================================
 	assert.Equal(t, desciption, desc)
-	assert.Equal(t, "somethin = float.Parse(download.text, System.Globalization.CultureInfo.InvariantCulture);", interpret)
-	assert.Equal(t, "float", defResp.VariableType())
+	assert.Equal(t, "somethin = JsonConvert.DeserializeObject<CoolCats[]>(download.text);", interpret)
+	assert.Equal(t, "CoolCats[]", defResp.VariableType())
 }

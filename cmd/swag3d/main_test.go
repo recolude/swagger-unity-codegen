@@ -164,6 +164,8 @@ func TestNoNamespace(t *testing.T) {
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Text;
+using Newtonsoft.Json;
 
 #region Definitions
 
@@ -244,6 +246,8 @@ func TestWithNamespace(t *testing.T) {
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace Example {
 

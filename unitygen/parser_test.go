@@ -81,7 +81,7 @@ func TestReadDefinition(t *testing.T) {
 			"v1ApiKey": {
 				"type": "object",
 				"properties": {
-					"createdAt": {
+					"created-at": {
 						"type": "string",
 						"format": "date-time"
 					},
@@ -166,20 +166,25 @@ func TestReadDefinition(t *testing.T) {
 			`[System.Serializable]
 public class V1ApiKey {
 
-	[SerializeField]
-	private string createdAt;
+	[JsonProperty("created-at")]
+	public string createdAt;
 
 	public System.DateTime CreatedAt { get => System.DateTime.Parse(createdAt); }
 
-	public string description;
+	[JsonProperty("description")]
+	public string Description { get; private set; }
 
-	public string name;
+	[JsonProperty("name")]
+	public string Name { get; private set; }
 
-	public V1Permission[] permissions;
+	[JsonProperty("permissions")]
+	public V1Permission[] Permissions { get; private set; }
 
-	public V1Project project;
+	[JsonProperty("project")]
+	public V1Project Project { get; private set; }
 
-	public string token;
+	[JsonProperty("token")]
+	public string Token { get; private set; }
 
 }`, spec.Definitions[0].ToCSharp())
 
@@ -188,17 +193,56 @@ public class V1ApiKey {
 	V_UNKNOWN = 0,
 	V_PUBLIC = 1,
 	V_PRIVATE = 2
+}
+public class V1EnumVisibilityJsonConverter : JsonConverter {
+	public override void WriteJson(JsonWriter w, object val, JsonSerializer s) {
+		V1EnumVisibility castedVal = (V1EnumVisibility)val;
+		switch (castedVal) {
+			case V1EnumVisibility.V_UNKNOWN:
+				w.WriteValue("V_UNKNOWN");
+				break;
+			case V1EnumVisibility.V_PUBLIC:
+				w.WriteValue("V_PUBLIC");
+				break;
+			case V1EnumVisibility.V_PRIVATE:
+				w.WriteValue("V_PRIVATE");
+				break;
+			default:
+				throw new System.Exception("Unknown value. Living on the dangerous side editing generated code?");
+		}
+	}
+
+	public override object ReadJson(JsonReader r, System.Type t, object existingValue, JsonSerializer s) {
+		var enumString = (string)r.Value;
+		switch (enumString) {
+			case "V_UNKNOWN":
+				return V1EnumVisibility.V_UNKNOWN;
+			case "V_PUBLIC":
+				return V1EnumVisibility.V_PUBLIC;
+			case "V_PRIVATE":
+				return V1EnumVisibility.V_PRIVATE;
+			default:
+				throw new System.Exception("Unknown value. Perhaps you need to regenerate this code?");
+		}
+	}
+
+	public override bool CanConvert(System.Type objectType) {
+		return objectType == typeof(string);
+	}
 }`, spec.Definitions[1].ToCSharp())
 
 		assert.Equal(t,
 			`[System.Serializable]
 public class V1ListLicensesRequest {
 
-	public double duration;
+	[JsonProperty("duration")]
+	public double Duration { get; private set; }
 
-	public int limit;
+	[JsonProperty("limit")]
+	public int Limit { get; private set; }
 
-	public float time;
+	[JsonProperty("time")]
+	public float Time { get; private set; }
 
 }`, spec.Definitions[2].ToCSharp())
 	}
@@ -463,18 +507,25 @@ public class AggMetadataQuery {
 	[System.Serializable]
 public class Query {
 
-	public string field;
+	[JsonProperty("field")]
+	public string Field { get; private set; }
 
-	public int maxDate;
+	[JsonProperty("maxDate")]
+	public int MaxDate { get; private set; }
 
-	public int minDate;
+	[JsonProperty("minDate")]
+	public int MinDate { get; private set; }
 
-	public AggModifier modifier;
+	[JsonProperty("modifier")]
+	public AggModifier Modifier { get; private set; }
 
-	public RecordingEntity onEntity;
+	[JsonProperty("onEntity")]
+	public RecordingEntity OnEntity { get; private set; }
 
 }
-	public Query query;
+	[JsonProperty("query")]
+	public Query Query { get; private set; }
+
 }`, def.ToCSharp())
 	}
 }

@@ -21,12 +21,14 @@ func Test_StringDefaultsToFloat(t *testing.T) {
 	assert.Equal(t, "someName", name)
 	assert.Equal(t, "string", varType)
 	assert.Equal(t, "null", nullVal)
-	assert.Equal(t, "	public string someName;\n", classVars)
+	assert.Equal(t, `	[JsonProperty("someName")]
+	public string SomeName { get; private set; }
+`, classVars)
 }
 
 func Test_StringInterpretsDate(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewString("someName", "date-time")
+	ref := property.NewString("some-name", "date-time")
 
 	// ********************************** ACT *********************************
 	name := ref.Name()
@@ -35,11 +37,11 @@ func Test_StringInterpretsDate(t *testing.T) {
 	classVars := ref.ClassVariables()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, "someName", name)
+	assert.Equal(t, "some-name", name)
 	assert.Equal(t, "System.DateTime", varType)
 	assert.Equal(t, "null", nullVal)
-	assert.Equal(t, `	[SerializeField]
-	private string someName;
+	assert.Equal(t, `	[JsonProperty("some-name")]
+	public string someName;
 
 	public System.DateTime SomeName { get => System.DateTime.Parse(someName); }
 `, classVars)

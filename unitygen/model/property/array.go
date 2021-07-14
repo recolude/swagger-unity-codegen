@@ -2,7 +2,9 @@ package property
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"github.com/recolude/swagger-unity-codegen/unitygen/model"
 )
 
@@ -35,5 +37,13 @@ func (sp Array) EmptyValue() string {
 }
 
 func (sp Array) ClassVariables() string {
-	return fmt.Sprintf("\tpublic %s %s;\n", sp.ToVariableType(), sp.Name())
+	builder := strings.Builder{}
+	builder.WriteString("\t[JsonProperty(\"")
+	builder.WriteString(sp.name)
+	builder.WriteString("\")]\n\tpublic ")
+	builder.WriteString(sp.ToVariableType())
+	builder.WriteString(" ")
+	builder.WriteString(convention.TitleCase(sp.name))
+	builder.WriteString(" { get; private set; }\n")
+	return builder.String()
 }

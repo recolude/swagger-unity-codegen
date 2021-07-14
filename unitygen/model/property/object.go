@@ -1,7 +1,7 @@
 package property
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"github.com/recolude/swagger-unity-codegen/unitygen/model"
@@ -36,5 +36,15 @@ func (op Object) EmptyValue() string {
 
 // What gets written to the c# class definition.
 func (op Object) ClassVariables() string {
-	return fmt.Sprintf("\t%s\n\tpublic %s %s;", op.obj.ToCSharp(), op.ToVariableType(), convention.CamelCase(op.name))
+	builder := strings.Builder{}
+	builder.WriteString("\t")
+	builder.WriteString(op.obj.ToCSharp())
+	builder.WriteString("\n\t[JsonProperty(\"")
+	builder.WriteString(op.name)
+	builder.WriteString("\")]\n\tpublic ")
+	builder.WriteString(op.ToVariableType())
+	builder.WriteString(" ")
+	builder.WriteString(convention.TitleCase(op.name))
+	builder.WriteString(" { get; private set; }\n")
+	return builder.String()
 }

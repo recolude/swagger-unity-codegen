@@ -9,7 +9,7 @@ import (
 
 func Test_Boolean(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewBoolean("someName")
+	ref := property.NewBoolean("some name")
 
 	// ********************************** ACT *********************************
 	name := ref.Name()
@@ -18,8 +18,10 @@ func Test_Boolean(t *testing.T) {
 	classVar := ref.ClassVariables()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, "someName", name)
+	assert.Equal(t, "some name", name)
 	assert.Equal(t, "bool", varType)
 	assert.Equal(t, "false", nullVal)
-	assert.Equal(t, "	public bool someName;\n", classVar)
+	assert.Equal(t, `	[JsonProperty("some name")]
+	public bool SomeName { get; private set; }
+`, classVar)
 }

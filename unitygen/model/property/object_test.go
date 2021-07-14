@@ -10,8 +10,9 @@ import (
 
 func Test_Objec(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewObject("someName", model.NewObject("someName", []model.Property{
-		property.NewBoolean("mybool"),
+	anonObjPropName := "some-name"
+	ref := property.NewObject(anonObjPropName, model.NewObject(anonObjPropName, []model.Property{
+		property.NewBoolean("my bool"),
 	}))
 
 	// ********************************** ACT *********************************
@@ -21,14 +22,17 @@ func Test_Objec(t *testing.T) {
 	csharp := ref.ClassVariables()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, "someName", name)
+	assert.Equal(t, anonObjPropName, name)
 	assert.Equal(t, "SomeName", varType)
 	assert.Equal(t, "null", nullVal)
 	assert.Equal(t, `	[System.Serializable]
 public class SomeName {
 
-	public bool mybool;
+	[JsonProperty("my bool")]
+	public bool MyBool { get; private set; }
 
 }
-	public SomeName someName;`, csharp)
+	[JsonProperty("some-name")]
+	public SomeName SomeName { get; private set; }
+`, csharp)
 }

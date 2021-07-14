@@ -102,8 +102,10 @@ func Test_ParameterInPath(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
 
+	// A successful response.
 	public V1UserResponse success;
 
+	// An unexpected error response
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -160,7 +162,7 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 			path.NewSecurityMethodReference("DevKeyAuth"),
 		},
 		map[string]path.Response{
-			"200": path.NewDefinitionResponse("A successful response.", model.NewObjectReference("#/definitions/v1UserResponse")),
+			"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/v1UserResponse")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
@@ -220,6 +222,7 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
 
+	// An unexpected error response
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -267,10 +270,13 @@ func Test_ThreeParametersInPath(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
 
+	// A successful response.
 	public V1UserResponse success;
 
+	// Weird Unauthorized response.
 	public V1Unauthorized unauthorized;
 
+	// An unexpected error response
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -336,10 +342,13 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	assert.Equal(t, tags, route.Tags())
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
 
+	// A successful response.
 	public V1UserResponse success;
 
+	// some file
 	public byte[] notImplemented;
 
+	// An unexpected error response
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -448,6 +457,7 @@ public GetUserUnityWebRequest GetUser(string userId, string userName, string dif
 
 	assert.Equal(t, `public class GetUserUnityWebRequest {
 
+	// An unexpected error response
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }

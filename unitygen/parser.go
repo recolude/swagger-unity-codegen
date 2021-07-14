@@ -310,7 +310,7 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 		}
 
 		responses := make(map[string]path.Response)
-		for key, respJSON := range verbObj.Path("responses").ChildrenMap() {
+		for code, respJSON := range verbObj.Path("responses").ChildrenMap() {
 			schemaJSON := respJSON.Path("schema")
 			description := ""
 			descriptionNode := respJSON.Path("description")
@@ -321,7 +321,7 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 			if schemaJSON != nil {
 				refNode := schemaJSON.Path("$ref")
 				if refNode != nil {
-					responses[key] = path.NewDefinitionResponse(
+					responses[code] = path.NewDefinitionResponse(
 						description,
 						model.NewObjectReference(refNode.Data().(string)),
 					)
@@ -333,22 +333,30 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 					typeValue := typeNode.Data().(string)
 					switch typeValue {
 					case "file":
-						responses[key] = path.NewFileResponse(description)
+						responses[code] = path.NewFileResponse(description)
 						break
 
 					case "number":
-						responses[key] = path.NewNumberResponse(description)
+						responses[code] = path.NewNumberResponse(description)
+						break
+
+					case "array":
+						prop, err := p.interpretArrayProperty([]string{"paths", url, verb, code}, code, schemaJSON)
+						if err != nil {
+							return nil, err
+						}
+						responses[code] = path.NewArrayResponse(description, prop)
 						break
 
 					default:
-						return nil, InvalidSpecError{Path: []string{"paths", url, verb, key}, Reason: "unable to interpret response schema: " + typeValue}
+						return nil, InvalidSpecError{Path: []string{"paths", url, verb, code}, Reason: "unable to interpret response schema: " + typeValue}
 					}
 					continue
 				}
 
-				return nil, InvalidSpecError{Path: []string{"paths", url, verb, key}, Reason: "unable to interpret response"}
+				return nil, InvalidSpecError{Path: []string{"paths", url, verb, code}, Reason: "unable to interpret response"}
 			} else {
-				responses[key] = nil
+				responses[code] = nil
 			}
 		}
 

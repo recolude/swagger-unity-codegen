@@ -225,6 +225,14 @@ func (p Path) UnityWebRequest() string {
 	for _, k := range keys {
 		// Some responses are defined as an empty body, making them nil!
 		if p.responses[k] != nil {
+			desc := strings.TrimSpace(p.responses[k].Description())
+			lines := strings.Split(strings.ReplaceAll(desc, "\r\n", "\n"), "\n")
+			for _, line := range lines {
+				if line != "" {
+					fmt.Fprintf(&builder, "\t// %s\n", line)
+				}
+			}
+
 			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].VariableType(), p.respVariableName(k))
 		}
 	}

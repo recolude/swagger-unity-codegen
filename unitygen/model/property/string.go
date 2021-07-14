@@ -38,15 +38,19 @@ func (sp String) EmptyValue() string {
 }
 
 func (sp String) ClassVariables() string {
+	builder := strings.Builder{}
+	fmt.Fprintf(&builder, "\t[JsonProperty(\"%s\")]\n", sp.Name())
+
 	switch sp.format {
 	case "date-time":
-		builder := strings.Builder{}
-		builder.WriteString("\t[SerializeField]\n")
-		fmt.Fprintf(&builder, "\tprivate string %s;\n\n", sp.Name())
-		fmt.Fprintf(&builder, "\tpublic System.DateTime %s { get => System.DateTime.Parse(%s); }\n", convention.TitleCase(sp.Name()), sp.Name())
-		return builder.String()
+		fmt.Fprintf(&builder, "\tpublic string %s;\n\n", convention.CamelCase(sp.Name()))
+		fmt.Fprintf(&builder, "\tpublic System.DateTime %s { get => System.DateTime.Parse(%s); }\n", convention.TitleCase(sp.Name()), convention.CamelCase(sp.Name()))
+		break
 
 	default:
-		return fmt.Sprintf("\tpublic %s %s;\n", sp.ToVariableType(), sp.Name())
+		fmt.Fprintf(&builder, "\tpublic string %s { get; private set; }\n", convention.TitleCase(sp.Name()))
+		break
 	}
+
+	return builder.String()
 }

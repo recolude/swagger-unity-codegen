@@ -18,7 +18,7 @@ func (resp NumberResponse) Description() string {
 }
 
 func (resp NumberResponse) Interpret(variableName string, downloadHandlerVariableName string) string {
-	return fmt.Sprintf("%s = float.Parse(%s.text);", variableName, downloadHandlerVariableName)
+	return fmt.Sprintf("%s = float.Parse(%s.text, System.Globalization.CultureInfo.InvariantCulture);", variableName, downloadHandlerVariableName)
 }
 
 func (resp NumberResponse) VariableType() string {

@@ -28,7 +28,8 @@ func TestObject(t *testing.T) {
 	assert.Equal(t, `[System.Serializable]
 public class TestObj {
 
-	public int num;
+	[JsonProperty("num")]
+	public int Num { get; private set; }
 
 }`, cSharp)
 }
@@ -53,8 +54,8 @@ func TestObject_DatesCorrectly(t *testing.T) {
 	assert.Equal(t, `[System.Serializable]
 public class TestObj {
 
-	[SerializeField]
-	private string date;
+	[JsonProperty("date")]
+	public string date;
 
 	public System.DateTime Date { get => System.DateTime.Parse(date); }
 

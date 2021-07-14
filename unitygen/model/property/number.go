@@ -1,6 +1,11 @@
 package property
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
+)
 
 type Number struct {
 	name   string
@@ -43,5 +48,8 @@ func (sp Number) EmptyValue() string {
 }
 
 func (sp Number) ClassVariables() string {
-	return fmt.Sprintf("\tpublic %s %s;\n", sp.ToVariableType(), sp.Name())
+	builder := strings.Builder{}
+	fmt.Fprintf(&builder, "\t[JsonProperty(\"%s\")]\n", sp.Name())
+	fmt.Fprintf(&builder, "\tpublic %s %s { get; private set; }\n", sp.ToVariableType(), convention.TitleCase(sp.Name()))
+	return builder.String()
 }

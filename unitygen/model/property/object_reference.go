@@ -1,8 +1,8 @@
 package property
 
 import (
-	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 )
@@ -32,5 +32,13 @@ func (orp ObjectReference) EmptyValue() string {
 }
 
 func (orp ObjectReference) ClassVariables() string {
-	return fmt.Sprintf("\tpublic %s %s;\n", orp.ToVariableType(), orp.Name())
+	builder := strings.Builder{}
+	builder.WriteString("\t[JsonProperty(\"")
+	builder.WriteString(orp.name)
+	builder.WriteString("\")]\n\tpublic ")
+	builder.WriteString(orp.ToVariableType())
+	builder.WriteString(" ")
+	builder.WriteString(convention.TitleCase(orp.name))
+	builder.WriteString(" { get; private set; }\n")
+	return builder.String()
 }
