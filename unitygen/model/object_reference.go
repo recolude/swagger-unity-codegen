@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"path/filepath"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
@@ -28,7 +29,11 @@ func (or ObjectReference) ToCSharp() string {
 	// Maybe all this should do is create a class that inherits the reference?
 	// Doens't make sense where request body's schema is direct reference to this tho...
 	// But I guess it wouldn't actuall be *that* bad.
-	panic("unimplemented")
+	//
+	// But honestly the only time this is used is as a refernce for a response.
+	// I've at this point refactored response as an internface. Maybe at this point
+	// I just make a ObjectReferenceResponse type?
+	panic(errors.New("unimplemented"))
 }
 
 // ToVariableType generates a identifier for the definition

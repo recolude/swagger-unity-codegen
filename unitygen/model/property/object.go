@@ -19,6 +19,11 @@ func NewObject(name string, obj model.Object) Object {
 	}
 }
 
+// Object is the actual object definition of the property
+func (op Object) Object() model.Object {
+	return op.obj
+}
+
 // Name of the property (generally a c# variable name)
 func (op Object) Name() string {
 	return op.name

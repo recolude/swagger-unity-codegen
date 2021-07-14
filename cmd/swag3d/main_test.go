@@ -342,3 +342,48 @@ func TestErrorsWithNoFileToReadFrom(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.EqualError(t, err, "Error opening swagger file: open swagger.json: file does not exist")
 }
+
+func TestFilterUnusedDefinitions_AnonymouseFunctionReferences(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	spec := unitygen.NewSpec(
+		unitygen.SpecInfo{},
+		[]model.Definition{
+			model.NewObject("Big", []model.Property{
+				property.NewObject("Anonymoose",
+					model.NewObject("Anonymoose", []model.Property{
+						property.NewObjectReference("ref", "#/def/Ref"),
+					}),
+				),
+				property.NewObjectReference("numenum", "#/def/BB"),
+			}),
+			model.NewObject("Ref", []model.Property{}),
+			model.NewNumberEnum("BB", []float64{1, 2, 3}),
+		},
+		nil,
+		[]unitygen.Service{
+			unitygen.NewService(
+				"A",
+				[]path.Path{
+					path.NewPath(
+						"aaerg",
+						"",
+						"",
+						nil,
+						nil,
+						map[string]path.Response{
+							"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/Big")),
+						},
+						[]path.Parameter{},
+					),
+				},
+			),
+		},
+	)
+
+	// ********************************** ACT *********************************
+	out := filterSpecForUnusedDefinitions(spec)
+
+	// ********************************* ASSERT *******************************
+	assert.Len(t, out.Services, 1)
+	assert.Len(t, out.Definitions, 3)
+}

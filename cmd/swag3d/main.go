@@ -44,15 +44,13 @@ func alreadyRecursed(inquestion string, alreadyAdded []string) bool {
 func findReferencePropRecurse(inQuestion model.Property, defs []model.Definition, alreadyAdded []string) []string {
 	finalReferences := alreadyAdded
 
-	objectDefinition, ok := inQuestion.(property.ObjectReference)
-
+	objectReferenceDefinition, ok := inQuestion.(property.ObjectReference)
 	if ok {
-		if alreadyRecursed(objectDefinition.ToVariableType(), finalReferences) {
+		if alreadyRecursed(objectReferenceDefinition.ToVariableType(), finalReferences) {
 			return finalReferences
 		}
-		// finalReferences = append(finalReferences, objectDefinition.ToVariableType())
 		for _, def := range defs {
-			if def.ToVariableType() == objectDefinition.ToVariableType() {
+			if def.ToVariableType() == objectReferenceDefinition.ToVariableType() {
 				finalReferences = findReferenceRecurse(def, defs, finalReferences)
 			}
 		}
@@ -61,6 +59,11 @@ func findReferencePropRecurse(inQuestion model.Property, defs []model.Definition
 	arrayDefinition, ok := inQuestion.(property.Array)
 	if ok {
 		return findReferencePropRecurse(arrayDefinition.Property(), defs, finalReferences)
+	}
+
+	objectDefinition, ok := inQuestion.(property.Object)
+	if ok {
+		finalReferences = findReferenceRecurse(objectDefinition.Object(), defs, finalReferences)
 	}
 
 	return finalReferences
@@ -80,9 +83,14 @@ func findReferenceRecurse(inQuestion model.Definition, defs []model.Definition, 
 		}
 	}
 
-	enumDefinition, ok := inQuestion.(model.StringEnum)
+	stringEnumDefinition, ok := inQuestion.(model.StringEnum)
 	if ok {
-		finalReferences = append(finalReferences, enumDefinition.ToVariableType())
+		finalReferences = append(finalReferences, stringEnumDefinition.ToVariableType())
+	}
+
+	numEnumDefinition, ok := inQuestion.(model.NumberEnum)
+	if ok {
+		finalReferences = append(finalReferences, numEnumDefinition.ToVariableType())
 	}
 
 	return finalReferences

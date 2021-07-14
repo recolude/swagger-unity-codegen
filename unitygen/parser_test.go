@@ -505,7 +505,7 @@ func Test_ReadNestedObjectPropertyDefinition(t *testing.T) {
 public class AggMetadataQuery {
 
 	[System.Serializable]
-public class Query {
+public class AggMetadataQueryQuery {
 
 	[JsonProperty("field")]
 	public string Field { get; private set; }
@@ -524,7 +524,7 @@ public class Query {
 
 }
 	[JsonProperty("query")]
-	public Query Query { get; private set; }
+	public AggMetadataQueryQuery Query { get; private set; }
 
 }`, def.ToCSharp())
 	}

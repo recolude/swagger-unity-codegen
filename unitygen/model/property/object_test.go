@@ -8,20 +8,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Objec(t *testing.T) {
+func Test_Object(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	anonObjPropName := "some-name"
-	ref := property.NewObject(anonObjPropName, model.NewObject(anonObjPropName, []model.Property{
+	obj := model.NewObject(anonObjPropName, []model.Property{
 		property.NewBoolean("my bool"),
-	}))
+	})
+	ref := property.NewObject(anonObjPropName, obj)
 
 	// ********************************** ACT *********************************
 	name := ref.Name()
 	varType := ref.ToVariableType()
 	nullVal := ref.EmptyValue()
 	csharp := ref.ClassVariables()
+	objOut := ref.Object()
 
 	// ********************************* ASSERT *******************************
+	assert.Equal(t, obj, objOut)
 	assert.Equal(t, anonObjPropName, name)
 	assert.Equal(t, "SomeName", varType)
 	assert.Equal(t, "null", nullVal)

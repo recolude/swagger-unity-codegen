@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"github.com/recolude/swagger-unity-codegen/unitygen/model"
 	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/path"
@@ -17,18 +18,18 @@ import (
 // Parser reads through a file and interprets a swagger definition
 type Parser struct{}
 
-func (p Parser) interpretArrayProperty(path []string, name string, obj *gabs.Container) (property.Array, error) {
+func (p Parser) interpretArrayProperty(path []string, objectName, propertyName string, obj *gabs.Container) (property.Array, error) {
 	items := obj.Path("items")
 	if items == nil {
 		return property.Array{}, InvalidSpecError{Path: path, Reason: "Unable to find array type (missing items property)"}
 	}
 
-	prop, err := p.interpretObjectDefinitionProperty(append(path, "items"), "", items)
+	prop, err := p.interpretObjectDefinitionProperty(append(path, "items"), objectName, propertyName, items)
 	if err != nil {
 		return property.Array{}, err
 	}
 
-	return property.NewArray(name, prop), nil
+	return property.NewArray(propertyName, prop), nil
 }
 
 func (p Parser) interpretStringProperty(path []string, name string, obj *gabs.Container) (property.String, error) {
@@ -62,63 +63,63 @@ func (p Parser) interpretBooleanProperty(name string) (property.Boolean, error) 
 	return property.NewBoolean(name), nil
 }
 
-func (p Parser) interpretNestedObjectProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
-	def, err := p.interpretObjectDefinition(path, name, obj)
-	return property.NewObject(name, def), err
+func (p Parser) interpretNestedObjectProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
+	def, err := p.interpretObjectDefinition(path, fmt.Sprintf("%s%s", objectName, convention.ClassName(propertyName)), obj)
+	return property.NewObject(propertyName, def), err
 }
 
-func (p Parser) interpretObjectDefinitionProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
+func (p Parser) interpretObjectDefinitionProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
 	objRef, ok := obj.Path("$ref").Data().(string)
 	if ok {
-		return property.NewObjectReference(name, objRef), nil
+		return property.NewObjectReference(propertyName, objRef), nil
 	}
 
 	propType, ok := obj.Path("type").Data().(string)
 	if !ok {
-		return nil, InvalidSpecError{Path: append(path, name), Reason: "Property type not found on definition"}
+		return nil, InvalidSpecError{Path: append(path, propertyName), Reason: "Property type not found on definition"}
 	}
 
 	switch propType {
 
 	case "string":
-		return p.interpretStringProperty(path, name, obj)
+		return p.interpretStringProperty(path, propertyName, obj)
 
 	case "array":
-		return p.interpretArrayProperty(path, name, obj)
+		return p.interpretArrayProperty(path, objectName, propertyName, obj)
 
 	case "integer":
-		return p.interpretIntProperty(path, name, obj)
+		return p.interpretIntProperty(path, propertyName, obj)
 
 	case "number":
-		return p.interpretNumberProperty(path, name, obj)
+		return p.interpretNumberProperty(path, propertyName, obj)
 
 	case "boolean":
-		return p.interpretBooleanProperty(name)
+		return p.interpretBooleanProperty(propertyName)
 
 	case "object":
-		return p.interpretNestedObjectProperty(path, name, obj)
+		return p.interpretNestedObjectProperty(path, objectName, propertyName, obj)
 
 	default:
-		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
+		return nil, InvalidSpecError{Path: append(path, propertyName), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
 	}
 }
 
-func (p Parser) interpretObjectDefinition(path []string, name string, obj *gabs.Container) (model.Object, error) {
-	newPath := append(path, name)
+func (p Parser) interpretObjectDefinition(path []string, objectName string, obj *gabs.Container) (model.Object, error) {
+	newPath := append(path, objectName)
 	if obj == nil {
 		return model.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
 	}
 	properties := make([]model.Property, 0)
 
-	for key, val := range obj.Path("properties").ChildrenMap() {
-		prop, err := p.interpretObjectDefinitionProperty(append(newPath, "properties"), key, val)
+	for propertyName, val := range obj.Path("properties").ChildrenMap() {
+		prop, err := p.interpretObjectDefinitionProperty(append(newPath, "properties"), objectName, propertyName, val)
 		if err != nil {
 			return model.Object{}, err
 		}
 		properties = append(properties, prop)
 	}
 
-	return model.NewObject(name, properties), nil
+	return model.NewObject(objectName, properties), nil
 }
 
 func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
@@ -272,7 +273,7 @@ func (p Parser) interpretPathPameterProperty(path []string, name string, obj *ga
 		return p.interpretStringProperty(path, name, obj)
 
 	case "array":
-		return p.interpretArrayProperty(path, name, obj)
+		return p.interpretArrayProperty(path, "", name, obj)
 
 	case "integer":
 		return p.interpretIntProperty(path, name, obj)
@@ -341,7 +342,7 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 						break
 
 					case "array":
-						prop, err := p.interpretArrayProperty([]string{"paths", url, verb, code}, code, schemaJSON)
+						prop, err := p.interpretArrayProperty([]string{"paths", url, verb, code}, "", code, schemaJSON)
 						if err != nil {
 							return nil, err
 						}
