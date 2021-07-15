@@ -23,8 +23,10 @@ func TestStringEnum(t *testing.T) {
 	varType := enum.ToVariableType()
 	name := enum.Name()
 	cSharp := enum.ToCSharp()
+	converter := enum.JsonConverter()
 
 	// ********************************* ASSERT *******************************
+	assert.Equal(t, "TestEnumJsonConverter", converter)
 	assert.Equal(t, "TestEnum", varType)
 	assert.Equal(t, "testEnum", name)
 	assert.Equal(t, `public enum TestEnum {

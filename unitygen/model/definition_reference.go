@@ -7,24 +7,24 @@ import (
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 )
 
-// ObjectReference points to another object for it's definition
-type ObjectReference struct {
+// DefinitionReference points to another object for it's definition
+type DefinitionReference struct {
 	ref string
 }
 
-// NewObjectReference creates a new object reference
-func NewObjectReference(ref string) ObjectReference {
-	return ObjectReference{
+// NewDefinitionReference creates a new object reference
+func NewDefinitionReference(ref string) DefinitionReference {
+	return DefinitionReference{
 		ref: ref,
 	}
 }
 
 // Name is the name of the definition
-func (or ObjectReference) Name() string {
+func (or DefinitionReference) Name() string {
 	return or.ref
 }
 
-func (or ObjectReference) ToCSharp() string {
+func (or DefinitionReference) ToCSharp() string {
 	// What a smell, am I rite?
 	// Maybe all this should do is create a class that inherits the reference?
 	// Doens't make sense where request body's schema is direct reference to this tho...
@@ -37,6 +37,10 @@ func (or ObjectReference) ToCSharp() string {
 }
 
 // ToVariableType generates a identifier for the definition
-func (or ObjectReference) ToVariableType() string {
+func (or DefinitionReference) ToVariableType() string {
 	return convention.TitleCase(filepath.Base(or.ref))
+}
+
+func (or DefinitionReference) JsonConverter() string {
+	return ""
 }

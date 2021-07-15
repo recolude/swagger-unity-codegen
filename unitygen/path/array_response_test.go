@@ -11,7 +11,7 @@ import (
 func Test_ArrayResponse(t *testing.T) {
 	// ARRANGE ================================================================
 	desciption := "A bunch of cool cats"
-	schema := property.NewArray("cats", property.NewObjectReference("cats", "#/def/coolCats"))
+	schema := property.NewArray("cats", property.NewInteger("cats", "int"))
 	defResp := path.NewArrayResponse(desciption, schema)
 
 	// ACT ====================================================================
@@ -20,6 +20,6 @@ func Test_ArrayResponse(t *testing.T) {
 
 	// ASSERT =================================================================
 	assert.Equal(t, desciption, desc)
-	assert.Equal(t, "somethin = JsonConvert.DeserializeObject<CoolCats[]>(download.text);", interpret)
-	assert.Equal(t, "CoolCats[]", defResp.VariableType())
+	assert.Equal(t, "somethin = JsonConvert.DeserializeObject<int[]>(download.text);", interpret)
+	assert.Equal(t, "int[]", defResp.VariableType())
 }

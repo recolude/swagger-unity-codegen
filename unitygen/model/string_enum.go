@@ -84,3 +84,7 @@ func (e StringEnum) ToCSharp() string {
 
 	return enumBuilder.String()
 }
+
+func (ne StringEnum) JsonConverter() string {
+	return ne.ToVariableType() + "JsonConverter"
+}

@@ -7,18 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestObjectReference(t *testing.T) {
+func TestDefinitionReference(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	enum := model.NewObjectReference("#/definitions/SomeEnum")
+	ref := model.NewDefinitionReference("#/definitions/SomeEnum")
 
 	// ********************************** ACT *********************************
-	varType := enum.ToVariableType()
-	name := enum.Name()
+	varType := ref.ToVariableType()
+	name := ref.Name()
+	converter := ref.JsonConverter()
 
 	// ********************************* ASSERT *******************************
+	assert.Equal(t, "", converter)
 	assert.Equal(t, "SomeEnum", varType)
 	assert.Equal(t, "#/definitions/SomeEnum", name)
 	assert.PanicsWithError(t, "unimplemented", func() {
-		enum.ToCSharp()
+		ref.ToCSharp()
 	})
 }

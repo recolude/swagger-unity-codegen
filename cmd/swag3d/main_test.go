@@ -60,25 +60,43 @@ func TestFilterServiceByTags_Filters(t *testing.T) {
 
 func TestFilterUnusedDefinitions(t *testing.T) {
 	// ******************************** ARRANGE *******************************
+	modelD := model.NewObject("D", nil)
+	modelFurtherRemoved := model.NewStringEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"})
+	modelC := model.NewObject("C", []model.Property{
+		property.NewDefinitionReference("a", modelFurtherRemoved),
+		property.NewArray("test", property.NewDefinitionReference("a", modelD)),
+	})
+	modelB := model.NewObject("B", []model.Property{property.NewDefinitionReference("a", modelC)})
+	modelY := model.NewObject("Y", nil)
+	modelX := model.NewObject("X", nil)
+
+	recurseWrapper := model.NewDefinitionWrapper(nil)
+	modelM := model.NewObject("RecurseM", []model.Property{property.NewDefinitionReference("a", recurseWrapper)})
+	recurseWrapper.UpdateDefinition(modelM)
+
+	recurseRWrapper := model.NewDefinitionWrapper(nil)
+	recurseLWrapper := model.NewDefinitionWrapper(nil)
+	modelL := model.NewObject("RecurseL", []model.Property{property.NewDefinitionReference("a", recurseRWrapper)})
+	modelR := model.NewObject("RecurseR", []model.Property{property.NewDefinitionReference("a", recurseLWrapper)})
+	recurseRWrapper.UpdateDefinition(modelR)
+	recurseLWrapper.UpdateDefinition(modelL)
+
 	spec := unitygen.NewSpec(
 		unitygen.SpecInfo{},
 		[]model.Definition{
 			model.NewStringEnum("SomeEnum", []string{"OneEnum", "TwoEnum"}),
-			model.NewStringEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"}),
+			modelFurtherRemoved,
 			model.NewObject("ToBeRemoved", nil),
 			model.NewObject("Basic", nil),
-			model.NewObject("X", nil),
-			model.NewObject("Y", nil),
-			model.NewObject("A", []model.Property{property.NewObjectReference("a", "#/definitions/B")}),
-			model.NewObject("B", []model.Property{property.NewObjectReference("a", "#/definitions/C")}),
-			model.NewObject("C", []model.Property{
-				property.NewObjectReference("a", "#/definitions/FurtherRemovedEnum"),
-				property.NewArray("test", property.NewObjectReference("a", "#/definitions/D")),
-			}),
-			model.NewObject("D", nil),
-			model.NewObject("RecurseL", []model.Property{property.NewObjectReference("a", "#/definitions/RecurseR")}),
-			model.NewObject("RecurseR", []model.Property{property.NewObjectReference("a", "#/definitions/RecurseL")}),
-			model.NewObject("RecurseM", []model.Property{property.NewObjectReference("a", "#/definitions/RecurseM")}),
+			modelX,
+			modelY,
+			model.NewObject("A", []model.Property{property.NewDefinitionReference("a", modelB)}),
+			modelB,
+			modelC,
+			modelD,
+			modelL,
+			modelR,
+			modelM,
 		},
 		nil,
 		[]unitygen.Service{
@@ -92,17 +110,17 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/A")),
-							"400": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/SomeEnum")),
-							"500": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/RecurseM")),
-							"501": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/RecurseL")),
+							"200": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/A")),
+							"400": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/SomeEnum")),
+							"500": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/RecurseM")),
+							"501": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/RecurseL")),
 						},
 						[]path.Parameter{
 							path.NewParameter(
 								path.BodyParameterLocation,
 								"",
 								false,
-								property.NewObjectReference("a", "#/definitions/X"),
+								property.NewDefinitionReference("a", modelX),
 							),
 						},
 					),
@@ -118,14 +136,14 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/Basic")),
+							"200": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/Basic")),
 						},
 						[]path.Parameter{
 							path.NewParameter(
 								path.BodyParameterLocation,
 								"",
 								false,
-								property.NewObjectReference("a", "#/definitions/Y"),
+								property.NewDefinitionReference("a", modelY),
 							),
 						},
 					),
@@ -345,19 +363,22 @@ func TestErrorsWithNoFileToReadFrom(t *testing.T) {
 
 func TestFilterUnusedDefinitions_AnonymouseFunctionReferences(t *testing.T) {
 	// ******************************** ARRANGE *******************************
+	ref := model.NewObject("Ref", []model.Property{})
+	bb := model.NewNumberEnum("BB", []float64{1, 2, 3})
+
 	spec := unitygen.NewSpec(
 		unitygen.SpecInfo{},
 		[]model.Definition{
 			model.NewObject("Big", []model.Property{
 				property.NewObject("Anonymoose",
 					model.NewObject("Anonymoose", []model.Property{
-						property.NewObjectReference("ref", "#/def/Ref"),
+						property.NewDefinitionReference("ref", ref),
 					}),
 				),
-				property.NewObjectReference("numenum", "#/def/BB"),
+				property.NewDefinitionReference("numenum", bb),
 			}),
-			model.NewObject("Ref", []model.Property{}),
-			model.NewNumberEnum("BB", []float64{1, 2, 3}),
+			ref,
+			bb,
 		},
 		nil,
 		[]unitygen.Service{
@@ -371,7 +392,7 @@ func TestFilterUnusedDefinitions_AnonymouseFunctionReferences(t *testing.T) {
 						nil,
 						nil,
 						map[string]path.Response{
-							"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/Big")),
+							"200": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/Big")),
 						},
 						[]path.Parameter{},
 					),

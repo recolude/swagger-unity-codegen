@@ -97,9 +97,6 @@ func TestReadDefinition(t *testing.T) {
 							"$ref": "#/definitions/v1Permission"
 						}
 					},
-					"project": {
-						"$ref": "#/definitions/v1Project"
-					},
 					"token": {
 						"type": "string"
 					}
@@ -130,6 +127,18 @@ func TestReadDefinition(t *testing.T) {
 					"format": "double"
 				  }
 				}
+			},
+			"v1DevKeyResponse": {
+				"type": "object",
+				"properties": {}
+			},
+			"runtimeError": {
+				"type": "object",
+				"properties": {}
+			},
+			"v1Permission": {
+				"type": "object",
+				"properties": {}
 			}
 		},
 		"securityDefinitions": {
@@ -151,7 +160,8 @@ func TestReadDefinition(t *testing.T) {
 		}
 	}`
 	// ********************************** ACT *********************************
-	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
 
 	// ********************************* ASSERT *******************************
 	if assert.NoError(t, err) == false {
@@ -159,9 +169,11 @@ func TestReadDefinition(t *testing.T) {
 	}
 	assert.Equal(t, "Recolude Service", spec.Info.Title)
 	assert.Equal(t, "1.0", spec.Info.Version)
-	if assert.Len(t, spec.Definitions, 3) {
-		assert.Equal(t, "v1ApiKey", spec.Definitions[0].Name())
-		assert.Equal(t, "v1EnumVisibility", spec.Definitions[1].Name())
+	if assert.Len(t, spec.Definitions, 6) {
+		assert.Equal(t, "runtimeError", spec.Definitions[0].Name())
+		assert.Equal(t, "v1ApiKey", spec.Definitions[1].Name())
+		assert.Equal(t, "v1DevKeyResponse", spec.Definitions[2].Name())
+		assert.Equal(t, "v1EnumVisibility", spec.Definitions[3].Name())
 		assert.Equal(t,
 			`[System.Serializable]
 public class V1ApiKey {
@@ -180,13 +192,10 @@ public class V1ApiKey {
 	[JsonProperty("permissions")]
 	public V1Permission[] Permissions { get; private set; }
 
-	[JsonProperty("project")]
-	public V1Project Project { get; private set; }
-
 	[JsonProperty("token")]
 	public string Token { get; private set; }
 
-}`, spec.Definitions[0].ToCSharp())
+}`, spec.Definitions[1].ToCSharp())
 
 		assert.Equal(t,
 			`public enum V1EnumVisibility {
@@ -229,7 +238,7 @@ public class V1EnumVisibilityJsonConverter : JsonConverter {
 	public override bool CanConvert(System.Type objectType) {
 		return objectType == typeof(string);
 	}
-}`, spec.Definitions[1].ToCSharp())
+}`, spec.Definitions[3].ToCSharp())
 
 		assert.Equal(t,
 			`[System.Serializable]
@@ -244,7 +253,7 @@ public class V1ListLicensesRequest {
 	[JsonProperty("time")]
 	public float Time { get; private set; }
 
-}`, spec.Definitions[2].ToCSharp())
+}`, spec.Definitions[4].ToCSharp())
 	}
 
 	if assert.Len(t, spec.AuthDefinitions, 3) {
@@ -374,7 +383,6 @@ func Test_ReadParameters(t *testing.T) {
 					}
 				  ],
 				  "description": "Echos your message back to you",
-
 				  "operationId": "EchoService_EchoString2",
 				  "parameters": [
 					{
@@ -406,11 +414,18 @@ func Test_ReadParameters(t *testing.T) {
 					}
 				  }
 				}
-			  }
+			}
+		},
+		"definitions" : {
+			"v1Echo": {
+				"type": "object",
+				"properties": {}
+			}
 		}
 	}`
 	// ********************************** ACT *********************************
-	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
 
 	// ********************************* ASSERT *******************************
 	if assert.NoError(t, err) == false {
@@ -485,11 +500,20 @@ func Test_ReadNestedObjectPropertyDefinition(t *testing.T) {
 						"required": ["field", "modifier"]
 					  }
 					}
-				  }
+				},
+				"AggModifier": {
+					"type": "object",
+					"properties": {}
+				},
+				"RecordingEntity": {
+					"type": "object",
+					"properties": {}
+				}
 			}
 		}`
 	// ********************************** ACT *********************************
-	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
 
 	// ********************************* ASSERT *******************************
 	if assert.NoError(t, err) == false {
@@ -497,7 +521,7 @@ func Test_ReadNestedObjectPropertyDefinition(t *testing.T) {
 	}
 	assert.Equal(t, "Analytic Service", spec.Info.Title)
 	assert.Equal(t, "1.0.0", spec.Info.Version)
-	if assert.Len(t, spec.Definitions, 1) {
+	if assert.Len(t, spec.Definitions, 3) {
 		def := spec.Definitions[0]
 		assert.Equal(t, "AggMetadataQuery", def.Name())
 		assert.Equal(t, "AggMetadataQuery", def.ToVariableType())
@@ -547,7 +571,8 @@ func Test_ReadNumberEnums(t *testing.T) {
 			}
 		}`
 	// ********************************** ACT *********************************
-	spec, err := unitygen.Parser{}.ParseJSON(strings.NewReader(swaggerDotJSON))
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
 
 	// ********************************* ASSERT *******************************
 	if assert.NoError(t, err) == false {

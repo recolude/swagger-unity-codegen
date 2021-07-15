@@ -44,7 +44,7 @@ func alreadyRecursed(inquestion string, alreadyAdded []string) bool {
 func findReferencePropRecurse(inQuestion model.Property, defs []model.Definition, alreadyAdded []string) []string {
 	finalReferences := alreadyAdded
 
-	objectReferenceDefinition, ok := inQuestion.(property.ObjectReference)
+	objectReferenceDefinition, ok := inQuestion.(property.DefinitionReference)
 	if ok {
 		if alreadyRecursed(objectReferenceDefinition.ToVariableType(), finalReferences) {
 			return finalReferences
@@ -326,7 +326,7 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 						return fmt.Errorf("Error opening swagger file: %w", err)
 					}
 
-					spec, err := unitygen.Parser{}.ParseJSON(file)
+					spec, err := unitygen.NewParser().ParseJSON(file)
 					if err != nil {
 						return fmt.Errorf("Error reading from swagger file: %w", err)
 					}

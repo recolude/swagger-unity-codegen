@@ -16,9 +16,17 @@ import (
 )
 
 // Parser reads through a file and interprets a swagger definition
-type Parser struct{}
+type Parser struct {
+	workingDefinitions map[string]*model.DefinitionWrapper
+}
 
-func (p Parser) interpretArrayProperty(path []string, objectName, propertyName string, obj *gabs.Container) (property.Array, error) {
+func NewParser() *Parser {
+	return &Parser{
+		workingDefinitions: make(map[string]*model.DefinitionWrapper),
+	}
+}
+
+func (p *Parser) interpretArrayProperty(path []string, objectName, propertyName string, obj *gabs.Container) (property.Array, error) {
 	items := obj.Path("items")
 	if items == nil {
 		return property.Array{}, InvalidSpecError{Path: path, Reason: "Unable to find array type (missing items property)"}
@@ -32,7 +40,7 @@ func (p Parser) interpretArrayProperty(path []string, objectName, propertyName s
 	return property.NewArray(propertyName, prop), nil
 }
 
-func (p Parser) interpretStringProperty(path []string, name string, obj *gabs.Container) (property.String, error) {
+func (p *Parser) interpretStringProperty(path []string, name string, obj *gabs.Container) (property.String, error) {
 	format := ""
 	formatInSpec := obj.Path("format").Data()
 	if formatInSpec != nil {
@@ -41,7 +49,7 @@ func (p Parser) interpretStringProperty(path []string, name string, obj *gabs.Co
 	return property.NewString(name, format), nil
 }
 
-func (p Parser) interpretIntProperty(path []string, name string, obj *gabs.Container) (property.Integer, error) {
+func (p *Parser) interpretIntProperty(path []string, name string, obj *gabs.Container) (property.Integer, error) {
 	format := ""
 	formatInSpec := obj.Path("format").Data()
 	if formatInSpec != nil {
@@ -50,7 +58,7 @@ func (p Parser) interpretIntProperty(path []string, name string, obj *gabs.Conta
 	return property.NewInteger(name, format), nil
 }
 
-func (p Parser) interpretNumberProperty(path []string, name string, obj *gabs.Container) (property.Number, error) {
+func (p *Parser) interpretNumberProperty(path []string, name string, obj *gabs.Container) (property.Number, error) {
 	format := ""
 	formatInSpec := obj.Path("format").Data()
 	if formatInSpec != nil {
@@ -59,19 +67,26 @@ func (p Parser) interpretNumberProperty(path []string, name string, obj *gabs.Co
 	return property.NewNumber(name, format), nil
 }
 
-func (p Parser) interpretBooleanProperty(name string) (property.Boolean, error) {
+func (p *Parser) interpretBooleanProperty(name string) (property.Boolean, error) {
 	return property.NewBoolean(name), nil
 }
 
-func (p Parser) interpretNestedObjectProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
+func (p *Parser) interpretNestedObjectProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
 	def, err := p.interpretObjectDefinition(path, fmt.Sprintf("%s%s", objectName, convention.ClassName(propertyName)), obj)
 	return property.NewObject(propertyName, def), err
 }
 
-func (p Parser) interpretObjectDefinitionProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
-	objRef, ok := obj.Path("$ref").Data().(string)
+func (p *Parser) interpretObjectDefinitionProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
+	objRefUrl, ok := obj.Path("$ref").Data().(string)
+
 	if ok {
-		return property.NewObjectReference(propertyName, objRef), nil
+		_, hasDef := p.workingDefinitions[objRefUrl]
+
+		if hasDef == false {
+			p.workingDefinitions[objRefUrl] = model.NewDefinitionWrapper(nil)
+		}
+
+		return property.NewDefinitionReference(propertyName, p.workingDefinitions[objRefUrl]), nil
 	}
 
 	propType, ok := obj.Path("type").Data().(string)
@@ -104,7 +119,7 @@ func (p Parser) interpretObjectDefinitionProperty(path []string, objectName, pro
 	}
 }
 
-func (p Parser) interpretObjectDefinition(path []string, objectName string, obj *gabs.Container) (model.Object, error) {
+func (p *Parser) interpretObjectDefinition(path []string, objectName string, obj *gabs.Container) (model.Object, error) {
 	newPath := append(path, objectName)
 	if obj == nil {
 		return model.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
@@ -122,7 +137,7 @@ func (p Parser) interpretObjectDefinition(path []string, objectName string, obj 
 	return model.NewObject(objectName, properties), nil
 }
 
-func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
+func (p *Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
 	enum := obj.Path("enum")
 	if enum == nil {
 		return nil, InvalidSpecError{Path: append(path, name), Reason: "Unimplemented string case"}
@@ -137,7 +152,7 @@ func (p Parser) interpretStringDefinition(path []string, name string, obj *gabs.
 	return model.NewStringEnum(name, parsedValues), nil
 }
 
-func (p Parser) interpretNumberDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
+func (p *Parser) interpretNumberDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
 	enum := obj.Path("enum")
 	if enum == nil {
 		return nil, InvalidSpecError{Path: append(path, name), Reason: "Unimplemented number case"}
@@ -152,7 +167,7 @@ func (p Parser) interpretNumberDefinition(path []string, name string, obj *gabs.
 	return model.NewNumberEnum(name, parsedValues), nil
 }
 
-func (p Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error) {
+func (p *Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error) {
 	definitions := make([]model.Definition, 0)
 	var err error
 	for key, val := range obj.Path("definitions").ChildrenMap() {
@@ -183,13 +198,18 @@ func (p Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error
 		if err != nil {
 			return nil, err
 		}
+		if wrapper, ok := p.workingDefinitions["#/definitions/"+key]; ok {
+			wrapper.UpdateDefinition(def)
+		} else {
+			p.workingDefinitions["#/definitions/"+key] = model.NewDefinitionWrapper(def)
+		}
 		definitions = append(definitions, def)
 	}
 
 	return definitions, nil
 }
 
-func (p Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs.Container) (security.Auth, error) {
+func (p *Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs.Container) (security.Auth, error) {
 	keyPath := append(path, name)
 	if obj == nil {
 		return nil, InvalidSpecError{Path: keyPath, Reason: "Definition contains no contents"}
@@ -218,7 +238,7 @@ func (p Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs.
 	return security.NewAPIKey(name, apikeyName, keyLoc), nil
 }
 
-func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, error) {
+func (p *Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, error) {
 	definitions := make([]security.Auth, 0)
 	var err error
 	for key, val := range obj.Path("securityDefinitions").ChildrenMap() {
@@ -247,16 +267,22 @@ func (p Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth, 
 	return definitions, nil
 }
 
-func (p Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
+func (p *Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
 	schemaNode := obj.Path("schema")
 	if schemaNode != nil {
 		refNode := schemaNode.Path("$ref")
 		if refNode == nil {
 			return nil, InvalidSpecError{Path: append(path, "schema"), Reason: "Expected $ref"}
 		}
-		refName, ok := refNode.Data().(string)
-		if ok {
-			return property.NewObjectReference(name, refName), nil
+		refName, hasRef := refNode.Data().(string)
+		if hasRef {
+			_, hasDef := p.workingDefinitions[refName]
+
+			if hasDef == false {
+				p.workingDefinitions[refName] = model.NewDefinitionWrapper(nil)
+			}
+
+			return property.NewDefinitionReference(name, p.workingDefinitions[refName]), nil
 		}
 
 		return nil, InvalidSpecError{Path: append(path, "schema"), Reason: "Expected $ref to be string"}
@@ -289,7 +315,7 @@ func (p Parser) interpretPathPameterProperty(path []string, name string, obj *ga
 	}
 }
 
-func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, error) {
+func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, error) {
 	paths := make([]path.Path, 0)
 	for verb, verbObj := range routeObj.ChildrenMap() {
 		tagsInJSON := make([]string, 0)
@@ -324,7 +350,7 @@ func (p Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, e
 				if refNode != nil {
 					responses[code] = path.NewDefinitionResponse(
 						description,
-						model.NewObjectReference(refNode.Data().(string)),
+						model.NewDefinitionReference(refNode.Data().(string)),
 					)
 					continue
 				}
@@ -418,7 +444,7 @@ func (a sortByPathMethod) Len() int           { return len(a) }
 func (a sortByPathMethod) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a sortByPathMethod) Less(i, j int) bool { return a[i].Method() < a[j].Method() }
 
-func (p Parser) serviceForPath(s Service, pa path.Path) bool {
+func (p *Parser) serviceForPath(s Service, pa path.Path) bool {
 	for _, t := range pa.Tags() {
 		if t == s.name {
 			return true
@@ -433,7 +459,7 @@ func (a sortByServiceName) Len() int           { return len(a) }
 func (a sortByServiceName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a sortByServiceName) Less(i, j int) bool { return a[i].name < a[j].name }
 
-func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
+func (p *Parser) parseServices(obj *gabs.Container) ([]Service, error) {
 	services := make([]Service, 0)
 	defaultServiceIndex := -1
 
@@ -477,7 +503,7 @@ func (p Parser) parseServices(obj *gabs.Container) ([]Service, error) {
 
 // ParseJSON reads through the input stream and constructs an understanding of
 // the API our Unity3D client needs to interact with
-func (p Parser) ParseJSON(in io.Reader) (Spec, error) {
+func (p *Parser) ParseJSON(in io.Reader) (Spec, error) {
 	entireIn, err := ioutil.ReadAll(in)
 	if err != nil {
 		return Spec{}, err

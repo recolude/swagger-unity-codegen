@@ -24,13 +24,13 @@ func NewNumberEnum(name string, values []float64) NumberEnum {
 }
 
 // ToVariableType generates a identifier for the definition
-func (e NumberEnum) ToVariableType() string {
-	return convention.TitleCase(e.Name())
+func (ne NumberEnum) ToVariableType() string {
+	return convention.TitleCase(ne.Name())
 }
 
 // Name returns the enums name
-func (e NumberEnum) Name() string {
-	return e.name
+func (ne NumberEnum) Name() string {
+	return ne.name
 }
 
 func floatToEnumMember(x float64) string {
@@ -67,18 +67,22 @@ func floatToEnumMember(x float64) string {
 }
 
 // ToCSharp generates a c# enum for unity
-func (e NumberEnum) ToCSharp() string {
+func (ne NumberEnum) ToCSharp() string {
 	var enumBuilder strings.Builder
 
 	enumBuilder.WriteString("public enum ")
-	enumBuilder.WriteString(e.ToVariableType())
+	enumBuilder.WriteString(ne.ToVariableType())
 	enumBuilder.WriteString(" {\n")
-	for i, prop := range e.values {
+	for i, prop := range ne.values {
 		enumBuilder.WriteString(fmt.Sprintf("\t%s", floatToEnumMember(prop)))
-		if i < len(e.values)-1 {
+		if i < len(ne.values)-1 {
 			enumBuilder.WriteString(",\n")
 		}
 	}
 	enumBuilder.WriteString("\n}")
 	return enumBuilder.String()
+}
+
+func (ne NumberEnum) JsonConverter() string {
+	return ""
 }

@@ -21,8 +21,10 @@ func TestObject(t *testing.T) {
 	varType := obj.ToVariableType()
 	name := obj.Name()
 	cSharp := obj.ToCSharp()
+	converter := obj.JsonConverter()
 
 	// ********************************* ASSERT *******************************
+	assert.Equal(t, "", converter)
 	assert.Equal(t, "TestObj", varType)
 	assert.Equal(t, "testObj", name)
 	assert.Equal(t, `[System.Serializable]

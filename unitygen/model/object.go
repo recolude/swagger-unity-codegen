@@ -53,3 +53,7 @@ func (od Object) ToCSharp() string {
 func (od Object) ToVariableType() string {
 	return convention.TitleCase(od.Name())
 }
+
+func (od Object) JsonConverter() string {
+	return ""
+}

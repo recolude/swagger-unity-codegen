@@ -84,8 +84,8 @@ func Test_ParameterInPath(t *testing.T) {
 			path.NewSecurityMethodReference("DevKeyAuth"),
 		},
 		map[string]path.Response{
-			"200":     path.NewDefinitionResponse("A successful response.", model.NewObjectReference("#/definitions/v1UserResponse")),
-			"default": path.NewDefinitionResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
+			"200":     path.NewDefinitionResponse("A successful response.", model.NewDefinitionReference("#/definitions/v1UserResponse")),
+			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
@@ -162,7 +162,7 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 			path.NewSecurityMethodReference("DevKeyAuth"),
 		},
 		map[string]path.Response{
-			"200": path.NewDefinitionResponse("", model.NewObjectReference("#/definitions/v1UserResponse")),
+			"200": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/v1UserResponse")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
@@ -209,7 +209,7 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 			path.NewSecurityMethodReference("DevKeyAuth"),
 		},
 		map[string]path.Response{
-			"default": path.NewDefinitionResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
+			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
@@ -255,9 +255,9 @@ func Test_ThreeParametersInPath(t *testing.T) {
 			path.NewSecurityMethodReference("DevKeyAuth"),
 		},
 		map[string]path.Response{
-			"200":     path.NewDefinitionResponse("A successful response.", model.NewObjectReference("#/definitions/v1UserResponse")),
-			"401":     path.NewDefinitionResponse("Weird Unauthorized response.", model.NewObjectReference("#/definitions/v1Unauthorized")),
-			"default": path.NewDefinitionResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
+			"200":     path.NewDefinitionResponse("A successful response.", model.NewDefinitionReference("#/definitions/v1UserResponse")),
+			"401":     path.NewDefinitionResponse("Weird Unauthorized response.", model.NewDefinitionReference("#/definitions/v1Unauthorized")),
+			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
@@ -322,10 +322,10 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 		tags,
 		security,
 		map[string]path.Response{
-			"200":     path.NewDefinitionResponse("A successful response.", model.NewObjectReference("#/definitions/v1UserResponse")),
+			"200":     path.NewDefinitionResponse("A successful response.", model.NewDefinitionReference("#/definitions/v1UserResponse")),
 			"401":     nil,
 			"501":     path.NewFileResponse("some file"),
-			"default": path.NewDefinitionResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
+			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		params,
 	)
@@ -384,7 +384,7 @@ func Test_DealsWithQueryParams(t *testing.T) {
 		[]string{"UserService"},
 		nil,
 		map[string]path.Response{
-			"default": path.NewDefinitionResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
+			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
@@ -414,6 +414,8 @@ public UserService_GetUserUnityWebRequest UserService_GetUser(string userId, str
 
 func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 	// ******************************** ARRANGE *******************************
+	query := model.NewObject("query", nil)
+
 	route := path.NewPath(
 		"/api/v1/users/{userId}/{user-name}",
 		"getUser",
@@ -421,14 +423,14 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 		[]string{"UserService"},
 		nil,
 		map[string]path.Response{
-			"default": path.NewDefinitionResponse("An unexpected error response", model.NewObjectReference("#/definitions/runtimeError")),
+			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
 			path.NewParameter(path.PathParameterLocation, "user-name", true, property.NewString("userId", "")),
 			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
 			path.NewParameter(path.QueryParameterLocation, "anotherId", true, property.NewInteger("anotherId", "")),
-			path.NewParameter(path.BodyParameterLocation, "query", true, property.NewObjectReference("test", "#/definitions/Query")),
+			path.NewParameter(path.BodyParameterLocation, "query", true, property.NewDefinitionReference("test", query)),
 		},
 	)
 
