@@ -493,6 +493,9 @@ func Test_ReadNestedObjectPropertyDefinition(t *testing.T) {
 							"type": "integer",
 							"format": "int32"
 						  },
+						  "someBool": {
+							"type": "boolean"
+						  },
 						  "onEntity": {
 							"$ref": "#/definitions/RecordingEntity"
 						  }
@@ -546,6 +549,9 @@ public class AggMetadataQueryQuery {
 	[JsonProperty("onEntity")]
 	public RecordingEntity OnEntity { get; private set; }
 
+	[JsonProperty("someBool")]
+	public bool SomeBool { get; private set; }
+
 }
 	[JsonProperty("query")]
 	public AggMetadataQueryQuery Query { get; private set; }
@@ -594,4 +600,92 @@ func Test_ReadNumberEnums(t *testing.T) {
 	NUMBER_8
 }`, def.ToCSharp())
 	}
+}
+
+func Test_PathParameters_InterpretNumber(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+		"paths": {
+			"/analytics-api/v1/projects/{project-id}/counts": {
+				"post": {
+					"tags": ["AnalyticsService"],
+					"operationId": "countOccurences",
+					"consumes": ["application/json"],
+					"produces": ["application/json"],
+					"parameters": [{
+							"name": "project-id",
+							"in": "path",
+							"description": "The Id of the project",
+							"required": true,
+							"type": "string"
+						},
+						{
+							"name": "query",
+							"in": "query",
+							"type": "number"
+						},
+						{
+							"name": "b",
+							"in": "query",
+							"type": "boolean"
+						},
+						{
+							"name": "arr",
+							"in": "query",
+							"type": "array",
+							"items": {
+								"type": "number"
+							}
+						}
+					],
+					"responses": {
+						"200": {
+							"description": "The result",
+							"schema": {
+								"type": "array",
+								"items": {
+									"type": "number"
+								}
+							}
+						},
+						"400": {
+							"description": "The result",
+							"schema": {
+								"type": "number"
+							}
+						}
+					}
+				}
+			}
+		}
+	}`
+	// ********************************** ACT *********************************
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ASSERT =================================================================
+	assert.NoError(t, err)
+	assert.Len(t, spec.Services, 1)
+	assert.Len(t, spec.Services[0].Paths(), 1)
+
+	// Responses
+	assert.Len(t, spec.Services[0].Paths()[0].Responses(), 2)
+	assert.Equal(t, spec.Services[0].Paths()[0].Responses()["200"].VariableType(), "float[]")
+	assert.Equal(t, spec.Services[0].Paths()[0].Responses()["400"].VariableType(), "float")
+
+	// Parameters
+	assert.Len(t, spec.Services[0].Paths()[0].Parameters(), 4)
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[0].Name(), "project-id")
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[0].Location(), path.PathParameterLocation)
+
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[1].Name(), "query")
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[1].Location(), path.QueryParameterLocation)
+
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[2].Name(), "b")
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[2].Location(), path.QueryParameterLocation)
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[2].Schema().ToVariableType(), "bool")
+
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[3].Name(), "arr")
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[3].Location(), path.QueryParameterLocation)
+	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[3].Schema().ToVariableType(), "float[]")
 }
