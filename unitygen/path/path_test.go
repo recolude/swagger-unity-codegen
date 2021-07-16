@@ -121,9 +121,9 @@ func Test_ParameterInPath(t *testing.T) {
 
 	public void Interpret(UnityWebRequest req) {
 		if (req.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
+			success = JsonConvert.DeserializeObject<V1UserResponse>(req.downloadHandler.text);
 		} else {
-			fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
+			fallbackResponse = JsonConvert.DeserializeObject<RuntimeError>(req.downloadHandler.text);
 		}
 	}
 
@@ -190,7 +190,7 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 
 	public void Interpret(UnityWebRequest req) {
 		if (req.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
+			success = JsonConvert.DeserializeObject<V1UserResponse>(req.downloadHandler.text);
 		}
 	}
 
@@ -237,7 +237,7 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 	}
 
 	public void Interpret(UnityWebRequest req) {
-		fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
+		fallbackResponse = JsonConvert.DeserializeObject<RuntimeError>(req.downloadHandler.text);
 	}
 
 }`, classCode)
@@ -292,11 +292,11 @@ func Test_ThreeParametersInPath(t *testing.T) {
 
 	public void Interpret(UnityWebRequest req) {
 		if (req.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
+			success = JsonConvert.DeserializeObject<V1UserResponse>(req.downloadHandler.text);
 		} else if (req.responseCode == 401) {
-			unauthorized = JsonUtility.FromJson<V1Unauthorized>(req.downloadHandler.text);
+			unauthorized = JsonConvert.DeserializeObject<V1Unauthorized>(req.downloadHandler.text);
 		} else {
-			fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
+			fallbackResponse = JsonConvert.DeserializeObject<RuntimeError>(req.downloadHandler.text);
 		}
 	}
 
@@ -364,11 +364,11 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 
 	public void Interpret(UnityWebRequest req) {
 		if (req.responseCode == 200) {
-			success = JsonUtility.FromJson<V1UserResponse>(req.downloadHandler.text);
+			success = JsonConvert.DeserializeObject<V1UserResponse>(req.downloadHandler.text);
 		} else if (req.responseCode == 501) {
 			notImplemented = req.downloadHandler.data;
 		} else {
-			fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
+			fallbackResponse = JsonConvert.DeserializeObject<RuntimeError>(req.downloadHandler.text);
 		}
 	}
 
@@ -474,7 +474,7 @@ public GetUserUnityWebRequest GetUser(string userId, string userName, string dif
 	}
 
 	public void Interpret(UnityWebRequest req) {
-		fallbackResponse = JsonUtility.FromJson<RuntimeError>(req.downloadHandler.text);
+		fallbackResponse = JsonConvert.DeserializeObject<RuntimeError>(req.downloadHandler.text);
 	}
 
 }

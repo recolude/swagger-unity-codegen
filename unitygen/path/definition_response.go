@@ -29,7 +29,7 @@ func (resp DefinitionResponse) Interpret(variableName string, downloadHandlerVar
 	if resp.schema == nil {
 		panic(errors.New("can not build a response interpretation from nil definition"))
 	}
-	return fmt.Sprintf("%s = JsonUtility.FromJson<%s>(%s.text);", variableName, resp.schema.ToVariableType(), downloadHandlerVariableName)
+	return fmt.Sprintf("%s = JsonConvert.DeserializeObject<%s>(%s.text);", variableName, resp.schema.ToVariableType(), downloadHandlerVariableName)
 }
 
 func (resp DefinitionResponse) VariableType() string {

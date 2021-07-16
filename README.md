@@ -180,7 +180,7 @@ public class ExampleService
         {
             if (req.responseCode == 200)
             {
-                success = JsonUtility.FromJson<EchoResponse>(req.downloadHandler.text);
+                success = JsonConvert.DeserializeObject<EchoResponse>(req.downloadHandler.text);
             }
         }
     }

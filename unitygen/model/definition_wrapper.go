@@ -1,5 +1,7 @@
 package model
 
+// DefinitionWrapper allows one definintion to reference another explicitly,
+// which is required for classes structured in a recursive manor.
 type DefinitionWrapper struct {
 	def Definition
 }

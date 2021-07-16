@@ -20,7 +20,7 @@ func Test_DefinitionResponse(t *testing.T) {
 
 	// ASSERT =================================================================
 	assert.Equal(t, desciption, desc)
-	assert.Equal(t, "somethin = JsonUtility.FromJson<CoolCats>(download.text);", interpret)
+	assert.Equal(t, "somethin = JsonConvert.DeserializeObject<CoolCats>(download.text);", interpret)
 	assert.Equal(t, "CoolCats", defResp.VariableType())
 }
 
