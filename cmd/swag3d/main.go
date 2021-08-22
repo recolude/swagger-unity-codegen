@@ -78,7 +78,7 @@ func findReferenceRecurse(inQuestion model.Definition, defs []model.Definition, 
 			return finalReferences
 		}
 		finalReferences = append(finalReferences, objectDefinition.ToVariableType())
-		for _, prop := range objectDefinition.Properties {
+		for _, prop := range objectDefinition.Properties() {
 			finalReferences = findReferencePropRecurse(prop, defs, finalReferences)
 		}
 	}

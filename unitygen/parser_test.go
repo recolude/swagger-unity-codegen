@@ -689,3 +689,65 @@ func Test_PathParameters_InterpretNumber(t *testing.T) {
 	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[3].Location(), path.QueryParameterLocation)
 	assert.Equal(t, spec.Services[0].Paths()[0].Parameters()[3].Schema().ToVariableType(), "float[]")
 }
+
+func Test_ReadAllOf(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+			"info": {
+				"title": "Analytic Service",
+				"version": "1.0.0"
+			},
+			"paths": {
+			},
+			"definitions": {
+				"GraphQuery": {
+					"type": "object",
+					"properties": {
+						"queryType": { "type": "string" },
+						"somethinElse": { "type": "string" }
+					}
+				},
+				"CountQuery": {
+					"allOf": [
+						{
+						  "$ref": "#/definitions/GraphQuery"
+						}
+					],
+					"type": "object",
+					"properties": {
+						"name": { "type": "string" }
+					}
+				}
+			}
+		}`
+	// ********************************** ACT *********************************
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	if assert.NoError(t, err) == false {
+		return
+	}
+	assert.Equal(t, "Analytic Service", spec.Info.Title)
+	assert.Equal(t, "1.0.0", spec.Info.Version)
+	if assert.Len(t, spec.Definitions, 2) {
+		countQueryDef := spec.Definitions[0]
+		assert.Equal(t, "CountQuery", countQueryDef.Name())
+		assert.Equal(t, `[System.Serializable]
+public class CountQuery {
+
+	[JsonProperty("queryType")]
+	public string QueryType { get; private set; }
+
+	[JsonProperty("somethinElse")]
+	public string SomethinElse { get; private set; }
+
+	[JsonProperty("name")]
+	public string Name { get; private set; }
+
+}`, countQueryDef.ToCSharp())
+
+		graphQueryDef := spec.Definitions[1]
+		assert.Equal(t, "GraphQuery", graphQueryDef.Name())
+	}
+}

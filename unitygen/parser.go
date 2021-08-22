@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -18,11 +19,13 @@ import (
 // Parser reads through a file and interprets a swagger definition
 type Parser struct {
 	workingDefinitions map[string]*model.DefinitionWrapper
+	resolvers          []resolver
 }
 
 func NewParser() *Parser {
 	return &Parser{
 		workingDefinitions: make(map[string]*model.DefinitionWrapper),
+		resolvers:          make([]resolver, 0),
 	}
 }
 
@@ -124,14 +127,38 @@ func (p *Parser) interpretObjectDefinition(path []string, objectName string, obj
 	if obj == nil {
 		return model.Object{}, InvalidSpecError{Path: newPath, Reason: "Definition contains no contents"}
 	}
-	properties := make([]model.Property, 0)
 
+	allofNode := obj.Path("allOf")
+	var allofRef *model.Object
+	if allofNode != nil {
+		for _, allOfChild := range allofNode.Children() {
+			allOfChildRef := allOfChild.Path("$ref")
+			if allOfChildRef != nil {
+				refName, hasRef := allOfChildRef.Data().(string)
+				if hasRef {
+					p.resolvers = append(
+						p.resolvers,
+						allOfResolver{
+							objToChangeName: objectName,
+							allOfObjName:    filepath.Base(refName),
+						},
+					)
+				}
+			}
+		}
+	}
+
+	properties := make([]model.Property, 0)
 	for propertyName, val := range obj.Path("properties").ChildrenMap() {
 		prop, err := p.interpretObjectDefinitionProperty(append(newPath, "properties"), objectName, propertyName, val)
 		if err != nil {
 			return model.Object{}, err
 		}
 		properties = append(properties, prop)
+	}
+
+	if allofRef != nil {
+		return model.NewAllOfObject(objectName, *allofRef, properties), nil
 	}
 
 	return model.NewObject(objectName, properties), nil
@@ -526,6 +553,13 @@ func (p *Parser) ParseJSON(in io.Reader) (Spec, error) {
 	parsedDefinitions, err := p.parseDefinitions(jsonParsed)
 	if err != nil {
 		return Spec{}, err
+	}
+
+	for _, r := range p.resolvers {
+		err = r.Resolve(parsedDefinitions)
+		if err != nil {
+			return Spec{}, err
+		}
 	}
 
 	parsedSecurityDefinitions, err := p.parseSecurityDefinitions(jsonParsed)

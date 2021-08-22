@@ -40,10 +40,12 @@ func TestNumberEnum(t *testing.T) {
 	varType := enum.ToVariableType()
 	name := enum.Name()
 	cSharp := enum.ToCSharp()
+	jsonConverter := enum.JsonConverter()
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, "TestEnum", varType)
 	assert.Equal(t, "testEnum", name)
+	assert.Equal(t, "", jsonConverter)
 	assert.Equal(t, `public enum TestEnum {
 	NUMBER_0_DOT_125,
 	NUMBER_0_DOT_25,

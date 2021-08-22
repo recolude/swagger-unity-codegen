@@ -9,8 +9,9 @@ import (
 
 // Object is a collection of properties
 type Object struct {
-	ObjectName string
-	Properties []Property
+	ObjectName             string
+	objectToTakeProperties *Object
+	properties             []Property
 }
 
 // NewObject creates a new object
@@ -18,7 +19,19 @@ func NewObject(name string, properties []Property) Object {
 	sort.Sort(sortByPropName(properties))
 	return Object{
 		ObjectName: name,
-		Properties: properties,
+		properties: properties,
+	}
+}
+
+// NewAllOfObject is an object that has all properties of another object. It's not
+// proper inheritance, just composition. For inheritance, look at discriminator
+// object.
+func NewAllOfObject(name string, objectToTakeProperties Object, extraProperties []Property) Object {
+	sort.Sort(sortByPropName(extraProperties))
+	return Object{
+		ObjectName:             name,
+		properties:             extraProperties,
+		objectToTakeProperties: &objectToTakeProperties,
 	}
 }
 
@@ -33,6 +46,19 @@ func (od Object) Name() string {
 	return od.ObjectName
 }
 
+func (od Object) Properties() []Property {
+	if od.objectToTakeProperties != nil {
+		return append(od.objectToTakeProperties.Properties(), od.properties...)
+	}
+	return od.properties
+}
+
+// SetAllOfObject makes this object take on the properties of the object passed
+// in, satisfying the "allOf" modifier in swagger 2.0
+func (od *Object) SetAllOfObject(objectToTakeProperties *Object) {
+	od.objectToTakeProperties = objectToTakeProperties
+}
+
 // ToCSharp generates a c# class for unity
 func (od Object) ToCSharp() string {
 	var classBuilder strings.Builder
@@ -40,8 +66,16 @@ func (od Object) ToCSharp() string {
 	classBuilder.WriteString("[System.Serializable]\npublic class ")
 	classBuilder.WriteString(od.ToVariableType())
 	classBuilder.WriteString(" {\n\n")
-	for _, prop := range od.Properties {
-		// classBuilder.WriteString()
+
+	// List out any inheritted properties
+	if od.objectToTakeProperties != nil {
+		for _, prop := range od.objectToTakeProperties.Properties() {
+			classBuilder.WriteString(prop.ClassVariables())
+			classBuilder.WriteString("\n")
+		}
+	}
+
+	for _, prop := range od.properties {
 		classBuilder.WriteString(prop.ClassVariables())
 		classBuilder.WriteString("\n")
 	}
