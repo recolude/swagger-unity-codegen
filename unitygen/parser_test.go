@@ -751,3 +751,163 @@ public class CountQuery {
 		assert.Equal(t, "GraphQuery", graphQueryDef.Name())
 	}
 }
+
+func Test_ErrorsWhenAllOfReferencesNonExistantDefinition(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+			"info": {
+				"title": "Analytic Service",
+				"version": "1.0.0"
+			},
+			"paths": {
+			},
+			"definitions": {
+				"CountQuery": {
+					"allOf": [
+						{
+						  "$ref": "#/definitions/GraphQuery"
+						}
+					],
+					"type": "object",
+					"properties": {
+						"name": { "type": "string" }
+					}
+				}
+			}
+		}`
+	// ********************************** ACT *********************************
+	parser := unitygen.NewParser()
+	_, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	assert.EqualError(t, err, "definition `GraphQuery` that `CountQuery` references in 'allOf' was not found in the swagger file")
+}
+
+func Test_ErrorsWhenAllOfReferencesNonObjectDefinition(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+			"info": {
+				"title": "Analytic Service",
+				"version": "1.0.0"
+			},
+			"paths": {
+			},
+			"definitions": {
+				"CountQuery": {
+					"allOf": [
+						{
+						  "$ref": "#/definitions/v1EnumVisibility"
+						}
+					],
+					"type": "object",
+					"properties": {
+						"name": { "type": "string" }
+					}
+				},
+				"v1EnumVisibility": {
+					"type": "string",
+					"default": "V_UNKNOWN",
+					"enum": [
+					  "V_UNKNOWN",
+					  "V_PUBLIC",
+					  "V_PRIVATE"
+					]
+				}
+			}
+		}`
+	// ********************************** ACT *********************************
+	parser := unitygen.NewParser()
+	_, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	assert.EqualError(t, err, "definition `CountQuery` references non-object `v1EnumVisibility` in 'allOf'")
+}
+
+func TestParse_ReadDiscriminator(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	swaggerDotJSON := `{
+			"info": {
+				"title": "Analytic Service",
+				"version": "1.0.0"
+			},
+			"paths": {
+			},
+			"definitions": {
+				"GraphQuery": {
+					"type": "object",
+					"discriminator": "queryType",
+					"properties": {
+						"queryType": { "type": "string" },
+						"somethinElse": { "type": "string" }
+					}
+				},
+				"CountQuery": {
+					"allOf": [
+						{
+						  "$ref": "#/definitions/GraphQuery"
+						}
+					],
+					"type": "object",
+					"properties": {
+						"name": { "type": "string" }
+					}
+				}, 
+				"GroupsCountQuery": {
+					"allOf": [
+					  {
+						"$ref": "#/definitions/GraphQuery"
+					  }
+					],
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "object",
+							"properties": {
+								"groupsField": {
+									"type": "string",
+									"x-nullable": true
+								}
+							}
+						}
+					}
+				}
+			}
+		}`
+	// ********************************** ACT *********************************
+	parser := unitygen.NewParser()
+	spec, err := parser.ParseJSON(strings.NewReader(swaggerDotJSON))
+
+	// ********************************* ASSERT *******************************
+	if assert.NoError(t, err) == false {
+		return
+	}
+	assert.Equal(t, "Analytic Service", spec.Info.Title)
+	assert.Equal(t, "1.0.0", spec.Info.Version)
+	if assert.Len(t, spec.Definitions, 3) {
+		countQueryDef := spec.Definitions[0]
+		assert.Equal(t, "CountQuery", countQueryDef.Name())
+		assert.Equal(t, `[System.Serializable]
+public class CountQuery : GraphQuery {
+
+	[JsonProperty("name")]
+	public string Name { get; private set; }
+
+}`, countQueryDef.ToCSharp())
+
+		graphQueryDef := spec.Definitions[1]
+		assert.Equal(t, "GraphQuery", graphQueryDef.Name())
+		assert.Equal(t, `[System.Serializable]
+[JsonConverter(typeof(JsonSubtypes), "queryType")]
+[JsonSubtypes.KnownSubType(typeof(CountQuery), "CountQuery")]
+[JsonSubtypes.KnownSubType(typeof(GroupsCountQuery), "GroupsCountQuery")]
+public class GraphQuery {
+
+	[JsonProperty("queryType")]
+	public string QueryType { get; private set; }
+
+	[JsonProperty("somethinElse")]
+	public string SomethinElse { get; private set; }
+
+}`, graphQueryDef.ToCSharp())
+	}
+}

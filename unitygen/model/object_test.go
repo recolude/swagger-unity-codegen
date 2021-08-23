@@ -176,3 +176,89 @@ public class CompositionThingy {
 
 }`, cSharp)
 }
+
+func TestObject_CanSetChildAndParent(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	p0 := property.NewString("disc", "")
+	p1 := property.NewInteger("num", "")
+	p2 := property.NewString("date", "date-time")
+	p3 := property.NewBoolean("anotha one")
+	p4 := property.NewString("and anotha one", "")
+
+	parentObj := model.NewDiscriminatorObject(
+		"Parent",
+		[]model.Property{p0, p1, p2},
+		"disc",
+	)
+
+	childObj := model.NewObject(
+		"Child",
+		[]model.Property{p3, p4},
+	)
+	childObj.SetWhatToInherit(&parentObj)
+	parentObj.AddChild(&childObj)
+
+	// ********************************** ACT *********************************
+	varType := childObj.ToVariableType()
+	name := childObj.Name()
+	converter := childObj.JsonConverter()
+	childCSharp := childObj.ToCSharp()
+	properties := childObj.Properties()
+
+	parentCSharp := parentObj.ToCSharp()
+
+	// ********************************* ASSERT *******************************
+	if assert.Len(t, properties, 2) {
+		assert.Equal(t, p3, properties[1])
+		assert.Equal(t, p4, properties[0])
+	}
+	assert.Equal(t, "", converter)
+	assert.Equal(t, "Child", varType)
+	assert.Equal(t, "Child", name)
+	assert.Equal(t, `[System.Serializable]
+public class Child : Parent {
+
+	[JsonProperty("and anotha one")]
+	public string AndAnothaOne { get; private set; }
+
+	[JsonProperty("anotha one")]
+	public bool AnothaOne { get; private set; }
+
+}`, childCSharp)
+
+	assert.Equal(t, `[System.Serializable]
+[JsonConverter(typeof(JsonSubtypes), "disc")]
+[JsonSubtypes.KnownSubType(typeof(Child), "Child")]
+public class Parent {
+
+	[JsonProperty("date")]
+	public string date;
+
+	public System.DateTime Date { get => System.DateTime.Parse(date); }
+
+	[JsonProperty("disc")]
+	public string Disc { get; private set; }
+
+	[JsonProperty("num")]
+	public int Num { get; private set; }
+
+}`, parentCSharp)
+}
+
+func TestObject_ParentPanicsWithNilChild(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	p0 := property.NewString("disc", "")
+
+	parentObj := model.NewDiscriminatorObject(
+		"Parent",
+		[]model.Property{p0},
+		"disc",
+	)
+
+	parentObj.AddChild(nil)
+
+	// ******************************* ACT/ASSERT *****************************
+	assert.PanicsWithError(t, "Parent was elected as parent class and provided a nil child", func() {
+		parentObj.ToCSharp()
+	})
+}

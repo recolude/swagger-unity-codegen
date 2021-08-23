@@ -184,6 +184,8 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using JsonSubTypes;
 
 #region Definitions
 
@@ -266,6 +268,8 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using JsonSubTypes;
 
 namespace Example {
 
@@ -358,7 +362,7 @@ func TestErrorsWithNoFileToReadFrom(t *testing.T) {
 	err := app.Run([]string{"swag3d", "generate", "--file", "swagger.json", "--out", "."})
 
 	// ********************************* ASSERT *******************************
-	assert.EqualError(t, err, "Error opening swagger file: open swagger.json: file does not exist")
+	assert.EqualError(t, err, "error opening swagger file: open swagger.json: file does not exist")
 }
 
 func TestFilterUnusedDefinitions_AnonymouseFunctionReferences(t *testing.T) {

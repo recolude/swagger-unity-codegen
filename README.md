@@ -234,8 +234,10 @@ Ordered by priority (to me)!
 - [X] Don't include definitions that are never used.
 - [X] Support for System.DateTime.
 - [X] Support Searilizing Bodies.
+- [ ] Polymorphism
 - [ ] Implement [Fluent Interface Pattern](https://en.wikipedia.org/wiki/Fluent_interface) For Creating Requests.
 - [ ] Optional Parameters In Request Body.
+- [ ] Required Fields
 - [X] Embedded object definitions.
 - [ ] Embedded array object definitions.
 - [ ] Generate a scriptable object for any definition found in the swagger file.

@@ -163,6 +163,8 @@ func fileImports(out io.Writer) {
 	fmt.Fprintln(out, "using System.Collections;")
 	fmt.Fprintln(out, "using System.Text;")
 	fmt.Fprintln(out, "using Newtonsoft.Json;")
+	fmt.Fprintln(out, "using Newtonsoft.Json.Converters;")
+	fmt.Fprintln(out, "using JsonSubTypes;")
 	fmt.Fprintln(out, "")
 }
 
@@ -221,12 +223,12 @@ func toDir(fs afero.Fs, c *cli.Context, location string, spec unitygen.Spec) err
 
 	err := fs.MkdirAll(location, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("Error creating folder: %w", err)
+		return fmt.Errorf("error creating folder: %w", err)
 	}
 
 	definitionsFile, err := fs.Create(path.Join(location, "Definitions.cs"))
 	if err != nil {
-		return fmt.Errorf("Error creating definitions file: %w", err)
+		return fmt.Errorf("error creating definitions file: %w", err)
 	}
 	fileCommentHeader(definitionsFile)
 	fileImports(definitionsFile)
@@ -236,7 +238,7 @@ func toDir(fs afero.Fs, c *cli.Context, location string, spec unitygen.Spec) err
 
 	servicesFile, err := fs.Create(path.Join(location, "Services.cs"))
 	if err != nil {
-		return fmt.Errorf("Error creating services file: %w", err)
+		return fmt.Errorf("error creating services file: %w", err)
 	}
 	fileCommentHeader(servicesFile)
 	fileImports(servicesFile)
@@ -246,7 +248,7 @@ func toDir(fs afero.Fs, c *cli.Context, location string, spec unitygen.Spec) err
 
 	configFile, err := fs.Create(path.Join(location, fmt.Sprintf("%s.cs", convention.TitleCase(c.String("config-name")))))
 	if err != nil {
-		return fmt.Errorf("Error creating config file: %w", err)
+		return fmt.Errorf("error creating config file: %w", err)
 	}
 	fileCommentHeader(configFile)
 	fileImports(configFile)
@@ -323,15 +325,15 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 				Action: func(c *cli.Context) error {
 					file, err := fs.Open(c.String("file"))
 					if err != nil {
-						return fmt.Errorf("Error opening swagger file: %w", err)
+						return fmt.Errorf("error opening swagger file: %w", err)
 					}
 
 					spec, err := unitygen.NewParser().ParseJSON(file)
 					if err != nil {
-						return fmt.Errorf("Error reading from swagger file: %w", err)
+						return fmt.Errorf("error reading from swagger file: %w", err)
 					}
 					spec = filterSpecForTags(spec, c.StringSlice("tags"))
-					if c.Bool("include-unused") == false {
+					if !c.Bool("include-unused") {
 						spec = filterSpecForUnusedDefinitions(spec)
 					}
 

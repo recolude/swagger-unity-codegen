@@ -148,6 +148,12 @@ func (p *Parser) interpretObjectDefinition(path []string, objectName string, obj
 		}
 	}
 
+	discriminatorNode := obj.Path("discriminator")
+	var discriminateOn string
+	if discriminatorNode != nil {
+		discriminateOn = discriminatorNode.Data().(string)
+	}
+
 	properties := make([]model.Property, 0)
 	for propertyName, val := range obj.Path("properties").ChildrenMap() {
 		prop, err := p.interpretObjectDefinitionProperty(append(newPath, "properties"), objectName, propertyName, val)
@@ -159,6 +165,8 @@ func (p *Parser) interpretObjectDefinition(path []string, objectName string, obj
 
 	if allofRef != nil {
 		return model.NewAllOfObject(objectName, *allofRef, properties), nil
+	} else if discriminateOn != "" {
+		return model.NewDiscriminatorObject(objectName, properties, discriminateOn), nil
 	}
 
 	return model.NewObject(objectName, properties), nil
@@ -208,15 +216,12 @@ func (p *Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, erro
 		switch definitionType {
 		case "object":
 			def, err = p.interpretObjectDefinition([]string{"definitions"}, key, val)
-			break
 
 		case "string":
 			def, err = p.interpretStringDefinition([]string{"definitions"}, key, val)
-			break
 
 		case "number":
 			def, err = p.interpretNumberDefinition([]string{"definitions"}, key, val)
-			break
 
 		default:
 			return nil, InvalidSpecError{Path: []string{"definitions", key, "type"}, Reason: fmt.Sprintf("Unknown definition type \"%s\"", definitionType)}
@@ -256,7 +261,6 @@ func (p *Parser) interpretAPIKeyDefinition(path []string, name string, obj *gabs
 	switch foundIn {
 	case "header":
 		keyLoc = security.Header
-		break
 
 	default:
 		return nil, InvalidSpecError{Path: keyPath, Reason: fmt.Sprintf("Unimplemnted key location: \"%s\"", foundIn)}

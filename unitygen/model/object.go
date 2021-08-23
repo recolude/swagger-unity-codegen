@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -12,6 +13,9 @@ type Object struct {
 	ObjectName             string
 	objectToTakeProperties *Object
 	properties             []Property
+	children               []*Object
+	discriminator          string
+	inherits               *Object
 }
 
 // NewObject creates a new object
@@ -35,11 +39,32 @@ func NewAllOfObject(name string, objectToTakeProperties Object, extraProperties 
 	}
 }
 
+func NewDiscriminatorObject(name string, properties []Property, discriminator string) Object {
+	sort.Sort(sortByPropName(properties))
+	return Object{
+		ObjectName:    name,
+		properties:    properties,
+		discriminator: discriminator,
+	}
+}
+
 type sortByPropName []Property
 
 func (a sortByPropName) Len() int           { return len(a) }
 func (a sortByPropName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a sortByPropName) Less(i, j int) bool { return a[i].Name() < a[j].Name() }
+
+func (od Object) HasDiscriminator() bool {
+	return od.discriminator != ""
+}
+
+func (od *Object) SetWhatToInherit(obj *Object) {
+	od.inherits = obj
+}
+
+func (od *Object) AddChild(child *Object) {
+	od.children = append(od.children, child)
+}
 
 // Name is the name of the definition
 func (od Object) Name() string {
@@ -63,11 +88,36 @@ func (od *Object) SetAllOfObject(objectToTakeProperties *Object) {
 func (od Object) ToCSharp() string {
 	var classBuilder strings.Builder
 
-	classBuilder.WriteString("[System.Serializable]\npublic class ")
+	classBuilder.WriteString("[System.Serializable]\n")
+
+	if od.HasDiscriminator() {
+		classBuilder.WriteString("[JsonConverter(typeof(JsonSubtypes), \"")
+		classBuilder.WriteString(od.discriminator)
+		classBuilder.WriteString("\")]\n")
+
+		for _, child := range od.children {
+			if child == nil {
+				panic(fmt.Errorf("%s was elected as parent class and provided a nil child", od.ToVariableType()))
+			}
+			classBuilder.WriteString("[JsonSubtypes.KnownSubType(typeof(")
+			classBuilder.WriteString(child.ToVariableType())
+			classBuilder.WriteString("), \"")
+			classBuilder.WriteString(child.ToVariableType())
+			classBuilder.WriteString("\")]\n")
+		}
+	}
+
+	classBuilder.WriteString("public class ")
 	classBuilder.WriteString(od.ToVariableType())
+
+	if od.inherits != nil {
+		classBuilder.WriteString(" : ")
+		classBuilder.WriteString(od.inherits.ToVariableType())
+	}
+
 	classBuilder.WriteString(" {\n\n")
 
-	// List out any inheritted properties
+	// List out any "any of" properties
 	if od.objectToTakeProperties != nil {
 		for _, prop := range od.objectToTakeProperties.Properties() {
 			classBuilder.WriteString(prop.ClassVariables())
