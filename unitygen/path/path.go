@@ -187,7 +187,7 @@ func (p Path) RequestParamClass() string {
 		if param.location == QueryParameterLocation {
 			privateVarName := convention.CamelCase(param.name)
 			fmt.Fprintf(&builder, "\t\tif (%sSet) {\n", privateVarName)
-			fmt.Fprintf(&builder, "\t\t\tfinalPath += (queryAdded ? \"&\" : \"?\") + \"%s=\";\n", privateVarName)
+			fmt.Fprintf(&builder, "\t\t\tfinalPath += (queryAdded ? \"&\" : \"?\") + \"%s=\";\n", param.name)
 			builder.WriteString("\t\t\tqueryAdded = true;\n")
 			fmt.Fprintf(&builder, "\t\t\tfinalPath += UnityWebRequest.EscapeURL(%s.ToString());\n\t\t}\n\n", privateVarName)
 		}

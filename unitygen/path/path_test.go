@@ -429,7 +429,7 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
 			path.NewParameter(path.PathParameterLocation, "user-name", true, property.NewString("userId", "")),
 			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
-			path.NewParameter(path.QueryParameterLocation, "anotherId", true, property.NewInteger("anotherId", "")),
+			path.NewParameter(path.QueryParameterLocation, "another-id", true, property.NewInteger("another-id", "")),
 			path.NewParameter(path.BodyParameterLocation, "query", true, property.NewDefinitionReference("test", query)),
 		},
 	)
@@ -519,7 +519,7 @@ public class GetUserRequestParams
 		}
 
 		if (anotherIdSet) {
-			finalPath += (queryAdded ? "&" : "?") + "anotherId=";
+			finalPath += (queryAdded ? "&" : "?") + "another-id=";
 			queryAdded = true;
 			finalPath += UnityWebRequest.EscapeURL(anotherId.ToString());
 		}
