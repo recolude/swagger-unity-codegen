@@ -21,6 +21,13 @@ func TestSpec_ServiceConfig_NoScriptableObject(t *testing.T) {
 	// The base URL to which the endpoint paths are appended
 	string BasePath { get; }
 
+}
+
+public interface IWebRequest {
+
+	UnityWebRequest UnderlyingRequest{ get; }
+
+	IEnumerator Run();
 }`, code)
 }
 
@@ -37,6 +44,13 @@ func TestSpec_ServiceConfig_NoSecurityDefinitions(t *testing.T) {
 	// The base URL to which the endpoint paths are appended
 	string BasePath { get; }
 
+}
+
+public interface IWebRequest {
+
+	UnityWebRequest UnderlyingRequest{ get; }
+
+	IEnumerator Run();
 }
 
 #if UNITY_EDITOR
@@ -103,6 +117,13 @@ func TestSpec_ServiceConfig_MultipleSecurityDefinitions(t *testing.T) {
 	// SomeIdentifier is a API Key 'DA-KEY' found in a request's header
 	string SomeIdentifier { get; }
 
+}
+
+public interface IWebRequest {
+
+	UnityWebRequest UnderlyingRequest{ get; }
+
+	IEnumerator Run();
 }
 
 #if UNITY_EDITOR

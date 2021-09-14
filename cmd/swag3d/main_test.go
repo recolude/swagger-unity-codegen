@@ -200,6 +200,13 @@ public interface Config {
 
 }
 
+public interface IWebRequest {
+
+	UnityWebRequest UnderlyingRequest{ get; }
+
+	IEnumerator Run();
+}
+
 #if UNITY_EDITOR
 [UnityEditor.CustomEditor(typeof(ServiceConfig))]
 public class ServiceConfigEditor : UnityEditor.Editor
@@ -284,6 +291,13 @@ public interface Config {
 	// The base URL to which the endpoint paths are appended
 	string BasePath { get; }
 
+}
+
+public interface IWebRequest {
+
+	UnityWebRequest UnderlyingRequest{ get; }
+
+	IEnumerator Run();
 }
 
 #if UNITY_EDITOR

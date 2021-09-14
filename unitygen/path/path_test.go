@@ -48,7 +48,7 @@ func Test_SimpleGet(t *testing.T) {
 	requestParamsCode := route.RequestParamClass()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public class DevKeyService_GetDevKeyUnityWebRequest {
+	assert.Equal(t, `public class DevKeyService_GetDevKeyUnityWebRequest : IWebRequest {
 
 	public UnityWebRequest UnderlyingRequest{ get; }
 
@@ -100,7 +100,7 @@ func Test_ParameterInPath(t *testing.T) {
 	})
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
 	// A successful response.
 	public V1UserResponse success;
@@ -173,7 +173,7 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
 	public V1UserResponse success;
 
@@ -220,7 +220,7 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
 	// An unexpected error response
 	public RuntimeError fallbackResponse;
@@ -268,7 +268,7 @@ func Test_ThreeParametersInPath(t *testing.T) {
 	classCode := route.UnityWebRequest()
 
 	// ********************************* ASSERT *******************************
-	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
 	// A successful response.
 	public V1UserResponse success;
@@ -340,7 +340,7 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	assert.Equal(t, method, route.Method())
 	assert.Equal(t, security, route.SecurityReferences())
 	assert.Equal(t, tags, route.Tags())
-	assert.Equal(t, `public class UserService_GetUserUnityWebRequest {
+	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
 	// A successful response.
 	public V1UserResponse success;
@@ -457,7 +457,7 @@ public GetUserUnityWebRequest GetUser(string userId, string userName, string dif
 	});
 }`, functionCode)
 
-	assert.Equal(t, `public class GetUserUnityWebRequest {
+	assert.Equal(t, `public class GetUserUnityWebRequest : IWebRequest {
 
 	// An unexpected error response
 	public RuntimeError fallbackResponse;

@@ -96,7 +96,14 @@ func (s Spec) ServiceConfig(configName, menuName string, includeScriptableObject
 	// Interface
 	builder.WriteString("public interface Config {\n\n")
 	builder.WriteString(s.renderInterfaceBody())
-	builder.WriteString("}")
+	builder.WriteString("}\n\n")
+
+	builder.WriteString(`public interface IWebRequest {
+
+	UnityWebRequest UnderlyingRequest{ get; }
+
+	IEnumerator Run();
+}`)
 
 	// Editor Config Code
 	if includeScriptableObject {

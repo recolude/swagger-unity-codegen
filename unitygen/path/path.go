@@ -214,7 +214,7 @@ func (p Path) RequestParamClass() string {
 func (p Path) UnityWebRequest() string {
 	builder := strings.Builder{}
 
-	fmt.Fprintf(&builder, "public class %s {\n\n", p.unityWebReqPathName())
+	fmt.Fprintf(&builder, "public class %s : IWebRequest {\n\n", p.unityWebReqPathName())
 
 	// Outline all portential responses
 	keys := make([]string, 0)
