@@ -18,6 +18,18 @@ cd swagger-unity-codegen
 go install ./cmd/swag3d
 ```
 
+## Dependencies
+
+The code produced from this tool will depend on two external DLLs. Trust me I tried my best to use just the builtin Unity Serializer at first, but it's just not powerful enough to take into account all the different types of definitions a swagger file can have 😓.
+
+The two DLLs are: 
+
+1. [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json/)
+2. [JSONSubTypes](https://www.nuget.org/packages/JsonSubTypes/)
+
+Make sure that the DLLs you grab from the packages both target the same version of .NET
+If you don't want to download them through nuget, you can checkout the dlls folder in this repository. I haven't tested them with most versions of Unity though.
+
 ## Usage
 
 ```
