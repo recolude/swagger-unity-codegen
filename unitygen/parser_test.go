@@ -41,6 +41,9 @@ func TestReadDefinition(t *testing.T) {
 								"type": "file"
 							}
 						},
+						"401": {
+							"schema": { }
+						},
 						"default": {
 							"description": "An unexpected error response",
 							"schema": {
@@ -289,7 +292,7 @@ public class V1ListLicensesRequest {
 			assert.Equal(t, "DevKeyService_GetDevKey", spec.Services[0].Paths()[0].OperationID())
 			assert.Equal(t, "DevKeyService_CreateDevKey", spec.Services[0].Paths()[1].OperationID())
 
-			if assert.Len(t, spec.Services[0].Paths()[0].Responses(), 3) {
+			if assert.Len(t, spec.Services[0].Paths()[0].Responses(), 4) {
 				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["200"]) {
 					assert.Equal(t, "V1DevKeyResponse", spec.Services[0].Paths()[0].Responses()["200"].VariableType())
 				}
@@ -300,6 +303,8 @@ public class V1ListLicensesRequest {
 				if assert.NotNil(t, spec.Services[0].Paths()[0].Responses()["400"]) {
 					assert.Equal(t, "byte[]", spec.Services[0].Paths()[0].Responses()["400"].VariableType())
 				}
+
+				assert.Nil(t, spec.Services[0].Paths()[0].Responses()["401"])
 			}
 
 			if assert.Len(t, spec.Services[0].Paths()[1].Responses(), 2) {
@@ -347,11 +352,19 @@ func Test_ReadParameters(t *testing.T) {
 					  "in": "query"
 					},
 					{
-					"type": "integer",
-					"format": "int32",
-					"name": "grantId",
-					"in": "path",
-					"required": true
+					  "type": "integer",
+					  "format": "int32",
+					  "name": "grantId",
+					  "in": "path",
+					  "required": true
+					},
+					{
+					  "name": "stringbody",
+					  "in": "body",
+					  "required": true,
+					  "schema": {
+						"type": "string"
+					  }
 					}
 				  ],
 				  "responses": {
@@ -447,7 +460,7 @@ func Test_ReadParameters(t *testing.T) {
 
 		assert.Equal(t, "EchoService", spec.Services[1].Name())
 		if assert.Len(t, spec.Services[1].Paths(), 1) {
-			if assert.Len(t, spec.Services[1].Paths()[0].Parameters(), 2) {
+			if assert.Len(t, spec.Services[1].Paths()[0].Parameters(), 3) {
 				assert.Equal(t, "value", spec.Services[1].Paths()[0].Parameters()[0].Name())
 				assert.Equal(t, path.QueryParameterLocation, spec.Services[1].Paths()[0].Parameters()[0].Location())
 				assert.Equal(t, false, spec.Services[1].Paths()[0].Parameters()[0].Required())
@@ -457,6 +470,11 @@ func Test_ReadParameters(t *testing.T) {
 				assert.Equal(t, path.PathParameterLocation, spec.Services[1].Paths()[0].Parameters()[1].Location())
 				assert.Equal(t, true, spec.Services[1].Paths()[0].Parameters()[1].Required())
 				assert.Equal(t, "int", spec.Services[1].Paths()[0].Parameters()[1].Schema().ToVariableType())
+
+				assert.Equal(t, "stringbody", spec.Services[1].Paths()[0].Parameters()[2].Name())
+				assert.Equal(t, path.BodyParameterLocation, spec.Services[1].Paths()[0].Parameters()[2].Location())
+				assert.Equal(t, true, spec.Services[1].Paths()[0].Parameters()[2].Required())
+				assert.Equal(t, "string", spec.Services[1].Paths()[0].Parameters()[2].Schema().ToVariableType())
 			}
 		}
 

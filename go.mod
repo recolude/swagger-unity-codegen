@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Jeffail/gabs/v2 v2.6.0
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/spf13/afero v1.4.0
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518

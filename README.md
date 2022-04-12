@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/recolude/swagger-unity-codegen.svg?branch=master)](https://travis-ci.com/recolude/swagger-unity-codegen) [![Coverage](https://codecov.io/gh/recolude/swagger-unity-codegen/branch/master/graph/badge.svg)](https://codecov.io/gh/recolude/swagger-unity-codegen) [![Go Report Card](https://goreportcard.com/badge/github.com/recolude/swagger-unity-codegen)](https://goreportcard.com/report/github.com/recolude/swagger-unity-codegen)
 
-**[Currently In Beta: Only Supports Swagger 2.0 JSON ATM]**
+**[Currently In Beta]**
 
 Generate valid networking code for Unity3D that takes advantage of [Unity's Web Request](https://docs.unity3d.com/ScriptReference/Networking.UnityWebRequest.html) object instead of something like RestSharp. This project was both made for and is used by [Recolude](https://app.recolude.com)'s Unity Plugin. Lots of cute unity things you can do here that wouldn't make sense sitting in original swagger codegen repo.
 
@@ -22,12 +22,13 @@ go install ./cmd/swag3d
 
 The code produced from this tool will depend on two external DLLs. Trust me I tried my best to use just the builtin Unity Serializer at first, but it's just not powerful enough to take into account all the different types of definitions a swagger file can have 😓.
 
-The two DLLs are: 
+The two DLLs are:
 
 1. [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json/)
 2. [JSONSubTypes](https://www.nuget.org/packages/JsonSubTypes/)
 
 Make sure that the DLLs you grab from the packages both target the same version of .NET
+
 If you don't want to download them through nuget, you can checkout the dlls folder in this repository. I haven't tested them with most versions of Unity though.
 
 ## Usage
@@ -70,6 +71,7 @@ swag3d generate \
 	--namespace Recolude.API \
 	--out "Scripts" \
 	--scriptable-object-config=false
+
 ```
 
 ## Features
@@ -219,7 +221,7 @@ public class ExampleService
             return new UnityWebRequest(finalPath, UnityWebRequest.kHttpVerbGET);
         }
     }
-	
+
     public EchoUnityWebRequest Echo(EchoRequestParams requestParams)
     {
         var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
@@ -241,18 +243,18 @@ public class ExampleService
 
 Ordered by priority (to me)!
 
-- [X] Scriptable Object For Configuration.
-- [X] Easier Request Building.
-- [X] Don't include definitions that are never used.
-- [X] Support for System.DateTime.
-- [X] Support Searilizing Bodies.
+- [x] Scriptable Object For Configuration.
+- [x] Easier Request Building.
+- [x] Prune unused definitions.
+- [x] Support for System.DateTime.
+- [x] Support Serializing Bodies.
 - [ ] Polymorphism
 - [ ] Implement [Fluent Interface Pattern](https://en.wikipedia.org/wiki/Fluent_interface) For Creating Requests.
 - [ ] Optional Parameters In Request Body.
 - [ ] Required Fields
-- [X] Embedded object definitions.
+- [x] Embedded object definitions.
 - [ ] Embedded array object definitions.
 - [ ] Generate a scriptable object for any definition found in the swagger file.
-- [ ] Ability to generate `*.unitypackage`.
-- [ ] YAML support.
+- [ ] Ability to generate ~~`*.unitypackage`~~ a package recognizable by the unity package manager.
+- [x] YAML support.
 - [ ] Oauth security definition.

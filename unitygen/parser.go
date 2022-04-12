@@ -85,7 +85,7 @@ func (p *Parser) interpretObjectDefinitionProperty(path []string, objectName, pr
 	if ok {
 		_, hasDef := p.workingDefinitions[objRefUrl]
 
-		if hasDef == false {
+		if !hasDef {
 			p.workingDefinitions[objRefUrl] = model.NewDefinitionWrapper(nil)
 		}
 
@@ -298,51 +298,78 @@ func (p *Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth,
 	return definitions, nil
 }
 
-func (p *Parser) interpretPathPameterProperty(path []string, name string, obj *gabs.Container) (model.Property, error) {
+func (p *Parser) interpretPathParameterProperty(currentPath []string, name string, obj *gabs.Container) (model.Property, error) {
 	schemaNode := obj.Path("schema")
 	if schemaNode != nil {
-		refNode := schemaNode.Path("$ref")
-		if refNode == nil {
-			return nil, InvalidSpecError{Path: append(path, "schema"), Reason: "Expected $ref"}
-		}
-		refName, hasRef := refNode.Data().(string)
-		if hasRef {
-			_, hasDef := p.workingDefinitions[refName]
 
-			if hasDef == false {
-				p.workingDefinitions[refName] = model.NewDefinitionWrapper(nil)
+		// p.interpretStringProperty(currentPath, name, obj)
+
+		refNode := schemaNode.Path("$ref")
+		typeNode := schemaNode.Path("type")
+		if refNode != nil {
+			refName, hasRef := refNode.Data().(string)
+			if hasRef {
+				_, hasDef := p.workingDefinitions[refName]
+
+				if !hasDef {
+					p.workingDefinitions[refName] = model.NewDefinitionWrapper(nil)
+				}
+
+				return property.NewDefinitionReference(name, p.workingDefinitions[refName]), nil
 			}
 
-			return property.NewDefinitionReference(name, p.workingDefinitions[refName]), nil
+			return nil, InvalidSpecError{Path: append(currentPath, "schema"), Reason: "Expected $ref to be string"}
+		} else if typeNode != nil {
+			switch typeNode.Data().(string) {
+
+			case "string":
+				return p.interpretStringProperty(currentPath, name, schemaNode)
+
+			case "array":
+				return p.interpretArrayProperty(currentPath, "", name, schemaNode)
+
+			case "integer":
+				return p.interpretIntProperty(currentPath, name, schemaNode)
+
+			case "number":
+				return p.interpretNumberProperty(currentPath, name, schemaNode)
+
+			case "boolean":
+				return p.interpretBooleanProperty(name)
+
+			default:
+				return nil, InvalidSpecError{Path: append(currentPath, name), Reason: fmt.Sprintf("unknown property type \"%s\"", typeNode.Data().(string))}
+			}
+		} else {
+			return nil, InvalidSpecError{Path: append(currentPath, "schema"), Reason: "Expected $ref or type"}
 		}
 
-		return nil, InvalidSpecError{Path: append(path, "schema"), Reason: "Expected $ref to be string"}
 	}
 
 	propType, ok := obj.Path("type").Data().(string)
 	if !ok {
-		return nil, InvalidSpecError{Path: append(path, name), Reason: "Property type not found on definition"}
+		return nil, InvalidSpecError{Path: append(currentPath, name), Reason: "Property type not found on definition"}
 	}
 
 	switch propType {
 
 	case "string":
-		return p.interpretStringProperty(path, name, obj)
+		return p.interpretStringProperty(currentPath, name, obj)
 
 	case "array":
-		return p.interpretArrayProperty(path, "", name, obj)
+		return p.interpretArrayProperty(currentPath, "", name, obj)
 
 	case "integer":
-		return p.interpretIntProperty(path, name, obj)
+		return p.interpretIntProperty(currentPath, name, obj)
 
 	case "number":
-		return p.interpretNumberProperty(path, name, obj)
+		return p.interpretNumberProperty(currentPath, name, obj)
 
 	case "boolean":
 		return p.interpretBooleanProperty(name)
 
 	default:
-		return nil, InvalidSpecError{Path: append(path, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
+		return nil, InvalidSpecError{Path: append(currentPath, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}
 	}
 }
 
@@ -392,11 +419,9 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 					switch typeValue {
 					case "file":
 						responses[code] = path.NewFileResponse(description)
-						break
 
 					case "number":
 						responses[code] = path.NewNumberResponse(description)
-						break
 
 					case "array":
 						prop, err := p.interpretArrayProperty([]string{"paths", url, verb, code}, "", code, schemaJSON)
@@ -404,15 +429,18 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 							return nil, err
 						}
 						responses[code] = path.NewArrayResponse(description, prop)
-						break
 
 					default:
-						return nil, InvalidSpecError{Path: []string{"paths", url, verb, code}, Reason: "unable to interpret response schema: " + typeValue}
+						return nil, InvalidSpecError{Path: []string{"paths", url, verb, "responses", code}, Reason: "unable to interpret response schema: " + typeValue}
 					}
 					continue
 				}
+				if len(schemaJSON.Children()) == 0 {
+					responses[code] = nil
+					continue
+				}
 
-				return nil, InvalidSpecError{Path: []string{"paths", url, verb, code}, Reason: "unable to interpret response"}
+				return nil, InvalidSpecError{Path: []string{"paths", url, verb, "responses", code}, Reason: "unable to interpret response, schema missing both $ref and type definitions"}
 			} else {
 				responses[code] = nil
 			}
@@ -427,8 +455,28 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 
 			paramName := param.Path("name").Data().(string)
 
-			paramProperty, err := p.interpretPathPameterProperty(
-				[]string{url, verb, "parameters", fmt.Sprintf("[%d]", paramIndex)},
+			currentPath := []string{url, verb, "parameters", fmt.Sprintf("[%d]", paramIndex)}
+			inNode := param.Path("in")
+			if inNode == nil {
+				return nil, InvalidSpecError{Path: currentPath, Reason: "missing 'in' definition (path, body, query)"}
+			}
+			var parameterLocation path.ParameterLocation
+			switch inNode.Data().(string) {
+			case "body":
+				parameterLocation = path.BodyParameterLocation
+
+			case "query":
+				parameterLocation = path.QueryParameterLocation
+
+			case "path":
+				parameterLocation = path.PathParameterLocation
+
+			default:
+				return nil, InvalidSpecError{Path: currentPath, Reason: fmt.Sprintf("unrecognized 'in' definition '%s'", inNode.Data().(string))}
+			}
+
+			paramProperty, err := p.interpretPathParameterProperty(
+				currentPath,
 				paramName,
 				param,
 			)
@@ -437,7 +485,7 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 			}
 
 			parameters = append(parameters, path.NewParameter(
-				path.ParameterLocation(param.Path("in").Data().(string)),
+				parameterLocation,
 				paramName,
 				required,
 				paramProperty,

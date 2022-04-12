@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/recolude/swagger-unity-codegen/unitygen"
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 	"github.com/recolude/swagger-unity-codegen/unitygen/model"
@@ -323,12 +327,44 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					file, err := fs.Open(c.String("file"))
-					if err != nil {
-						return fmt.Errorf("error opening swagger file: %w", err)
+					fileToLoad := c.String("file")
+					extension := strings.ToLower(filepath.Ext(fileToLoad))
+
+					var jsonStream io.Reader
+
+					switch extension {
+					case ".json":
+						file, err := fs.Open(fileToLoad)
+						if err != nil {
+							return fmt.Errorf("error opening swagger file: %w", err)
+						}
+						defer file.Close()
+						jsonStream = file
+
+					case ".yaml":
+						fallthrough
+					case ".yml":
+						file, err := fs.Open(fileToLoad)
+						if err != nil {
+							return fmt.Errorf("error opening swagger file: %w", err)
+						}
+						defer file.Close()
+						y, err := io.ReadAll(file)
+						if err != nil {
+							return fmt.Errorf("error reading YAML: %w", err)
+						}
+
+						j2, err := yaml.YAMLToJSON(y)
+						if err != nil {
+							return fmt.Errorf("error translating YAML: %w", err)
+						}
+						jsonStream = bytes.NewBuffer(j2)
+
+					default:
+						return fmt.Errorf("unrecognized swagger file format '%s', please provide either json or yml", extension)
 					}
 
-					spec, err := unitygen.NewParser().ParseJSON(file)
+					spec, err := unitygen.NewParser().ParseJSON(jsonStream)
 					if err != nil {
 						return fmt.Errorf("error reading from swagger file: %w", err)
 					}
