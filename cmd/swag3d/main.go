@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -349,7 +350,7 @@ func buildApp(fs afero.Fs, out io.Writer, errOut io.Writer) *cli.App {
 							return fmt.Errorf("error opening swagger file: %w", err)
 						}
 						defer file.Close()
-						y, err := io.ReadAll(file)
+						y, err := ioutil.ReadAll(file)
 						if err != nil {
 							return fmt.Errorf("error reading YAML: %w", err)
 						}
