@@ -263,17 +263,19 @@ func (p Path) UnityWebRequest() string {
 
 func (p Path) renderConditionalResponseCast(code string, resp Response) string {
 	if parsed, err := strconv.Atoi(code); err == nil {
-		return fmt.Sprintf("if (req.responseCode == %d) {\n\t\t\t%s\n\t\t}", parsed, resp.Interpret(p.respVariableName(code), "req.downloadHandler"))
+		if resp != nil {
+			return fmt.Sprintf("if (req.responseCode == %d) {\n\t\t\t%s\n\t\t}", parsed, resp.Interpret(p.respVariableName(code), "req.downloadHandler"))
+		} else {
+			return fmt.Sprintf("if (req.responseCode == %d) {\n\t\t\t%s\n\t\t}", parsed, "// No expected response. Do nothing!")
+		}
 	}
 	return resp.Interpret("fallbackResponse", "req.downloadHandler")
 }
 
 func (p Path) renderHandleResponse() string {
 	codes := make([]string, 0)
-	for k, resp := range p.responses {
-		if resp != nil {
-			codes = append(codes, k)
-		}
+	for k := range p.responses {
+		codes = append(codes, k)
 	}
 	builder := strings.Builder{}
 	sort.Strings(codes)

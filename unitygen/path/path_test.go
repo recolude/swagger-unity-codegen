@@ -365,6 +365,8 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	public void Interpret(UnityWebRequest req) {
 		if (req.responseCode == 200) {
 			success = JsonConvert.DeserializeObject<V1UserResponse>(req.downloadHandler.text);
+		} else if (req.responseCode == 401) {
+			// No expected response. Do nothing!
 		} else if (req.responseCode == 501) {
 			notImplemented = req.downloadHandler.data;
 		} else {
