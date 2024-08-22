@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen"
+	"github.com/recolude/swagger-unity-codegen/unitygen/path"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,5 +43,32 @@ func TestService_DoesntAppend2ndServiceToName(t *testing.T) {
 		this.Config = Config;
 	}
 
+}`, code)
+}
+
+func TestServiceInterfaceNoPaths(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	service := unitygen.NewService("test", nil)
+
+	// ********************************** ACT *********************************
+	code := service.Interface()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public interface ITestService {
+}`, code)
+}
+
+func TestServiceInterfaceOnePath(t *testing.T) {
+	// ******************************** ARRANGE *******************************
+	service := unitygen.NewService("test", []path.Path{
+		path.NewPath("/get", "doThing", "GET", nil, nil, nil, nil),
+	})
+
+	// ********************************** ACT *********************************
+	code := service.Interface()
+
+	// ********************************* ASSERT *******************************
+	assert.Equal(t, `public interface ITestService {
+	public DoThingUnityWebRequest DoThing(DoThingRequestParams requestParams);
 }`, code)
 }

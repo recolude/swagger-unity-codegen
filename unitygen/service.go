@@ -32,13 +32,42 @@ func (s Service) Paths() []path.Path {
 	return s.paths
 }
 
+func (s Service) Interface() string {
+	builder := strings.Builder{}
+
+	builder.WriteString("public interface ")
+	builder.WriteString(s.InterfaceName())
+
+	builder.WriteString(` {
+`)
+
+	for _, p := range s.paths {
+		builder.WriteString("\t")
+		builder.WriteString(p.ServiceInterfaceFunction())
+		builder.WriteString("\n")
+	}
+
+	builder.WriteString("}")
+
+	return builder.String()
+}
+
+func (s Service) InterfaceName() string {
+	return "I" + s.ClassName()
+}
+
+func (s Service) ClassName() string {
+	className := convention.TitleCase(s.Name())
+	if !strings.HasSuffix(className, "Service") {
+		className += "Service"
+	}
+	return className
+}
+
 // ToCSharp writes out the service as a class with collection of functions that
 // correspond to calling different routes
 func (s Service) ToCSharp(knownModifiers []security.Auth, serviceConfigName string) string {
-	className := convention.TitleCase(s.Name())
-	if strings.HasSuffix(className, "Service") == false {
-		className += "Service"
-	}
+	className := s.ClassName()
 
 	builder := strings.Builder{}
 	builder.WriteString("public class ")
