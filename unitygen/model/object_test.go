@@ -34,7 +34,7 @@ func TestObject(t *testing.T) {
 public class TestObj {
 
 	[JsonProperty("num")]
-	public int Num { get; private set; }
+	public int Num { get; set; }
 
 }`, cSharp)
 }
@@ -111,13 +111,13 @@ public class CompositionThingy {
 	public System.DateTime Date { get => System.DateTime.Parse(date); }
 
 	[JsonProperty("num")]
-	public int Num { get; private set; }
+	public int Num { get; set; }
 
 	[JsonProperty("and anotha one")]
-	public string AndAnothaOne { get; private set; }
+	public string AndAnothaOne { get; set; }
 
 	[JsonProperty("anotha one")]
-	public bool AnothaOne { get; private set; }
+	public bool AnothaOne { get; set; }
 
 }`, cSharp)
 }
@@ -166,13 +166,13 @@ public class CompositionThingy {
 	public System.DateTime Date { get => System.DateTime.Parse(date); }
 
 	[JsonProperty("num")]
-	public int Num { get; private set; }
+	public int Num { get; set; }
 
 	[JsonProperty("and anotha one")]
-	public string AndAnothaOne { get; private set; }
+	public string AndAnothaOne { get; set; }
 
 	[JsonProperty("anotha one")]
-	public bool AnothaOne { get; private set; }
+	public bool AnothaOne { get; set; }
 
 }`, cSharp)
 }
@@ -219,10 +219,10 @@ func TestObject_CanSetChildAndParent(t *testing.T) {
 public class Child : Parent {
 
 	[JsonProperty("and anotha one")]
-	public string AndAnothaOne { get; private set; }
+	public string AndAnothaOne { get; set; }
 
 	[JsonProperty("anotha one")]
-	public bool AnothaOne { get; private set; }
+	public bool AnothaOne { get; set; }
 
 }`, childCSharp)
 
@@ -237,10 +237,10 @@ public class Parent {
 	public System.DateTime Date { get => System.DateTime.Parse(date); }
 
 	[JsonProperty("disc")]
-	public string Disc { get; private set; }
+	public string Disc { get; set; }
 
 	[JsonProperty("num")]
-	public int Num { get; private set; }
+	public int Num { get; set; }
 
 }`, parentCSharp)
 }

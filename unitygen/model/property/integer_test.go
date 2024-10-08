@@ -22,6 +22,6 @@ func Test_Integer(t *testing.T) {
 	assert.Equal(t, "int", varType)
 	assert.Equal(t, "0", nullVal)
 	assert.Equal(t, `	[JsonProperty("Some name")]
-	public int SomeName { get; private set; }
+	public int SomeName { get; set; }
 `, cSharp)
 }

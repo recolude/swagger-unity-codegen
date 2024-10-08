@@ -19,6 +19,7 @@ func ToUnityHTTPVerb(httpMethod string) string {
 		return "UnityWebRequest.kHttpVerbDELETE"
 	case http.MethodHead:
 		return "UnityWebRequest.kHttpVerbHEAD"
+
 	}
 	panic(fmt.Sprintf("unknown verb \"%s\"", httpMethod))
 }

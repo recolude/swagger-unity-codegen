@@ -24,7 +24,7 @@ func Test_DefinitionReference(t *testing.T) {
 	assert.Equal(t, "V1Permission", varType)
 	assert.Equal(t, "null", nullVal)
 	assert.Equal(t, `	[JsonProperty("my-permissions")]
-	public V1Permission MyPermissions { get; private set; }
+	public V1Permission MyPermissions { get; set; }
 `, cSharp)
 }
 
@@ -45,6 +45,6 @@ func Test_DefinitionReference_ShowsJSONConverter(t *testing.T) {
 	assert.Equal(t, "null", nullVal)
 	assert.Equal(t, `	[JsonProperty("awesome cat")]
 	[JsonConverter(typeof(CoolCatsJsonConverter))]
-	public CoolCats AwesomeCat { get; private set; }
+	public CoolCats AwesomeCat { get; set; }
 `, cSharp)
 }

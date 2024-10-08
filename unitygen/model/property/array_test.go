@@ -22,6 +22,6 @@ func Test_Array(t *testing.T) {
 	assert.Equal(t, "int[]", varType)
 	assert.Equal(t, "null", nullVal)
 	assert.Equal(t, `	[JsonProperty("my array")]
-	public int[] MyArray { get; private set; }
+	public int[] MyArray { get; set; }
 `, cSharp)
 }

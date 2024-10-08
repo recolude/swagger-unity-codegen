@@ -98,12 +98,58 @@ func (s Spec) ServiceConfig(configName, menuName string, includeScriptableObject
 	builder.WriteString(s.renderInterfaceBody())
 	builder.WriteString("}\n\n")
 
+	builder.WriteString(`public abstract class ServiceProviderObject<T> : ScriptableObject
+    {
+        public abstract T Service { get; }
+    }
+
+	public abstract class ServiceProvider<T> : ServiceProviderObject<T>
+{
+    [SerializeField]
+    T[] services;
+
+    public override T Service
+    {
+        get
+        {
+            if (services == null || services.Length == 0)
+            {
+                throw new System.InvalidOperationException("Provider has not been configured with any services");
+            }
+
+            foreach (var source in services)
+            {
+                if (source != null)
+                {
+                    return source;
+                }
+            }
+
+            throw new System.InvalidOperationException("Provider has not been configured with only null services");
+        }
+    }
+}
+`)
+
 	builder.WriteString(`public interface IWebRequest {
 
 	UnityWebRequest UnderlyingRequest{ get; }
 
 	IEnumerator Run();
-}`)
+}
+`)
+
+	builder.WriteString("public interface ISuccessResponse<T> { T Success { get; } }\n\n")
+	builder.WriteString("public interface IBadRequestResponse<T> { T BadRequest { get; } }\n\n")
+	builder.WriteString("public interface IUnauthorizedResponse<T> { T Unauthorized { get; } }\n\n")
+	builder.WriteString("public interface IForbiddenResponse<T> { T Forbidden { get; } }\n\n")
+	builder.WriteString("public interface INotFoundResponse<T> { T NotFound { get; } }\n\n")
+	builder.WriteString("public interface IInternalServerErrorResponse<T> { T InternalServerError { get; } }\n\n")
+	builder.WriteString("public interface INotImplementedResponse<T> { T NotImplemented { get; } }\n\n")
+	builder.WriteString("public interface IBadGatewayResponse<T> { T BadGateway { get; } }\n\n")
+	builder.WriteString("public interface IServiceUnavailableResponse<T> { T ServiceUnavailable { get; } }\n\n")
+	builder.WriteString("public interface IGatewayTimeoutResponse<T> { T GatewayTimeout { get; } }\n\n")
+	builder.WriteString("public interface IFallbackResponseResponse<T> { T FallbackResponse { get; } }\n\n")
 
 	// Editor Config Code
 	if includeScriptableObject {

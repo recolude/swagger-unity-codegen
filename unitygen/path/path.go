@@ -15,6 +15,8 @@ import (
 // Path represents an HTTP endpoint that our unity client can ping
 type Path struct {
 	route       string
+	summary     string
+	description string
 	httpMethod  string
 	tags        []string
 	operationID string
@@ -27,7 +29,7 @@ type Path struct {
 }
 
 // NewPath creates a new path
-func NewPath(route, operationID, method string, tags []string, security []SecurityMethodReference, responses map[string]Response, parameters []Parameter) Path {
+func NewPath(route, summary, description, operationID, method string, tags []string, security []SecurityMethodReference, responses map[string]Response, parameters []Parameter) Path {
 	bodyFound := false
 	for _, p := range parameters {
 		if p.location == BodyParameterLocation {
@@ -40,6 +42,8 @@ func NewPath(route, operationID, method string, tags []string, security []Securi
 
 	return Path{
 		route:       route,
+		summary:     strings.TrimSpace(summary),
+		description: strings.TrimSpace(description),
 		httpMethod:  method,
 		operationID: operationID,
 		security:    security,
@@ -79,7 +83,7 @@ func (p Path) Tags() []string {
 }
 
 func (p Path) unityWebReqPathName() string {
-	return fmt.Sprintf("%sUnityWebRequest", p.OperationIDFunctionName())
+	return fmt.Sprintf("%sRequest", p.OperationIDFunctionName())
 }
 
 func (p Path) requestParamClassName() string {
@@ -89,30 +93,30 @@ func (p Path) requestParamClassName() string {
 func (p Path) respVariableName(k string) string {
 	switch k {
 	case "200":
-		return "success"
+		return "Success"
 
 	case "400":
-		return "badRequest"
+		return "BadRequest"
 	case "401":
-		return "unauthorized"
+		return "Unauthorized"
 	case "403":
-		return "forbidden"
+		return "Forbidden"
 	case "404":
-		return "notFound"
+		return "NotFound"
 
 	case "500":
-		return "internalServerError"
+		return "InternalServerError"
 	case "501":
-		return "notImplemented"
+		return "NotImplemented"
 	case "502":
-		return "badGateway"
+		return "BadGateway"
 	case "503":
-		return "serviceUnavailable"
+		return "ServiceUnavailable"
 	case "504":
-		return "gatewayTimeout"
+		return "GatewayTimeout"
 
 	case "default":
-		return "fallbackResponse"
+		return "FallbackResponse"
 
 	}
 
@@ -214,7 +218,7 @@ func (p Path) RequestParamClass() string {
 func (p Path) UnityWebRequest() string {
 	builder := strings.Builder{}
 
-	fmt.Fprintf(&builder, "public class %s : IWebRequest {\n\n", p.unityWebReqPathName())
+	fmt.Fprintf(&builder, "public class %s : I%s {\n\n", p.unityWebReqPathName(), p.unityWebReqPathName())
 
 	// Outline all portential responses
 	keys := make([]string, 0)
@@ -227,13 +231,25 @@ func (p Path) UnityWebRequest() string {
 		if p.responses[k] != nil {
 			desc := strings.TrimSpace(p.responses[k].Description())
 			lines := strings.Split(strings.ReplaceAll(desc, "\r\n", "\n"), "\n")
+
+			validLines := false
 			for _, line := range lines {
 				if line != "" {
-					fmt.Fprintf(&builder, "\t// %s\n", line)
+					validLines = true
 				}
 			}
 
-			fmt.Fprintf(&builder, "\tpublic %s %s;\n\n", p.responses[k].VariableType(), p.respVariableName(k))
+			if validLines {
+				fmt.Fprint(&builder, "\t/// <summary>\n")
+				for _, line := range lines {
+					if line != "" {
+						fmt.Fprintf(&builder, "\t/// %s\n", line)
+					}
+				}
+				fmt.Fprint(&builder, "\t/// </summary>\n")
+			}
+
+			fmt.Fprintf(&builder, "\tpublic %s %s { get; private set; }\n\n", p.responses[k].VariableType(), p.respVariableName(k))
 		}
 	}
 
@@ -304,10 +320,35 @@ func (p Path) renderHandleResponse() string {
 	return builder.String()
 }
 
+func (p Path) Interface() string {
+	builder := strings.Builder{}
+	fmt.Fprintf(&builder, "public interface I%s : IWebRequest", p.unityWebReqPathName())
+
+	// Outline all portential responses
+	keys := make([]string, 0)
+	for k := range p.responses {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		// Some responses are defined as an empty body, making them nil!
+		if p.responses[k] != nil {
+
+			fmt.Fprintf(&builder, ", I%sResponse<%s>", p.respVariableName(k), p.responses[k].VariableType())
+		}
+	}
+
+	builder.WriteString(" { }")
+
+	return builder.String()
+}
+
 // SupportingClasses will write out different helper classes in C# to assist
 // in network requests
 func (p Path) SupportingClasses() string {
 	builder := strings.Builder{}
+	builder.WriteString(p.Interface())
+	builder.WriteString("\n")
 	builder.WriteString(p.UnityWebRequest())
 	builder.WriteString("\n")
 	builder.WriteString(p.RequestParamClass())
@@ -342,7 +383,8 @@ func (p Path) serviceFunctionParameters() string {
 func (p Path) functionOveride(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 
-	fmt.Fprintf(&builder, "public %s %s(%s)\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName(), p.serviceFunctionParameters())
+	builder.WriteString(p.serviceFunctionSummary())
+	fmt.Fprintf(&builder, "public I%s %s(%s)\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName(), p.serviceFunctionParameters())
 	fmt.Fprintf(&builder, "\treturn %s(new %s() {\n", p.OperationIDFunctionName(), p.requestParamClassName())
 	// fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(%s, %s);\n", p.serviceFunctionNetReqURL(), unity.ToUnityHTTPVerb(p.httpMethod))
 
@@ -360,19 +402,48 @@ func (p Path) OperationIDFunctionName() string {
 	return convention.ClassName(p.operationID)
 }
 
-func (p Path) ServiceInterfaceFunction() string {
-	return fmt.Sprintf("public %s %s(%s requestParams);", p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
+func (p Path) ServiceInterfaceFunction(extra string) string {
+	return fmt.Sprintf("public %s I%s %s(%s requestParams);", extra, p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
+}
+
+func (p Path) serviceFunctionSummary() string {
+	hasSummary := p.summary != ""
+	hasDescription := p.description != ""
+	if !hasSummary && !hasDescription {
+		return ""
+	}
+
+	builder := strings.Builder{}
+	builder.WriteString("/// <summary>\n")
+	if hasSummary && hasDescription {
+		fmt.Fprintf(&builder, "/// %s\n", p.summary)
+		builder.WriteString("/// \n")
+		fmt.Fprintf(&builder, "/// %s\n", p.description)
+	} else {
+		var text = p.summary
+		if hasDescription {
+			text = p.description
+		}
+		fmt.Fprintf(&builder, "/// %s\n", text)
+
+	}
+
+	builder.WriteString("/// </summary>\n")
+
+	return builder.String()
 }
 
 // ServiceFunction generates C# code that is used to make network requests
 func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 	builder := strings.Builder{}
 
+	builder.WriteString(p.serviceFunctionSummary())
+
 	if len(p.parameters) > 0 {
-		fmt.Fprintf(&builder, "public %s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
+		fmt.Fprintf(&builder, "public override I%s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
 		builder.WriteString("\tvar unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);\n")
 	} else {
-		fmt.Fprintf(&builder, "public %s %s()\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName())
+		fmt.Fprintf(&builder, "public I%s %s()\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName())
 		fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(string.Format(\"{0}%s\", this.Config.BasePath), %s);\n", p.route, unity.ToUnityHTTPVerb(p.httpMethod))
 	}
 

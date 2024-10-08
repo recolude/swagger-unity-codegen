@@ -44,6 +44,6 @@ func (sp Array) ClassVariables() string {
 	builder.WriteString(sp.ToVariableType())
 	builder.WriteString(" ")
 	builder.WriteString(convention.TitleCase(sp.name))
-	builder.WriteString(" { get; private set; }\n")
+	builder.WriteString(" { get; set; }\n")
 	return builder.String()
 }

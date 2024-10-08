@@ -50,6 +50,6 @@ func (sp Number) EmptyValue() string {
 func (sp Number) ClassVariables() string {
 	builder := strings.Builder{}
 	fmt.Fprintf(&builder, "\t[JsonProperty(\"%s\")]\n", sp.Name())
-	fmt.Fprintf(&builder, "\tpublic %s %s { get; private set; }\n", sp.ToVariableType(), convention.TitleCase(sp.Name()))
+	fmt.Fprintf(&builder, "\tpublic %s %s { get; set; }\n", sp.ToVariableType(), convention.TitleCase(sp.Name()))
 	return builder.String()
 }

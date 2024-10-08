@@ -48,7 +48,7 @@ func (sp String) ClassVariables() string {
 		break
 
 	default:
-		fmt.Fprintf(&builder, "\tpublic string %s { get; private set; }\n", convention.TitleCase(sp.Name()))
+		fmt.Fprintf(&builder, "\tpublic string %s { get; set; }\n", convention.TitleCase(sp.Name()))
 		break
 	}
 

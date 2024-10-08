@@ -22,7 +22,7 @@ func Test_NumberDefaultsToFloat(t *testing.T) {
 	assert.Equal(t, "float", varType)
 	assert.Equal(t, "0f", nullVal)
 	assert.Equal(t, `	[JsonProperty("some-name")]
-	public float SomeName { get; private set; }
+	public float SomeName { get; set; }
 `, cSharp)
 }
 

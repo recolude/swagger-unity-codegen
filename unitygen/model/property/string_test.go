@@ -22,7 +22,7 @@ func Test_StringDefaultsToFloat(t *testing.T) {
 	assert.Equal(t, "string", varType)
 	assert.Equal(t, "null", nullVal)
 	assert.Equal(t, `	[JsonProperty("someName")]
-	public string SomeName { get; private set; }
+	public string SomeName { get; set; }
 `, classVars)
 }
 

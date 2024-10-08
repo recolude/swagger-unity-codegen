@@ -13,7 +13,7 @@ func TestServiceNoPaths(t *testing.T) {
 	service := unitygen.NewService("test", nil)
 
 	// ********************************** ACT *********************************
-	code := service.ToCSharp(nil, "ServiceConfig")
+	code := service.ToCSharp(nil, "ServiceConfig", "Test")
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class TestService {
@@ -32,7 +32,7 @@ func TestService_DoesntAppend2ndServiceToName(t *testing.T) {
 	service := unitygen.NewService("testService", nil)
 
 	// ********************************** ACT *********************************
-	code := service.ToCSharp(nil, "RecoludeConfig")
+	code := service.ToCSharp(nil, "RecoludeConfig", "Test")
 
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class TestService {
@@ -61,7 +61,7 @@ func TestServiceInterfaceNoPaths(t *testing.T) {
 func TestServiceInterfaceOnePath(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	service := unitygen.NewService("test", []path.Path{
-		path.NewPath("/get", "doThing", "GET", nil, nil, nil, nil),
+		path.NewPath("/get", "", "", "doThing", "GET", nil, nil, nil, nil),
 	})
 
 	// ********************************** ACT *********************************

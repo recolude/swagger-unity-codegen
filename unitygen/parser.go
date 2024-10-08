@@ -1,6 +1,7 @@
 package unitygen
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -283,7 +284,6 @@ func (p *Parser) parseSecurityDefinitions(obj *gabs.Container) ([]security.Auth,
 		switch definitionType {
 		case "apiKey":
 			def, err = p.interpretAPIKeyDefinition([]string{"securityDefinitions"}, key, val)
-			break
 
 		default:
 			return nil, InvalidSpecError{Path: []string{"securityDefinitions", key, "type"}, Reason: fmt.Sprintf("Unknown security type \"%s\"", definitionType)}
@@ -373,7 +373,34 @@ func (p *Parser) interpretPathParameterProperty(currentPath []string, name strin
 	}
 }
 
-func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, error) {
+func resolveReference(root *gabs.Container, reference string) (*gabs.Container, error) {
+	components := strings.Split(reference, "/")
+	if len(components) != 3 || components[0] != "#" {
+		return nil, fmt.Errorf("unable to interpret ref value of '%s'", reference)
+	}
+
+	path := root.Path(fmt.Sprintf("%s.%s", components[1], components[2]))
+	if path == nil {
+		return nil, fmt.Errorf("reference path %s could not be resolved", reference)
+	}
+
+	return path, nil
+}
+
+func resolvePathParameter(root *gabs.Container, obj *gabs.Container) (*gabs.Container, error) {
+	refObj := obj.Path("$ref")
+	if refObj != nil {
+		ref, ok := refObj.Data().(string)
+		if !ok {
+			return nil, errors.New("$ref value is not a string")
+		}
+		return resolveReference(root, ref)
+
+	}
+	return obj, nil
+}
+
+func (p *Parser) parsePaths(root *gabs.Container, url string, routeObj *gabs.Container) ([]path.Path, error) {
 	paths := make([]path.Path, 0)
 	for verb, verbObj := range routeObj.ChildrenMap() {
 		tagsInJSON := make([]string, 0)
@@ -392,6 +419,20 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 		operationID, ok := verbObj.Path("operationId").Data().(string)
 		if !ok {
 			return nil, InvalidSpecError{Path: []string{"paths", url, verb}, Reason: "unable to locate operation ID"}
+		}
+
+		var summary string
+		if summaryNode := verbObj.Path("summary"); summaryNode != nil {
+			if text, ok := summaryNode.Data().(string); ok {
+				summary = text
+			}
+		}
+
+		var description string
+		if descriptionNode := verbObj.Path("description"); descriptionNode != nil {
+			if text, ok := descriptionNode.Data().(string); ok {
+				description = text
+			}
 		}
 
 		responses := make(map[string]path.Response)
@@ -447,7 +488,12 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 		}
 
 		parameters := make([]path.Parameter, 0)
-		for paramIndex, param := range verbObj.Path("parameters").Children() {
+		for paramIndex, paramData := range verbObj.Path("parameters").Children() {
+			param, err := resolvePathParameter(root, paramData)
+			if err != nil {
+				return nil, err
+			}
+
 			required, ok := param.Path("required").Data().(bool)
 			if !ok {
 				required = false
@@ -495,6 +541,8 @@ func (p *Parser) parsePaths(url string, routeObj *gabs.Container) ([]path.Path, 
 		paths = append(paths,
 			path.NewPath(
 				url,
+				summary,
+				description,
 				operationID,
 				strings.ToUpper(verb),
 				tagsInJSON,
@@ -536,14 +584,14 @@ type sortByServiceName []Service
 
 func (a sortByServiceName) Len() int           { return len(a) }
 func (a sortByServiceName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a sortByServiceName) Less(i, j int) bool { return a[i].name < a[j].name }
+func (a sortByServiceName) Less(i, j int) bool { return strings.Compare(a[i].name, a[j].name) < 0 }
 
-func (p *Parser) parseServices(obj *gabs.Container) ([]Service, error) {
+func (p *Parser) parseServices(root *gabs.Container) ([]Service, error) {
 	services := make([]Service, 0)
 	defaultServiceIndex := -1
 
-	for key, val := range obj.Path("paths").ChildrenMap() {
-		paths, err := p.parsePaths(key, val)
+	for key, val := range root.Path("paths").ChildrenMap() {
+		paths, err := p.parsePaths(root, key, val)
 		if err != nil {
 			return nil, err
 		}
@@ -573,6 +621,27 @@ func (p *Parser) parseServices(obj *gabs.Container) ([]Service, error) {
 				}
 			}
 		}
+	}
+
+	if tagsObject := root.Path("tags"); tagsObject != nil {
+		for i, tagObj := range tagsObject.Children() {
+			tagName, err := parseString(tagObj, "name")
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse tag[%d] name: %w", i, err)
+			}
+
+			tagDescription, _ := parseString(tagObj, "description")
+			if tagDescription == "" {
+				continue
+			}
+
+			for i, service := range services {
+				if service.name == tagName {
+					services[i].description = tagDescription
+				}
+			}
+		}
+
 	}
 
 	sort.Sort(sortByServiceName(services))

@@ -22,6 +22,6 @@ func Test_Boolean(t *testing.T) {
 	assert.Equal(t, "bool", varType)
 	assert.Equal(t, "false", nullVal)
 	assert.Equal(t, `	[JsonProperty("some name")]
-	public bool SomeName { get; private set; }
+	public bool SomeName { get; set; }
 `, classVar)
 }

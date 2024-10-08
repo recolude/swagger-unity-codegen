@@ -187,16 +187,16 @@ public class V1ApiKey {
 	public System.DateTime CreatedAt { get => System.DateTime.Parse(createdAt); }
 
 	[JsonProperty("description")]
-	public string Description { get; private set; }
+	public string Description { get; set; }
 
 	[JsonProperty("name")]
-	public string Name { get; private set; }
+	public string Name { get; set; }
 
 	[JsonProperty("permissions")]
-	public V1Permission[] Permissions { get; private set; }
+	public V1Permission[] Permissions { get; set; }
 
 	[JsonProperty("token")]
-	public string Token { get; private set; }
+	public string Token { get; set; }
 
 }`, spec.Definitions[1].ToCSharp())
 
@@ -248,13 +248,13 @@ public class V1EnumVisibilityJsonConverter : JsonConverter {
 public class V1ListLicensesRequest {
 
 	[JsonProperty("duration")]
-	public double Duration { get; private set; }
+	public double Duration { get; set; }
 
 	[JsonProperty("limit")]
-	public int Limit { get; private set; }
+	public int Limit { get; set; }
 
 	[JsonProperty("time")]
-	public float Time { get; private set; }
+	public float Time { get; set; }
 
 }`, spec.Definitions[4].ToCSharp())
 	}
@@ -553,26 +553,26 @@ public class AggMetadataQuery {
 public class AggMetadataQueryQuery {
 
 	[JsonProperty("field")]
-	public string Field { get; private set; }
+	public string Field { get; set; }
 
 	[JsonProperty("maxDate")]
-	public int MaxDate { get; private set; }
+	public int MaxDate { get; set; }
 
 	[JsonProperty("minDate")]
-	public int MinDate { get; private set; }
+	public int MinDate { get; set; }
 
 	[JsonProperty("modifier")]
-	public AggModifier Modifier { get; private set; }
+	public AggModifier Modifier { get; set; }
 
 	[JsonProperty("onEntity")]
-	public RecordingEntity OnEntity { get; private set; }
+	public RecordingEntity OnEntity { get; set; }
 
 	[JsonProperty("someBool")]
-	public bool SomeBool { get; private set; }
+	public bool SomeBool { get; set; }
 
 }
 	[JsonProperty("query")]
-	public AggMetadataQueryQuery Query { get; private set; }
+	public AggMetadataQueryQuery Query { get; set; }
 
 }`, def.ToCSharp())
 	}
@@ -755,13 +755,13 @@ func Test_ReadAllOf(t *testing.T) {
 public class CountQuery {
 
 	[JsonProperty("queryType")]
-	public string QueryType { get; private set; }
+	public string QueryType { get; set; }
 
 	[JsonProperty("somethinElse")]
-	public string SomethinElse { get; private set; }
+	public string SomethinElse { get; set; }
 
 	[JsonProperty("name")]
-	public string Name { get; private set; }
+	public string Name { get; set; }
 
 }`, countQueryDef.ToCSharp())
 
@@ -908,7 +908,7 @@ func TestParse_ReadDiscriminator(t *testing.T) {
 public class CountQuery : GraphQuery {
 
 	[JsonProperty("name")]
-	public string Name { get; private set; }
+	public string Name { get; set; }
 
 }`, countQueryDef.ToCSharp())
 
@@ -921,10 +921,10 @@ public class CountQuery : GraphQuery {
 public class GraphQuery {
 
 	[JsonProperty("queryType")]
-	public string QueryType { get; private set; }
+	public string QueryType { get; set; }
 
 	[JsonProperty("somethinElse")]
-	public string SomethinElse { get; private set; }
+	public string SomethinElse { get; set; }
 
 }`, graphQueryDef.ToCSharp())
 	}

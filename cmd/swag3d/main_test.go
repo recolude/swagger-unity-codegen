@@ -107,6 +107,8 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 						"aaerg",
 						"",
 						"",
+						"",
+						"",
 						nil,
 						nil,
 						map[string]path.Response{
@@ -131,6 +133,8 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 				[]path.Path{
 					path.NewPath(
 						"aaerg",
+						"",
+						"",
 						"",
 						"",
 						nil,
@@ -206,6 +210,29 @@ public interface IWebRequest {
 
 	IEnumerator Run();
 }
+public interface ISuccessResponse<T> { T Success { get; } }
+
+public interface IBadRequestResponse<T> { T BadRequest { get; } }
+
+public interface IUnauthorizedResponse<T> { T Unauthorized { get; } }
+
+public interface IForbiddenResponse<T> { T Forbidden { get; } }
+
+public interface INotFoundResponse<T> { T NotFound { get; } }
+
+public interface IInternalServerErrorResponse<T> { T InternalServerError { get; } }
+
+public interface INotImplementedResponse<T> { T NotImplemented { get; } }
+
+public interface IBadGatewayResponse<T> { T BadGateway { get; } }
+
+public interface IServiceUnavailableResponse<T> { T ServiceUnavailable { get; } }
+
+public interface IGatewayTimeoutResponse<T> { T GatewayTimeout { get; } }
+
+public interface IFallbackResponseResponse<T> { T FallbackResponse { get; } }
+
+
 
 #if UNITY_EDITOR
 [UnityEditor.CustomEditor(typeof(ServiceConfig))]
@@ -246,8 +273,8 @@ public class ServiceConfig: ScriptableObject, Config {
 
 }
 
-#endregion
 
+#endregion
 `, out.String())
 }
 
@@ -278,13 +305,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using JsonSubTypes;
 
+#region Definitions
 namespace Example {
 
-#region Definitions
-
+}
 #endregion
 
 #region Services
+
+namespace Example {
 
 public interface Config {
 
@@ -299,6 +328,29 @@ public interface IWebRequest {
 
 	IEnumerator Run();
 }
+public interface ISuccessResponse<T> { T Success { get; } }
+
+public interface IBadRequestResponse<T> { T BadRequest { get; } }
+
+public interface IUnauthorizedResponse<T> { T Unauthorized { get; } }
+
+public interface IForbiddenResponse<T> { T Forbidden { get; } }
+
+public interface INotFoundResponse<T> { T NotFound { get; } }
+
+public interface IInternalServerErrorResponse<T> { T InternalServerError { get; } }
+
+public interface INotImplementedResponse<T> { T NotImplemented { get; } }
+
+public interface IBadGatewayResponse<T> { T BadGateway { get; } }
+
+public interface IServiceUnavailableResponse<T> { T ServiceUnavailable { get; } }
+
+public interface IGatewayTimeoutResponse<T> { T GatewayTimeout { get; } }
+
+public interface IFallbackResponseResponse<T> { T FallbackResponse { get; } }
+
+
 
 #if UNITY_EDITOR
 [UnityEditor.CustomEditor(typeof(ServiceConfig))]
@@ -339,9 +391,9 @@ public class ServiceConfig: ScriptableObject, Config {
 
 }
 
+}
 #endregion
-
-}`, out.String())
+`, out.String())
 }
 
 func TestSpecifyingOutWritesMultipleFiles(t *testing.T) {
@@ -405,6 +457,8 @@ func TestFilterUnusedDefinitions_AnonymouseFunctionReferences(t *testing.T) {
 				[]path.Path{
 					path.NewPath(
 						"aaerg",
+						"",
+						"",
 						"",
 						"",
 						nil,

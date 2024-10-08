@@ -1,6 +1,7 @@
 package unitygen
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
@@ -10,8 +11,9 @@ import (
 
 // Service is a collection of API endpoints (dictated by the tags a route has)
 type Service struct {
-	name  string
-	paths []path.Path
+	name        string
+	description string
+	paths       []path.Path
 }
 
 // NewService creates a collection of paths
@@ -43,11 +45,38 @@ func (s Service) Interface() string {
 
 	for _, p := range s.paths {
 		builder.WriteString("\t")
-		builder.WriteString(p.ServiceInterfaceFunction())
+		builder.WriteString(p.ServiceInterfaceFunction(""))
 		builder.WriteString("\n")
 	}
 
-	builder.WriteString("}")
+	builder.WriteString("}\n")
+
+	return builder.String()
+}
+
+func (s Service) ServiceProvider(menuName string) string {
+	className := s.ClassName()
+
+	builder := &strings.Builder{}
+	nameWithSpaces := convention.AddSpace(className)
+	fmt.Fprintf(builder, "[CreateAssetMenu(fileName = \"%s Provider\", menuName = \"%s/%s Provider\")]\n", nameWithSpaces, menuName, nameWithSpaces)
+	fmt.Fprintf(builder, "public class %sProvider: ServiceProvider<%sObject> { }\n\n", className, className)
+
+	return builder.String()
+}
+
+func (s Service) ScriptableObject() string {
+	builder := strings.Builder{}
+
+	fmt.Fprintf(&builder, "public abstract class %sObject : ScriptableObject, %s {\n", s.ClassName(), s.InterfaceName())
+
+	for _, p := range s.paths {
+		builder.WriteString("\t")
+		builder.WriteString(p.ServiceInterfaceFunction("abstract"))
+		builder.WriteString("\n")
+	}
+
+	builder.WriteString("}\n")
 
 	return builder.String()
 }
@@ -64,25 +93,40 @@ func (s Service) ClassName() string {
 	return className
 }
 
-// ToCSharp writes out the service as a class with collection of functions that
-// correspond to calling different routes
-func (s Service) ToCSharp(knownModifiers []security.Auth, serviceConfigName string) string {
-	className := s.ClassName()
+func (s Service) Comments() string {
+	if s.description == "" {
+		return ""
+	}
 
 	builder := strings.Builder{}
-	builder.WriteString("public class ")
-	builder.WriteString(className)
-	builder.WriteString(" {\n\n\tpublic ")
-	builder.WriteString(serviceConfigName)
-	builder.WriteString(" Config { get; }\n\n\tpublic ")
-	builder.WriteString(className)
-	builder.WriteString("(")
-	builder.WriteString(serviceConfigName)
-	builder.WriteString(" Config) {\n\t\tthis.Config = Config;\n\t}\n\n")
+	builder.WriteString("/// <summary>\n/// ")
+	builder.WriteString(s.description)
+	builder.WriteString("\n/// </summary>\n")
+	return builder.String()
+}
+
+// ToCSharp writes out the service as a class with collection of functions that
+// correspond to calling different routes
+func (s Service) ToCSharp(knownModifiers []security.Auth, serviceConfigName string, menuName string) string {
+	className := s.ClassName()
+
+	builder := &strings.Builder{}
 
 	for _, p := range s.paths {
 		builder.WriteString(p.SupportingClasses())
 		builder.WriteString("\n")
+	}
+
+	builder.WriteString(s.Interface())
+	builder.WriteString(s.ScriptableObject())
+
+	builder.WriteString(s.Comments()) // [CreateAssetMenu(fileName = "SemanticLabelService", menuName = "DAT/API/Semantic Label Service")]
+	nameWithSpaces := convention.AddSpace(className)
+	fmt.Fprintf(builder, "[CreateAssetMenu(fileName = \"%s\", menuName = \"%s/%s\")]\n", nameWithSpaces, menuName, nameWithSpaces)
+	fmt.Fprintf(builder, "public class %s: %sObject {\n\n", className, className)
+	fmt.Fprintf(builder, "\t[SerializeField]\n\tprivate %s Config;\n", serviceConfigName)
+
+	for _, p := range s.paths {
 		builder.WriteString(p.ServiceFunction(knownModifiers))
 		builder.WriteString("\n")
 	}

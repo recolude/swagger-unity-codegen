@@ -44,6 +44,6 @@ func (sp Integer) ClassVariables() string {
 	builder.WriteString(sp.ToVariableType())
 	builder.WriteString(" ")
 	builder.WriteString(convention.TitleCase(sp.Name()))
-	builder.WriteString(" { get; private set; }\n")
+	builder.WriteString(" { get; set; }\n")
 	return builder.String()
 }

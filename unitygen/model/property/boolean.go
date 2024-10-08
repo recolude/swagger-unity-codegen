@@ -29,5 +29,5 @@ func (sp Boolean) EmptyValue() string {
 }
 
 func (sp Boolean) ClassVariables() string {
-	return fmt.Sprintf("\t[JsonProperty(\"%s\")]\n\tpublic %s %s { get; private set; }\n", sp.Name(), sp.ToVariableType(), convention.TitleCase(sp.Name()))
+	return fmt.Sprintf("\t[JsonProperty(\"%s\")]\n\tpublic %s %s { get; set; }\n", sp.Name(), sp.ToVariableType(), convention.TitleCase(sp.Name()))
 }

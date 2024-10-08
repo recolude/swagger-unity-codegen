@@ -32,10 +32,10 @@ func Test_Object(t *testing.T) {
 public class SomeName {
 
 	[JsonProperty("my bool")]
-	public bool MyBool { get; private set; }
+	public bool MyBool { get; set; }
 
 }
 	[JsonProperty("some-name")]
-	public SomeName SomeName { get; private set; }
+	public SomeName SomeName { get; set; }
 `, csharp)
 }

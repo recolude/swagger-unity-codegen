@@ -15,6 +15,8 @@ func Test_PanicsWithMultipleBodyParameters(t *testing.T) {
 	assert.PanicsWithError(t, "can not have multiple body parameters for a single path", func() {
 		path.NewPath(
 			"/api/v1/dev-keys",
+			"",
+			"",
 			"DevKeyService_GetDevKey",
 			http.MethodGet,
 			[]string{"DevKeyService"},
@@ -32,6 +34,8 @@ func Test_SimpleGet(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/dev-keys",
+		"",
+		"",
 		"DevKeyService_GetDevKey",
 		http.MethodGet,
 		[]string{"DevKeyService"},
@@ -76,6 +80,8 @@ func Test_ParameterInPath(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}",
+		"Summary comments",
+		"Description comments",
 		"UserService_GetUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -102,10 +108,14 @@ func Test_ParameterInPath(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
-	// A successful response.
+	/// <summary>
+	/// A successful response.
+	/// </summary>
 	public V1UserResponse success;
 
-	// An unexpected error response
+	/// <summary>
+	/// An unexpected error response
+	/// </summary>
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -129,7 +139,12 @@ func Test_ParameterInPath(t *testing.T) {
 
 }`, classCode)
 
-	assert.Equal(t, `public UserService_GetUserUnityWebRequest UserService_GetUser(UserService_GetUserRequestParams requestParams)
+	assert.Equal(t, `/// <summary>
+/// Summary comments
+/// 
+/// Description comments
+/// </summary>
+public UserService_GetUserUnityWebRequest UserService_GetUser(UserService_GetUserRequestParams requestParams)
 {
 	var unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);
 	unityNetworkReq.downloadHandler = new DownloadHandlerBuffer();
@@ -142,6 +157,11 @@ func Test_ParameterInPath(t *testing.T) {
 	return new UserService_GetUserUnityWebRequest(unityNetworkReq);
 }
 
+/// <summary>
+/// Summary comments
+/// 
+/// Description comments
+/// </summary>
 public UserService_GetUserUnityWebRequest UserService_GetUser(string userId)
 {
 	return UserService_GetUser(new UserService_GetUserRequestParams() {
@@ -154,6 +174,8 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}",
+		"",
+		"",
 		"UserService_GetUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -201,6 +223,8 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}",
+		"",
+		"",
 		"UserService_GetUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -222,7 +246,9 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
-	// An unexpected error response
+	/// <summary>
+	/// An unexpected error response
+	/// </summary>
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -247,6 +273,8 @@ func Test_ThreeParametersInPath(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}",
+		"",
+		"",
 		"UserService_GetUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -270,13 +298,19 @@ func Test_ThreeParametersInPath(t *testing.T) {
 	// ********************************* ASSERT *******************************
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
-	// A successful response.
+	/// <summary>
+	/// A successful response.
+	/// </summary>
 	public V1UserResponse success;
 
-	// Weird Unauthorized response.
+	/// <summary>
+	/// Weird Unauthorized response.
+	/// </summary>
 	public V1Unauthorized unauthorized;
 
-	// An unexpected error response
+	/// <summary>
+	/// An unexpected error response
+	/// </summary>
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -317,6 +351,8 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 
 	route := path.NewPath(
 		urlRotue,
+		"",
+		"",
 		opID,
 		method,
 		tags,
@@ -342,13 +378,19 @@ func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	assert.Equal(t, tags, route.Tags())
 	assert.Equal(t, `public class UserService_GetUserUnityWebRequest : IWebRequest {
 
-	// A successful response.
+	/// <summary>
+	/// A successful response.
+	/// </summary>
 	public V1UserResponse success;
 
-	// some file
+	/// <summary>
+	/// some file
+	/// </summary>
 	public byte[] notImplemented;
 
-	// An unexpected error response
+	/// <summary>
+	/// An unexpected error response
+	/// </summary>
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }
@@ -381,6 +423,8 @@ func Test_DealsWithQueryParams(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	route := path.NewPath(
 		"/api/v1/users/{userId}",
+		"",
+		"",
 		"UserService_GetUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -420,6 +464,8 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 
 	route := path.NewPath(
 		"/api/v1/users/{userId}/{user-name}",
+		"",
+		"",
 		"getUser",
 		http.MethodGet,
 		[]string{"UserService"},
@@ -461,7 +507,9 @@ public GetUserUnityWebRequest GetUser(string userId, string userName, string dif
 
 	assert.Equal(t, `public class GetUserUnityWebRequest : IWebRequest {
 
-	// An unexpected error response
+	/// <summary>
+	/// An unexpected error response
+	/// </summary>
 	public RuntimeError fallbackResponse;
 
 	public UnityWebRequest UnderlyingRequest{ get; }

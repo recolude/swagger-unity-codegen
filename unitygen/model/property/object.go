@@ -50,6 +50,6 @@ func (op Object) ClassVariables() string {
 	builder.WriteString(op.ToVariableType())
 	builder.WriteString(" ")
 	builder.WriteString(convention.TitleCase(op.name))
-	builder.WriteString(" { get; private set; }\n")
+	builder.WriteString(" { get; set; }\n")
 	return builder.String()
 }
