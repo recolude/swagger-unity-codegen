@@ -7,30 +7,26 @@ import (
 )
 
 type Integer struct {
-	name   string
-	format string
-}
-
-func NewInteger(name string, format string) Integer {
-	return Integer{
-		name:   name,
-		format: format,
-	}
+	PropertyName string
+	Format       string
+	Description  string
 }
 
 func (sp Integer) Name() string {
-	return sp.name
+	return sp.PropertyName
 }
 
 func (sp Integer) ToVariableType() string {
-	switch sp.format {
+	switch sp.Format {
+	case "int64":
+		return "long"
 	default:
 		return "int"
 	}
 }
 
 func (sp Integer) EmptyValue() string {
-	switch sp.format {
+	switch sp.Format {
 	default:
 		return "0"
 	}
@@ -38,6 +34,8 @@ func (sp Integer) EmptyValue() string {
 
 func (sp Integer) ClassVariables() string {
 	builder := strings.Builder{}
+
+	WriteDescriptionComment(&builder, sp.Description)
 	builder.WriteString("	[JsonProperty(\"")
 	builder.WriteString(sp.Name())
 	builder.WriteString("\")]\n\tpublic ")

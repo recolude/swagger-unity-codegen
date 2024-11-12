@@ -66,7 +66,6 @@ Command used to generate Recolude's code.
 swag3d generate \
 	--file api/openapi-spec/swagger.json \
 	--config-name="RecoludeConfig" \
-	--config-menu="Recolude/Config" \
 	--tags "RecordingService" \
 	--namespace Recolude.API \
 	--out "Scripts" \

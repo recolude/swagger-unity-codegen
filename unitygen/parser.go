@@ -40,39 +40,34 @@ func (p *Parser) interpretArrayProperty(path []string, objectName, propertyName 
 	if err != nil {
 		return property.Array{}, err
 	}
+	description, _ := parseString(obj, "description")
 
-	return property.NewArray(propertyName, prop), nil
+	return property.Array{PropertyName: propertyName, Item: prop, Description: description}, nil
 }
 
 func (p *Parser) interpretStringProperty(path []string, name string, obj *gabs.Container) (property.String, error) {
-	format := ""
-	formatInSpec := obj.Path("format").Data()
-	if formatInSpec != nil {
-		format = formatInSpec.(string)
-	}
-	return property.NewString(name, format), nil
+	description, _ := parseString(obj, "description")
+	format, _ := parseString(obj, "format")
+
+	return property.String{PropertyName: name, Format: format, Description: description}, nil
 }
 
 func (p *Parser) interpretIntProperty(path []string, name string, obj *gabs.Container) (property.Integer, error) {
-	format := ""
-	formatInSpec := obj.Path("format").Data()
-	if formatInSpec != nil {
-		format = formatInSpec.(string)
-	}
-	return property.NewInteger(name, format), nil
+	format, _ := parseString(obj, "format")
+	description, _ := parseString(obj, "description")
+	return property.Integer{PropertyName: name, Format: format, Description: description}, nil
 }
 
 func (p *Parser) interpretNumberProperty(path []string, name string, obj *gabs.Container) (property.Number, error) {
-	format := ""
-	formatInSpec := obj.Path("format").Data()
-	if formatInSpec != nil {
-		format = formatInSpec.(string)
-	}
-	return property.NewNumber(name, format), nil
+	format, _ := parseString(obj, "format")
+	description, _ := parseString(obj, "description")
+	return property.Number{PropertyName: name, Format: format, Description: description}, nil
 }
 
-func (p *Parser) interpretBooleanProperty(name string) (property.Boolean, error) {
-	return property.NewBoolean(name), nil
+func (p *Parser) interpretBooleanProperty(path []string, name string, obj *gabs.Container) (property.Boolean, error) {
+	// description, _ := parseString(obj, "description")
+	description, _ := parseString(obj, "description")
+	return property.Boolean{PropertyName: name, Description: description}, nil
 }
 
 func (p *Parser) interpretNestedObjectProperty(path []string, objectName, propertyName string, obj *gabs.Container) (model.Property, error) {
@@ -113,7 +108,7 @@ func (p *Parser) interpretObjectDefinitionProperty(path []string, objectName, pr
 		return p.interpretNumberProperty(path, propertyName, obj)
 
 	case "boolean":
-		return p.interpretBooleanProperty(propertyName)
+		return p.interpretBooleanProperty(path, propertyName, obj)
 
 	case "object":
 		return p.interpretNestedObjectProperty(path, objectName, propertyName, obj)
@@ -170,7 +165,9 @@ func (p *Parser) interpretObjectDefinition(path []string, objectName string, obj
 		return model.NewDiscriminatorObject(objectName, properties, discriminateOn), nil
 	}
 
-	return model.NewObject(objectName, properties), nil
+	model := model.NewObject(objectName, properties)
+	model.Description, _ = parseString(obj, "description")
+	return model, nil
 }
 
 func (p *Parser) interpretStringDefinition(path []string, name string, obj *gabs.Container) (model.Definition, error) {
@@ -335,7 +332,7 @@ func (p *Parser) interpretPathParameterProperty(currentPath []string, name strin
 				return p.interpretNumberProperty(currentPath, name, schemaNode)
 
 			case "boolean":
-				return p.interpretBooleanProperty(name)
+				return p.interpretBooleanProperty(currentPath, name, schemaNode)
 
 			default:
 				return nil, InvalidSpecError{Path: append(currentPath, name), Reason: fmt.Sprintf("unknown property type \"%s\"", typeNode.Data().(string))}
@@ -366,7 +363,7 @@ func (p *Parser) interpretPathParameterProperty(currentPath []string, name strin
 		return p.interpretNumberProperty(currentPath, name, obj)
 
 	case "boolean":
-		return p.interpretBooleanProperty(name)
+		return p.interpretBooleanProperty(currentPath, name, obj)
 
 	default:
 		return nil, InvalidSpecError{Path: append(currentPath, name), Reason: fmt.Sprintf("unknown property type \"%s\"", propType)}

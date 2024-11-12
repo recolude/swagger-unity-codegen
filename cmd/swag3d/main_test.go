@@ -64,7 +64,7 @@ func TestFilterUnusedDefinitions(t *testing.T) {
 	modelFurtherRemoved := model.NewStringEnum("FurtherRemovedEnum", []string{"OneEnum", "TwoEnum"})
 	modelC := model.NewObject("C", []model.Property{
 		property.NewDefinitionReference("a", modelFurtherRemoved),
-		property.NewArray("test", property.NewDefinitionReference("a", modelD)),
+		property.Array{PropertyName: "test", Item: property.NewDefinitionReference("a", modelD)},
 	})
 	modelB := model.NewObject("B", []model.Property{property.NewDefinitionReference("a", modelC)})
 	modelY := model.NewObject("Y", nil)

@@ -9,7 +9,7 @@ import (
 
 func Test_StringDefaultsToFloat(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewString("someName", "")
+	ref := property.String{PropertyName: "someName"}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()
@@ -28,7 +28,7 @@ func Test_StringDefaultsToFloat(t *testing.T) {
 
 func Test_StringInterpretsDate(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewString("some-name", "date-time")
+	ref := property.String{PropertyName: "some-name", Format: "date-time"}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()

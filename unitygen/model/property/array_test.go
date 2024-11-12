@@ -9,7 +9,7 @@ import (
 
 func Test_Array(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewArray("my array", property.NewInteger("anything", ""))
+	ref := property.Array{PropertyName: "my array", Item: property.Integer{PropertyName: "anything"}}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()

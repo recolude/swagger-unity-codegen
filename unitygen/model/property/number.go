@@ -8,39 +8,36 @@ import (
 )
 
 type Number struct {
-	name   string
-	format string
-}
-
-func NewNumber(name string, format string) Number {
-	return Number{
-		name:   name,
-		format: format,
-	}
+	PropertyName string
+	Format       string
+	Description  string
 }
 
 func (sp Number) Name() string {
-	return sp.name
+	return sp.PropertyName
 }
 
 func (sp Number) ToVariableType() string {
-	if sp.format == "" {
+
+	switch sp.Format {
+	case "int32":
+		return "int"
+
+	case "double":
+		return "double"
+
+	default:
 		return "float"
 	}
 
-	if sp.format == "int32" {
-		return "int"
-	}
-
-	return sp.format
 }
 
 func (sp Number) EmptyValue() string {
-	if sp.format == "" {
+	if sp.Format == "" {
 		return "0f"
 	}
 
-	if sp.format == "int32" {
+	if sp.Format == "int32" {
 		return "0"
 	}
 
@@ -49,6 +46,7 @@ func (sp Number) EmptyValue() string {
 
 func (sp Number) ClassVariables() string {
 	builder := strings.Builder{}
+	WriteDescriptionComment(&builder, sp.Description)
 	fmt.Fprintf(&builder, "\t[JsonProperty(\"%s\")]\n", sp.Name())
 	fmt.Fprintf(&builder, "\tpublic %s %s { get; set; }\n", sp.ToVariableType(), convention.TitleCase(sp.Name()))
 	return builder.String()

@@ -94,7 +94,7 @@ func Test_ParameterInPath(t *testing.T) {
 			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"}),
 		},
 	)
 
@@ -187,7 +187,7 @@ func Test_AcknowledgesSingleResponses(t *testing.T) {
 			"200": path.NewDefinitionResponse("", model.NewDefinitionReference("#/definitions/v1UserResponse")),
 		},
 		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"}),
 		},
 	)
 
@@ -236,7 +236,7 @@ func Test_AcknowledgesDefaultResponses(t *testing.T) {
 			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"}),
 		},
 	)
 
@@ -288,7 +288,7 @@ func Test_ThreeParametersInPath(t *testing.T) {
 			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"}),
 		},
 	)
 
@@ -339,7 +339,7 @@ func Test_ThreeParametersInPath(t *testing.T) {
 
 func Test_HandlesNilResponseDefinitions(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	params := []path.Parameter{path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", ""))}
+	params := []path.Parameter{path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"})}
 	opID := "UserService_GetUser"
 	urlRotue := "/api/v1/users/{userId}"
 	method := http.MethodGet
@@ -433,8 +433,8 @@ func Test_DealsWithQueryParams(t *testing.T) {
 			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
-			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"}),
+			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.String{PropertyName: "diffId"}),
 		},
 	)
 
@@ -474,10 +474,10 @@ func Test_DealsWithMultipleQueryParamsAndBody(t *testing.T) {
 			"default": path.NewDefinitionResponse("An unexpected error response", model.NewDefinitionReference("#/definitions/runtimeError")),
 		},
 		[]path.Parameter{
-			path.NewParameter(path.PathParameterLocation, "userId", true, property.NewString("userId", "")),
-			path.NewParameter(path.PathParameterLocation, "user-name", true, property.NewString("userId", "")),
-			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.NewString("diffId", "")),
-			path.NewParameter(path.QueryParameterLocation, "another-id", true, property.NewInteger("another-id", "")),
+			path.NewParameter(path.PathParameterLocation, "userId", true, property.String{PropertyName: "userId"}),
+			path.NewParameter(path.PathParameterLocation, "user-name", true, property.String{PropertyName: "userId"}),
+			path.NewParameter(path.QueryParameterLocation, "diffId", true, property.String{PropertyName: "diffId"}),
+			path.NewParameter(path.QueryParameterLocation, "another-id", true, property.Integer{PropertyName: "another-id"}),
 			path.NewParameter(path.BodyParameterLocation, "query", true, property.NewDefinitionReference("test", query)),
 		},
 	)

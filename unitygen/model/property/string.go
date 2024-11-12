@@ -8,23 +8,17 @@ import (
 )
 
 type String struct {
-	name   string
-	format string
-}
-
-func NewString(name string, format string) String {
-	return String{
-		name:   name,
-		format: format,
-	}
+	PropertyName string
+	Format       string
+	Description  string
 }
 
 func (sp String) Name() string {
-	return sp.name
+	return sp.PropertyName
 }
 
 func (sp String) ToVariableType() string {
-	switch sp.format {
+	switch sp.Format {
 	case "date-time":
 		return "System.DateTime"
 
@@ -39,17 +33,18 @@ func (sp String) EmptyValue() string {
 
 func (sp String) ClassVariables() string {
 	builder := strings.Builder{}
+
+	WriteDescriptionComment(&builder, sp.Description)
+
 	fmt.Fprintf(&builder, "\t[JsonProperty(\"%s\")]\n", sp.Name())
 
-	switch sp.format {
+	switch sp.Format {
 	case "date-time":
 		fmt.Fprintf(&builder, "\tpublic string %s;\n\n", convention.CamelCase(sp.Name()))
 		fmt.Fprintf(&builder, "\tpublic System.DateTime %s { get => System.DateTime.Parse(%s); }\n", convention.TitleCase(sp.Name()), convention.CamelCase(sp.Name()))
-		break
 
 	default:
 		fmt.Fprintf(&builder, "\tpublic string %s { get; set; }\n", convention.TitleCase(sp.Name()))
-		break
 	}
 
 	return builder.String()

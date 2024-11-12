@@ -9,7 +9,7 @@ import (
 
 func Test_NumberDefaultsToFloat(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewNumber("some-name", "")
+	ref := property.Number{PropertyName: "some-name"}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()
@@ -28,7 +28,7 @@ func Test_NumberDefaultsToFloat(t *testing.T) {
 
 func Test_NumberInterpretsInt32(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewNumber("someName", "int32")
+	ref := property.Number{PropertyName: "someName", Format: "int32"}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()

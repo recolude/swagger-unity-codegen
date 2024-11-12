@@ -9,7 +9,7 @@ import (
 
 func Test_Boolean(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewBoolean("some name")
+	ref := property.Boolean{PropertyName: "some name"}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()

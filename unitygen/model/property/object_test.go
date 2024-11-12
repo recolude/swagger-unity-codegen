@@ -12,7 +12,7 @@ func Test_Object(t *testing.T) {
 	// ******************************** ARRANGE *******************************
 	anonObjPropName := "some-name"
 	obj := model.NewObject(anonObjPropName, []model.Property{
-		property.NewBoolean("my bool"),
+		property.Boolean{PropertyName: "my bool"},
 	})
 	ref := property.NewObject(anonObjPropName, obj)
 

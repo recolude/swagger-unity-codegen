@@ -9,7 +9,7 @@ import (
 
 func Test_Integer(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	ref := property.NewInteger("Some name", "")
+	ref := property.Integer{PropertyName: "Some name"}
 
 	// ********************************** ACT *********************************
 	name := ref.Name()

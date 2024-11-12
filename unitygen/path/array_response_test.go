@@ -11,7 +11,7 @@ import (
 func Test_ArrayResponse(t *testing.T) {
 	// ARRANGE ================================================================
 	desciption := "A bunch of cool cats"
-	schema := property.NewArray("cats", property.NewInteger("cats", "int"))
+	schema := property.Array{PropertyName: "cats", Item: property.Integer{PropertyName: "cats", Format: "int"}}
 	defResp := path.NewArrayResponse(desciption, schema)
 
 	// ACT ====================================================================

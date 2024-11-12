@@ -10,7 +10,7 @@ import (
 
 func TestObject(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	prop := property.NewInteger("num", "")
+	prop := property.Integer{PropertyName: "num"}
 	obj := model.NewObject(
 		"testObj",
 		[]model.Property{prop},
@@ -44,7 +44,7 @@ func TestObject_DatesCorrectly(t *testing.T) {
 	obj := model.NewObject(
 		"testObj",
 		[]model.Property{
-			property.NewString("date", "date-time"),
+			property.String{PropertyName: "date", Format: "date-time"},
 		},
 	)
 
@@ -69,10 +69,10 @@ public class TestObj {
 
 func TestAllOfObject(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	p1 := property.NewInteger("num", "")
-	p2 := property.NewString("date", "date-time")
-	p3 := property.NewBoolean("anotha one")
-	p4 := property.NewString("and anotha one", "")
+	p1 := property.Integer{PropertyName: "num"}
+	p2 := property.String{PropertyName: "date", Format: "date-time"}
+	p3 := property.Boolean{PropertyName: "anotha one"}
+	p4 := property.String{PropertyName: "and anotha one"}
 
 	obj := model.NewObject(
 		"testObj",
@@ -124,10 +124,10 @@ public class CompositionThingy {
 
 func Test_CanSetAllOfObject(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	p1 := property.NewInteger("num", "")
-	p2 := property.NewString("date", "date-time")
-	p3 := property.NewBoolean("anotha one")
-	p4 := property.NewString("and anotha one", "")
+	p1 := property.Integer{PropertyName: "num"}
+	p2 := property.String{PropertyName: "date", Format: "date-time"}
+	p3 := property.Boolean{PropertyName: "anotha one"}
+	p4 := property.String{PropertyName: "and anotha one"}
 
 	obj := model.NewObject(
 		"testObj",
@@ -179,11 +179,11 @@ public class CompositionThingy {
 
 func TestObject_CanSetChildAndParent(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	p0 := property.NewString("disc", "")
-	p1 := property.NewInteger("num", "")
-	p2 := property.NewString("date", "date-time")
-	p3 := property.NewBoolean("anotha one")
-	p4 := property.NewString("and anotha one", "")
+	p0 := property.String{PropertyName: "disc"}
+	p1 := property.Integer{PropertyName: "num"}
+	p2 := property.String{PropertyName: "date", Format: "date-time"}
+	p3 := property.Boolean{PropertyName: "anotha one"}
+	p4 := property.String{PropertyName: "and anotha one"}
 
 	parentObj := model.NewDiscriminatorObject(
 		"Parent",
@@ -247,7 +247,7 @@ public class Parent {
 
 func TestObject_ParentPanicsWithNilChild(t *testing.T) {
 	// ******************************** ARRANGE *******************************
-	p0 := property.NewString("disc", "")
+	p0 := property.String{PropertyName: "disc"}
 
 	parentObj := model.NewDiscriminatorObject(
 		"Parent",

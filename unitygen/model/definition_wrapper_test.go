@@ -13,7 +13,7 @@ func TestDefinitionWrapperReference(t *testing.T) {
 	refs := []model.Definition{
 		model.NewStringEnum("cool cat", []string{"Mortimer"}),
 		model.NewObject("some obj", []model.Property{
-			property.NewBoolean("is cool"),
+			property.Boolean{PropertyName: "is cool"},
 		}),
 	}
 	wrap := model.NewDefinitionWrapper(nil)

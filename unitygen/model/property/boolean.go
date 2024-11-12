@@ -2,22 +2,18 @@ package property
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
 )
 
 type Boolean struct {
-	name string
-}
-
-func NewBoolean(name string) Boolean {
-	return Boolean{
-		name: name,
-	}
+	PropertyName string
+	Description  string
 }
 
 func (sp Boolean) Name() string {
-	return sp.name
+	return sp.PropertyName
 }
 
 func (sp Boolean) ToVariableType() string {
@@ -29,5 +25,9 @@ func (sp Boolean) EmptyValue() string {
 }
 
 func (sp Boolean) ClassVariables() string {
-	return fmt.Sprintf("\t[JsonProperty(\"%s\")]\n\tpublic %s %s { get; set; }\n", sp.Name(), sp.ToVariableType(), convention.TitleCase(sp.Name()))
+	builder := strings.Builder{}
+
+	WriteDescriptionComment(&builder, sp.Description)
+	fmt.Fprintf(&builder, "\t[JsonProperty(\"%s\")]\n\tpublic %s %s { get; set; }\n", sp.Name(), sp.ToVariableType(), convention.TitleCase(sp.Name()))
+	return builder.String()
 }

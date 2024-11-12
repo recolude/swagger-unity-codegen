@@ -11,6 +11,7 @@ import (
 // Object is a collection of properties
 type Object struct {
 	ObjectName             string
+	Description            string
 	objectToTakeProperties *Object
 	properties             []Property
 	children               []*Object
@@ -88,6 +89,11 @@ func (od *Object) SetAllOfObject(objectToTakeProperties *Object) {
 func (od Object) ToCSharp() string {
 	var classBuilder strings.Builder
 
+	if od.Description != "" {
+		classBuilder.WriteString("\t/// <summary>\n")
+		fmt.Fprintf(&classBuilder, "\t/// %s \n", od.Description)
+		classBuilder.WriteString("\t/// </summary>\n")
+	}
 	classBuilder.WriteString("[System.Serializable]\n")
 
 	if od.HasDiscriminator() {

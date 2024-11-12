@@ -13,7 +13,7 @@ func Test_Parameter(t *testing.T) {
 	name := "test"
 	paramLoc := path.PathParameterLocation
 	required := true
-	prop := property.NewBoolean("aaa")
+	prop := property.Boolean{PropertyName: "aaa"}
 
 	// ACT ====================================================================
 	param := path.NewParameter(paramLoc, name, required, prop)
