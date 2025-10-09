@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/recolude/swagger-unity-codegen/unitygen/convention"
+	"github.com/recolude/swagger-unity-codegen/unitygen/model/property"
 	"github.com/recolude/swagger-unity-codegen/unitygen/security"
 	"github.com/recolude/swagger-unity-codegen/unitygen/unity"
 )
@@ -94,6 +95,8 @@ func (p Path) respVariableName(k string) string {
 	switch k {
 	case "200":
 		return "Success"
+	case "201":
+		return "Created"
 
 	case "400":
 		return "BadRequest"
@@ -203,8 +206,18 @@ func (p Path) RequestParamClass() string {
 	// Set the body of the request
 	bodyParam := p.bodyParam()
 	if bodyParam != nil {
-		fmt.Fprintf(&builder, "\t\tvar unityRawUploadHandler = new UploadHandlerRaw(Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(%s)));\n", convention.CamelCase(bodyParam.name))
-		builder.WriteString("\t\tunityRawUploadHandler.contentType = \"application/json\";\n")
+
+		contentType := "application/octet-stream"
+		uploadHandler := fmt.Sprintf("new UploadHandlerRaw(%s);", convention.CamelCase(bodyParam.name))
+		if _, ok := bodyParam.parameterType.(property.DefinitionReference); ok {
+			contentType = "application/json"
+			uploadHandler = fmt.Sprintf("new UploadHandlerRaw(Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(%s)));", convention.CamelCase(bodyParam.name))
+		} else {
+			fmt.Printf("%#v\n", bodyParam.parameterType)
+		}
+
+		fmt.Fprintf(&builder, "\t\tvar unityRawUploadHandler = %s\n", uploadHandler)
+		builder.WriteString(fmt.Sprintf("\t\tunityRawUploadHandler.contentType = \"%s\";\n", contentType))
 		builder.WriteString("\t\tunityWebReq.uploadHandler = unityRawUploadHandler;\n")
 	}
 
@@ -403,7 +416,11 @@ func (p Path) OperationIDFunctionName() string {
 }
 
 func (p Path) ServiceInterfaceFunction(extra string) string {
-	return fmt.Sprintf("public %s I%s %s(%s requestParams);", extra, p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
+	if len(p.parameters) > 0 {
+		return fmt.Sprintf("public %s I%s %s(%s requestParams);", extra, p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
+	}
+
+	return fmt.Sprintf("public %s I%s %s();", extra, p.unityWebReqPathName(), p.OperationIDFunctionName())
 }
 
 func (p Path) serviceFunctionSummary() string {
@@ -443,7 +460,7 @@ func (p Path) ServiceFunction(knownModifiers []security.Auth) string {
 		fmt.Fprintf(&builder, "public override I%s %s(%s requestParams)\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName(), p.requestParamClassName())
 		builder.WriteString("\tvar unityNetworkReq = requestParams.BuildUnityWebRequest(this.Config.BasePath);\n")
 	} else {
-		fmt.Fprintf(&builder, "public I%s %s()\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName())
+		fmt.Fprintf(&builder, "public override I%s %s()\n{\n", p.unityWebReqPathName(), p.OperationIDFunctionName())
 		fmt.Fprintf(&builder, "\tvar unityNetworkReq = new UnityWebRequest(string.Format(\"{0}%s\", this.Config.BasePath), %s);\n", p.route, unity.ToUnityHTTPVerb(p.httpMethod))
 	}
 

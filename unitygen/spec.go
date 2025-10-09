@@ -140,6 +140,7 @@ func (s Spec) ServiceConfig(configName, menuName string, includeScriptableObject
 `)
 
 	builder.WriteString("public interface ISuccessResponse<T> { T Success { get; } }\n\n")
+	builder.WriteString("public interface ICreatedResponse<T> { T Created { get; } }\n\n")
 	builder.WriteString("public interface IBadRequestResponse<T> { T BadRequest { get; } }\n\n")
 	builder.WriteString("public interface IUnauthorizedResponse<T> { T Unauthorized { get; } }\n\n")
 	builder.WriteString("public interface IForbiddenResponse<T> { T Forbidden { get; } }\n\n")

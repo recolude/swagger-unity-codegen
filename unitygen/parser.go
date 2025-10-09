@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"log"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -202,11 +202,19 @@ func (p *Parser) interpretNumberDefinition(path []string, name string, obj *gabs
 
 func (p *Parser) parseDefinitions(obj *gabs.Container) ([]model.Definition, error) {
 	definitions := make([]model.Definition, 0)
-	var err error
 	for key, val := range obj.Path("definitions").ChildrenMap() {
 
-		definitionType, ok := val.Path("type").Data().(string)
-		if !ok {
+		definitionType, err := parseString(val, "type")
+		if err != nil {
+
+			allOf := val.Path("allOf")
+			log.Println(allOf)
+			log.Println()
+			log.Println(allOf.Data())
+			log.Println()
+			log.Println(allOf.Children())
+			log.Println()
+
 			return nil, InvalidSpecError{Path: []string{"definitions", key}, Reason: "Definition type not found on definition"}
 		}
 
@@ -415,7 +423,9 @@ func (p *Parser) parsePaths(root *gabs.Container, url string, routeObj *gabs.Con
 
 		operationID, ok := verbObj.Path("operationId").Data().(string)
 		if !ok {
-			return nil, InvalidSpecError{Path: []string{"paths", url, verb}, Reason: "unable to locate operation ID"}
+			// return nil, InvalidSpecError{Path: []string{"paths", url, verb}, Reason: "unable to locate operation ID"}
+			op := pathToCsharpIdentifier(url)
+			operationID = op + "_" + strings.ToUpper(verb)
 		}
 
 		var summary string
@@ -611,7 +621,7 @@ func (p *Parser) parseServices(root *gabs.Container) ([]Service, error) {
 				}
 			}
 
-			if foundService == false {
+			if !foundService {
 				for _, tag := range foundPath.Tags() {
 					services = append(services, Service{name: tag})
 					services[len(services)-1].paths = append(services[len(services)-1].paths, foundPath)
@@ -649,7 +659,7 @@ func (p *Parser) parseServices(root *gabs.Container) ([]Service, error) {
 // ParseJSON reads through the input stream and constructs an understanding of
 // the API our Unity3D client needs to interact with
 func (p *Parser) ParseJSON(in io.Reader) (Spec, error) {
-	entireIn, err := ioutil.ReadAll(in)
+	entireIn, err := io.ReadAll(in)
 	if err != nil {
 		return Spec{}, err
 	}
